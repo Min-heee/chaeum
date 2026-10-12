@@ -3,6 +3,7 @@ import type { FieldReasons } from '@/contract/core-api';
 import {
   fieldDef,
   FIELDS_BY_TYPE,
+  PRODUCT_NAME_MIN_CHARS,
   type DocType,
   type FieldKey,
   type FieldKind,
@@ -65,7 +66,7 @@ function badValue(kind: FieldKind, value: unknown): boolean {
 
 /**
  * 0 이하, 판매가 > 정가, 기간이 길수록(수량이 많을수록) 총액이 작아짐, 운영 0 이하·24시간 초과,
- * 크기가 터무니없음 → 그 칸에 OUT_OF_RANGE.
+ * 크기가 터무니없음, 상품 이름이 한 글자 → 그 칸에 OUT_OF_RANGE.
  */
 export function checkRange(type: DocType, values: FieldValues): FieldReasons {
   const out: FieldReasons = {};
@@ -81,6 +82,10 @@ export function checkRange(type: DocType, values: FieldValues): FieldReasons {
       flag(key);
     }
   }
+
+  // 상품 이름이 한 글자면 상품으로 등록되지 않는다. 승인 단계에서야 막히지 않게 여기서 표시한다.
+  const { name } = values;
+  if (FIELDS_BY_TYPE[type].length > 0 && typeof name === 'string' && [...name.trim()].length < PRODUCT_NAME_MIN_CHARS) flag('name');
 
   // 판매가가 정가보다 크면 둘 중 하나가 틀렸다. 어느 쪽인지는 모르므로 둘 다 표시한다.
   const { price_krw: price, list_price_krw: list } = values;

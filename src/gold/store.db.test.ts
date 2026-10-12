@@ -5,7 +5,7 @@ import { Client } from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { GoldDoc } from '@/contract/eval-types';
 import { migrate } from '../../scripts/migrate';
-import { assemble } from './assemble';
+import { GOLD_VERSION, assemble } from './assemble';
 import { generateSpecs } from './generate';
 import { firstPassQueue, getDoc, GoldError, listDocs, listReviews, loadDocs, loadReviews, planExport, recheckQueue, recordReview, summarize } from './store';
 
@@ -77,7 +77,7 @@ describe.skipIf(!usable)('정답 세트 DB', { shuffle: false }, () => {
     const after = await getDoc(client, doc.id);
     expect(after?.truth.fields.name).toBe('고친 이름');
     expect(after?.truth.fields.vat_included).toBeNull();
-    expect(planExport(docs, await listDocs(client, 'hand'))).toMatchObject({ changed: [doc.id], version: 2 });
+    expect(planExport(docs, await listDocs(client, 'hand'))).toMatchObject({ changed: [doc.id], version: GOLD_VERSION + 1 });
   });
 
   it('꼴이 다른 값, 그 종류에 없는 칸, 없는 문서는 받지 않고 아무것도 남기지 않는다', async () => {
@@ -139,7 +139,7 @@ describe.skipIf(!usable)('정답 세트 DB', { shuffle: false }, () => {
     const fixed = (await listDocs(client, 'hand')).find((d) => d.truth.fields.name === '고친 이름') as GoldDoc;
     await loadDocs(client, docs);
     expect((await getDoc(client, fixed.id))?.truth.fields.name).toBe('고친 이름');
-    const newer = docs.map((d) => ({ ...d, goldVersion: 2 }));
+    const newer = docs.map((d) => ({ ...d, goldVersion: GOLD_VERSION + 1 }));
     expect((await loadDocs(client, newer)).updated).toBe(12);
     expect((await getDoc(client, fixed.id))?.truth.fields.name).not.toBe('고친 이름');
   });

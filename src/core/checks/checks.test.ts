@@ -111,6 +111,13 @@ describe('범위', () => {
     expect(flagged('goods', { min_order_qty: 0, lead_time_days: 1 })).toEqual(['min_order_qty']);
   });
 
+  it('경계: 상품 이름이 한 글자면 걸리고 두 글자면 통과(상품 등록 조건과 같다)', () => {
+    expect(checkRange('goods', { name: '가' })).toEqual({ name: ['OUT_OF_RANGE'] });
+    expect(checkRange('goods', { name: ' 가 ' })).toEqual({ name: ['OUT_OF_RANGE'] });
+    expect(checkRange('goods', { name: '키링' })).toEqual({});
+    expect(checkRange('not_product', { name: '가' })).toEqual({});
+  });
+
   it('함정: 정가와 판매가가 함께 — 판매가가 정가보다 크면 두 칸 모두 걸린다. 같으면 통과', () => {
     expect(flagged('goods', { price_krw: 501, list_price_krw: 500 })).toEqual(['list_price_krw', 'price_krw']);
     expect(checkRange('goods', { price_krw: 500, list_price_krw: 500 })).toEqual({});

@@ -23,7 +23,7 @@ export default defineConfig({
         test: {
           name: 'db',
           environment: 'node',
-          include: ['tests/integration/**/*.test.ts', 'tests/api/**/*.test.ts', 'src/**/*.db.test.ts'],
+          include: ['tests/integration/**/*.test.ts', 'tests/api/**/*.test.ts', 'src/**/*.db.test.ts', 'eval/**/*.db.test.ts'],
           globalSetup: ['tests/setup/db-global.ts'],
           setupFiles: ['tests/setup/db-env.ts'],
           // 같은 DB 를 함께 쓰므로 파일을 차례로 돌린다.
