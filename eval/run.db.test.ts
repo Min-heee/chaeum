@@ -159,6 +159,35 @@ describe('평가 실행을 DB 와 파일에 남기기', () => {
     expect(await loadRunCells(db, 2_000_000_000)).toBeNull();
   });
 
+  it('fresh 로 돌리면 장부에 답이 있어도 모두 다시 부르고, 장부에는 아무것도 적지 않는다', async () => {
+    const db = getPool();
+    const ledgerRows = async () => (await db.query(`SELECT count(*)::int AS n FROM llm_calls WHERE eval_run_id IN (SELECT id FROM eval_runs WHERE git_commit = $1)`, [COMMIT])).rows[0].n as number;
+    const before = await ledgerRows();
+    const asked: string[] = [];
+    const written: unknown[] = [];
+    const extraWriter: LlmCallStore = { find: async () => null, save: async (r) => void written.push(r) };
+    const { file, paths } = await executeRun(
+      params('dev', { makeLive: makeLive(15000, asked), fresh: true, extraWriter, maxUsd: 0.01, startedAt: new Date('2026-10-12T02:30:00Z') }),
+    );
+    // 앞 시험들이 같은 요청의 답을 장부에 남겼지만 읽지 않는다.
+    expect(asked).toHaveLength(3);
+    expect(file.costUsd).toBe(0.006);
+    expect(file.calls.every((c) => !c.recorded)).toBe(true);
+    expect(file.runs.llm_code.metrics.docsAllCorrect).toEqual({ num: 3, den: 3 });
+    expect(file.info.fresh).toBe(true);
+    expect(await ledgerRows()).toBe(before);
+    expect(written).toEqual([]);
+    const row = await db.query('SELECT metrics, cost_usd FROM eval_runs WHERE id = $1', [file.runs.llm_code.runId]);
+    expect(row.rows[0].metrics.runInfo.fresh).toBe(true);
+    expect(Number(row.rows[0].cost_usd)).toBe(0.006);
+    expect(readFileSync(paths.summary, 'utf8')).toContain('--fresh');
+    // 그 뒤에 평소처럼 돌리면 먼저 남긴 녹화본(2호 문서의 값 99000)을 그대로 읽는다.
+    const later = await executeRun(params('dev', { makeLive: makeLive(15000, asked), startedAt: new Date('2026-10-12T02:40:00Z') }));
+    expect(asked).toHaveLength(3);
+    expect(later.file.info.fresh).toBeUndefined();
+    expect(later.file.runs.llm_code.metrics.docsAllCorrect).toEqual({ num: 2, den: 3 });
+  });
+
   it('확인 전 문서를 넣고 돌리면 실행 기록에 남는다', async () => {
     const { file } = await executeRun(
       params('dev', { selection: { excludedUnreviewed: 0, excludedDropped: 0, includesUnreviewed: true }, startedAt: new Date('2026-10-12T03:00:00Z') }),

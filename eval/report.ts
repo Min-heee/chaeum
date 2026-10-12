@@ -104,6 +104,7 @@ export function summaryText(file: EvalRunFile): string {
   lines.push(`| 채점한 문서 | ${file.docIds.length}건${info.limit !== null ? ` (--limit ${info.limit})` : ''} |`);
   lines.push(`| 뺀 문서 | 확인 기록 없음 ${info.excludedUnreviewed}건, 버림 ${info.excludedDropped}건 |`);
   lines.push(`| 녹화본만으로 돌림 | ${file.replayOnly ? '예' : '아니오'} |`);
+  if (info.fresh) lines.push('| 장부를 쓰지 않고 다시 부름(`--fresh`) | 예. 같은 요청의 답이 장부에 있어도 읽지 않았고, 이번 답을 장부에 적지 않았다 |');
   lines.push(`| 실제로 쓴 돈 | ${usd(file.costUsd)} (실제 호출 ${file.calls.filter((c) => !c.recorded).length}건, 장부에서 읽음 ${file.calls.filter((c) => c.recorded).length}건) |`);
   lines.push(`| 답을 못 받은 문서 | ${file.failures.length}건${file.failures.length > 0 ? `: ${file.failures.map((f) => `${f.goldDocId}(${f.code})`).join(', ')}` : ''} |`);
   lines.push('');

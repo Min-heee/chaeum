@@ -6,6 +6,27 @@ import type { LlmRequest } from '@/contract/llm-types';
 import { CONTENT_PROMPT_VERSION, CONTENT_SCHEMA_VERSION } from './prompts/content.v1';
 import { EXTRACT_PROMPT_VERSION, EXTRACT_SCHEMA_VERSION, ExtractWireSchema, extractWireToOutput, type ExtractWire } from './prompts/extract.v1';
 import {
+  EXTRACT_PROMPT_VERSION_V2,
+  EXTRACT_SCHEMA_VERSION_V2,
+  ExtractWireSchemaV2,
+  extractWireToOutputV2,
+  type ExtractWireV2,
+} from './prompts/extract.v2';
+import {
+  EXTRACT_PROMPT_VERSION_V3,
+  EXTRACT_SCHEMA_VERSION_V3,
+  ExtractWireSchemaV3,
+  extractWireToOutputV3,
+  type ExtractWireV3,
+} from './prompts/extract.v3';
+import {
+  EXTRACT_PROMPT_VERSION_V4,
+  EXTRACT_SCHEMA_VERSION_V4,
+  ExtractWireSchemaV4,
+  extractWireToOutputV4,
+  type ExtractWireV4,
+} from './prompts/extract.v4';
+import {
   TRANSCRIBE_PROMPT_VERSION,
   TRANSCRIBE_SCHEMA_VERSION,
   TranscribeWireSchema,
@@ -35,6 +56,22 @@ const BY_PROMPT_VERSION: Record<string, WireFormat> = {
     schemaVersion: EXTRACT_SCHEMA_VERSION,
     wire: ExtractWireSchema,
     toOutput: (w) => extractWireToOutput(w as ExtractWire),
+  },
+  // 평가가 견주는 판. 파이프라인이 쓰는 판은 index.ts 가 고른다(지금은 v1).
+  [EXTRACT_PROMPT_VERSION_V2]: {
+    schemaVersion: EXTRACT_SCHEMA_VERSION_V2,
+    wire: ExtractWireSchemaV2,
+    toOutput: (w) => extractWireToOutputV2(w as ExtractWireV2),
+  },
+  [EXTRACT_PROMPT_VERSION_V3]: {
+    schemaVersion: EXTRACT_SCHEMA_VERSION_V3,
+    wire: ExtractWireSchemaV3,
+    toOutput: (w) => extractWireToOutputV3(w as ExtractWireV3),
+  },
+  [EXTRACT_PROMPT_VERSION_V4]: {
+    schemaVersion: EXTRACT_SCHEMA_VERSION_V4,
+    wire: ExtractWireSchemaV4,
+    toOutput: (w) => extractWireToOutputV4(w as ExtractWireV4),
   },
   [CONTENT_PROMPT_VERSION]: {
     schemaVersion: CONTENT_SCHEMA_VERSION,
