@@ -5,8 +5,15 @@ import { ContentDraftSchema } from '@/contract/content';
 import type { LlmRequest } from '@/contract/llm-types';
 import { CONTENT_PROMPT_VERSION, CONTENT_SCHEMA_VERSION } from './prompts/content.v1';
 import { EXTRACT_PROMPT_VERSION, EXTRACT_SCHEMA_VERSION, ExtractWireSchema, extractWireToOutput, type ExtractWire } from './prompts/extract.v1';
+import {
+  TRANSCRIBE_PROMPT_VERSION,
+  TRANSCRIBE_SCHEMA_VERSION,
+  TranscribeWireSchema,
+  transcribeWireToOutput,
+  type TranscribeWire,
+} from './prompts/transcribe.v1';
 
-/** 생각을 얼마나 깊이 할지. 뽑기와 짧은 글에는 가장 낮은 단계로 충분하다고 보고 시작한다. 장부 키에도 들어간다. */
+/** 생각을 얼마나 깊이 할지. 받아 적기, 뽑기, 짧은 글에는 가장 낮은 단계로 충분하다고 보고 시작한다. 장부 키에도 들어간다. */
 export const LLM_EFFORT = 'low' as const;
 
 export interface WireFormat {
@@ -19,6 +26,11 @@ export interface WireFormat {
 }
 
 const BY_PROMPT_VERSION: Record<string, WireFormat> = {
+  [TRANSCRIBE_PROMPT_VERSION]: {
+    schemaVersion: TRANSCRIBE_SCHEMA_VERSION,
+    wire: TranscribeWireSchema,
+    toOutput: (w) => transcribeWireToOutput(w as TranscribeWire),
+  },
   [EXTRACT_PROMPT_VERSION]: {
     schemaVersion: EXTRACT_SCHEMA_VERSION,
     wire: ExtractWireSchema,

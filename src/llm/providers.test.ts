@@ -165,7 +165,7 @@ describe('구현 고르기', () => {
   it('모르는 방식이면 오류', () => {
     expect(() => providerFromEnv({ LLM_PROVIDER: 'other' })).toThrow();
   });
-  it('문 파일이 약속한 함수 여섯을 내보낸다', () => {
-    expect(Object.keys(api).sort()).toEqual(['buildContentRequest', 'buildExtractRequest', 'cacheKeyFor', 'costUsd', 'createProvider', 'priceOf']);
+  it('문 파일이 약속한 함수 일곱을 내보낸다', () => {
+    expect(Object.keys(api).sort()).toEqual(['buildContentRequest', 'buildExtractRequest', 'buildTranscribeRequest', 'cacheKeyFor', 'costUsd', 'createProvider', 'priceOf']);
   });
 });
