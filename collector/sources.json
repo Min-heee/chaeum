@@ -1,0 +1,254 @@
+{
+  "_설명": [
+    "출처 목록. 사람이 손으로 관리한다. 수집이 허용된 공공 자료만 적는다(이용 조건을 모르면 적지 않는다).",
+    "columns: 우리 칸 ← 그쪽 칸. 값은 그쪽 칸 이름 하나이거나, {const: 정해 둔 글}, {join: [그쪽 칸 여럿을 빈칸으로 잇기]},",
+    "         {compose: [이미 다듬은 우리 칸을 잇기]}, {region_of: 주소 칸의 앞머리(시·도·군·구)에서 지역 읽기} 가운데 하나다.",
+    "size: 규격. {column: 한 칸에 '가로*세로'} 또는 {width, height: 두 칸}. unit 은 값에 단위가 없을 때의 단위(mm·cm·m),",
+    "      unit_stated 는 그 단위가 칸 이름이나 자료 설명에 적혀 있는가. 적혀 있지 않으면 줄에 '단위가 적혀 있지 않아 출처의 기본 단위로 봄'(unit_assumed) 표시가 붙는다.",
+    "coords.bounds: [위도 최소, 위도 최대, 경도 최소, 경도 최대]. 관할을 넉넉히 덮게 손으로 그린 네모다(행정 경계가 아니다).",
+    "area_prefixes: 주소가 이 글로 시작하지 않으면 '관할 밖 주소' 표시가 붙는다. end_date: 표시 종료일 칸.",
+    "base_date: 자료의 기준일. 파일 안에 기준일 칸이 있으면 그 값, 없으면 포털의 수정일이다."
+  ],
+  "sources": [
+    {
+      "id": "seoul-metro-ad-facilities",
+      "name": "서울교통공사_역사별 광고시설 현황 정보",
+      "provider": "서울교통공사(저작권자 표기: 서울특별시)",
+      "landing_page": "https://data.seoul.go.kr/dataList/OA-22465/L/1/datasetView.do",
+      "download_url": "https://datafile.seoul.go.kr/bigfile/iot/inf/nio_download.do?infId=OA-22465&seqNo=&seq=1&infSeq=2&useCache=false",
+      "license": "공공누리 1유형: 출처표시(상업적 이용 및 변경 가능). 출처: 서울교통공사, 서울 열린데이터광장",
+      "base_date": "2023-03-20(파일 안 기준일)",
+      "encoding_hint": "cp949",
+      "columns": {
+        "kind": {"const": "지하철 광고"},
+        "subway_line": "호선",
+        "station": "역명",
+        "media_type": "광고시설물명",
+        "operator": "광고대행사",
+        "name": {"compose": ["station", "media_type"]}
+      },
+      "quantity": "광고시설물 수량",
+      "note": "역 269곳 × 시설 20종을 빠짐없이 채운 표라 수량 0 인 줄이 많다. 규격·좌표·주소 칸이 없다."
+    },
+    {
+      "id": "busan-metro-ad-facilities",
+      "name": "부산교통공사_광고시설물 관리정보",
+      "provider": "부산교통공사",
+      "landing_page": "https://www.data.go.kr/data/3057439/fileData.do",
+      "download_url": "https://www.data.go.kr/cmm/cmm/fileDownload.do?atchFileId=FILE_000000003630283&fileDetailSn=1&insertDataPrcus=N",
+      "license": "이용허락범위 제한 없음",
+      "base_date": "2026-04-21(포털 수정일)",
+      "encoding_hint": "cp949",
+      "columns": {
+        "kind": {"const": "지하철 광고"},
+        "subway_line": "호선",
+        "media_type": "광고종류",
+        "region": {"const": "부산광역시"},
+        "operator": "광고대행사",
+        "name": {"compose": ["subway_line", "media_type"]}
+      },
+      "note": "호선 × 매체 종류 단위의 표다. 역·수량·규격·주소 칸이 없다. '상세위치'(대합실 등)는 원래 줄에만 남긴다. 지역은 자료에 없어 낸 기관의 도시를 적었다(없으면 대구 자료의 '1호선 역구내 광고'와 같은 줄로 합쳐진다). 노선의 시 밖 구간은 가르지 못한다."
+    },
+    {
+      "id": "daegu-metro-ad-media",
+      "name": "대구교통공사_광고매체 현황",
+      "provider": "대구교통공사",
+      "landing_page": "https://www.data.go.kr/data/15137498/fileData.do",
+      "download_url": "https://www.data.go.kr/cmm/cmm/fileDownload.do?atchFileId=FILE_000000003689190&fileDetailSn=1&insertDataPrcus=N",
+      "license": "이용허락범위 제한 없음",
+      "base_date": "2026-08-03(포털 수정일)",
+      "encoding_hint": "cp949",
+      "columns": {
+        "kind": "구분",
+        "subway_line": "호선",
+        "media_type": "매체명",
+        "region": {"const": "대구광역시"},
+        "operator": "광고대행사",
+        "name": {"compose": ["subway_line", "media_type"]}
+      },
+      "note": "호선이 숫자로만 적혀 있다('1', '1,2'). 역·수량·규격·주소 칸이 없다. 지역은 자료에 없어 낸 기관의 도시를 적었다(부산 자료와 합쳐지지 않게). 노선의 시 밖 구간은 가르지 못한다."
+    },
+    {
+      "id": "daegu-bukgu-led-commercial",
+      "name": "대구광역시 북구_전광판 현황",
+      "provider": "대구광역시 북구",
+      "landing_page": "https://www.data.go.kr/data/15128341/fileData.do",
+      "download_url": "https://www.data.go.kr/cmm/cmm/fileDownload.do?atchFileId=FILE_000000003647947&fileDetailSn=1&insertDataPrcus=N",
+      "license": "이용허락범위 제한 없음",
+      "base_date": "2026-05-29(포털 수정일)",
+      "encoding_hint": "cp949",
+      "columns": {
+        "kind": {"const": "전광판"},
+        "address": "설치위치",
+        "region": {"region_of": "address"},
+        "operator": "업체명",
+        "name": {"compose": ["address", "kind"]}
+      },
+      "size": {"width": "가로 길이(단위 _ m)", "height": "세로 길이(단위 _ m)", "unit": "m", "unit_stated": true},
+      "quantity": "수량"
+    },
+    {
+      "id": "jeonju-led",
+      "name": "전북특별자치도 전주시_전광판현황",
+      "provider": "전북특별자치도 전주시",
+      "landing_page": "https://www.data.go.kr/data/15157332/fileData.do",
+      "download_url": "https://www.data.go.kr/cmm/cmm/fileDownload.do?atchFileId=FILE_000000003593161&fileDetailSn=1&insertDataPrcus=N",
+      "license": "이용허락범위 제한 없음",
+      "base_date": "2026-01-22(파일 안 기준일)",
+      "encoding_hint": "cp949",
+      "columns": {
+        "kind": {"const": "전광판"},
+        "media_type": "구분",
+        "address": "위치",
+        "region": {"const": "전북특별자치도 전주시"},
+        "name": {"compose": ["address", "media_type"]}
+      },
+      "size": {"column": "크기", "unit": "mm", "unit_stated": false},
+      "coords": {"lat": "위도", "lng": "경도", "bounds": [35.70, 35.93, 126.97, 127.26]},
+      "note": "'위치'에 시·구 이름이 없어(도로명이나 지번만) 지역은 낸 기관의 이름으로 적는다. 크기는 값에 mm 가 붙어 있다."
+    },
+    {
+      "id": "muju-led",
+      "name": "전북특별자치도 무주군_전광판현황",
+      "provider": "전북특별자치도 무주군",
+      "landing_page": "https://www.data.go.kr/data/15157305/fileData.do",
+      "download_url": "https://www.data.go.kr/cmm/cmm/fileDownload.do?atchFileId=FILE_000000003591632&fileDetailSn=1&insertDataPrcus=N",
+      "license": "이용허락범위 제한 없음",
+      "base_date": "2026-01-26(파일 안 기준일)",
+      "encoding_hint": "utf-8-sig",
+      "columns": {
+        "kind": {"const": "전광판"},
+        "media_type": "전광판구분",
+        "address": "주소",
+        "region": {"region_of": "address"},
+        "name": {"compose": ["address", "kind"]}
+      },
+      "size": {"column": "크기(cm)", "unit": "cm", "unit_stated": true},
+      "coords": {"lat": "위도", "lng": "경도", "bounds": [35.75, 36.10, 127.48, 127.95]}
+    },
+    {
+      "id": "iksan-led",
+      "name": "전북특별자치도 익산시_전광판 현황",
+      "provider": "전북특별자치도 익산시",
+      "landing_page": "https://www.data.go.kr/data/15157282/fileData.do",
+      "download_url": "https://www.data.go.kr/cmm/cmm/fileDownload.do?atchFileId=FILE_000000003590911&fileDetailSn=1&insertDataPrcus=N",
+      "license": "이용허락범위 제한 없음",
+      "base_date": "2026-01-16(파일 안 기준일)",
+      "encoding_hint": "utf-8-sig",
+      "columns": {
+        "kind": {"const": "전광판"},
+        "media_type": "전광판구분",
+        "name": "위치",
+        "address": "위치",
+        "region": {"const": "전북특별자치도 익산시"}
+      },
+      "size": {"column": "크기", "unit": "mm", "unit_stated": false},
+      "coords": {"lat": "위도", "lng": "경도", "bounds": [35.85, 36.16, 126.82, 127.16]},
+      "note": "'위치'가 주소가 아니라 장소 이름이다. 이름과 주소 두 칸에 같은 값을 넣는다(주소를 비우면 같은 크기의 전광판 둘이 한 건으로 합쳐진다)."
+    },
+    {
+      "id": "imsil-led",
+      "name": "전북특별자치도 임실군_전광판현황",
+      "provider": "전북특별자치도 임실군",
+      "landing_page": "https://www.data.go.kr/data/15157311/fileData.do",
+      "download_url": "https://www.data.go.kr/cmm/cmm/fileDownload.do?atchFileId=FILE_000000003605831&fileDetailSn=1&insertDataPrcus=N",
+      "license": "이용허락범위 제한 없음",
+      "base_date": "2026-01-27(파일 안 기준일)",
+      "encoding_hint": "utf-8-sig",
+      "columns": {
+        "kind": {"const": "전광판"},
+        "media_type": "멀티(문자)전광판구분",
+        "address": "위치",
+        "region": {"region_of": "address"},
+        "operator": "관리부서",
+        "name": {"compose": ["address", "kind"]}
+      },
+      "size": {"column": "크기(m)", "unit": "m", "unit_stated": true},
+      "coords": {"lat": "위도", "lng": "경도", "bounds": [35.43, 35.80, 127.05, 127.47]}
+    },
+    {
+      "id": "gwangju-bukgu-ooh-permits",
+      "name": "광주 북구_옥외광고물허가신고현황",
+      "provider": "광주 북구(포털 표기: 전남광주통합특별시 북구)",
+      "landing_page": "https://www.data.go.kr/data/15128463/fileData.do",
+      "download_url": "https://www.data.go.kr/cmm/cmm/fileDownload.do?atchFileId=FILE_000000003644245&fileDetailSn=1&insertDataPrcus=N",
+      "license": "이용허락범위 제한 없음",
+      "base_date": "2026-05-20(파일 안 기준일)",
+      "encoding_hint": "cp949",
+      "columns": {
+        "kind": {"const": "옥외광고물"},
+        "media_type": "광고물종류",
+        "address": "표시장소_도로명",
+        "region": {"region_of": "address"},
+        "name": {"join": ["업소명", "광고물종류"]}
+      },
+      "size": {"column": "광고물규격", "unit": "m", "unit_stated": false},
+      "area_prefixes": ["광주광역시 북구"],
+      "note": "'업소명'은 매체 운영자가 아니라 간판을 단 곳이라 운영 기관 칸에 넣지 않는다. 규격의 단위가 적혀 있지 않다."
+    },
+    {
+      "id": "daejeon-junggu-ooh-permits",
+      "name": "대전광역시 중구_옥외광고물 허가 신고 현황",
+      "provider": "대전광역시 중구",
+      "landing_page": "https://www.data.go.kr/data/15139620/fileData.do",
+      "download_url": "https://www.data.go.kr/cmm/cmm/fileDownload.do?atchFileId=FILE_000000003582453&fileDetailSn=1&insertDataPrcus=N",
+      "license": "이용허락범위 제한 없음",
+      "base_date": "2026-01-14(포털 수정일)",
+      "encoding_hint": "cp949",
+      "columns": {
+        "kind": {"const": "옥외광고물"},
+        "media_type": "광고물종류",
+        "address": "표시장소_도로명",
+        "region": {"region_of": "address"},
+        "name": {"join": ["업소명", "광고물종류"]}
+      },
+      "size": {"column": "광고물규격", "unit": "m", "unit_stated": false},
+      "end_date": "표시종료일자",
+      "area_prefixes": ["대전광역시 중구"],
+      "note": "표시 종료일 9999-12-31 은 '기한 없음'이다. 규격의 단위가 적혀 있지 않다."
+    },
+    {
+      "id": "suwon-ooh-survey",
+      "name": "경기도 수원시_옥외광고물현황",
+      "provider": "경기도 수원시",
+      "landing_page": "https://www.data.go.kr/data/15063845/fileData.do",
+      "download_url": "https://www.data.go.kr/cmm/cmm/fileDownload.do?atchFileId=FILE_000000003541155&fileDetailSn=1&insertDataPrcus=N",
+      "license": "이용허락범위 제한 없음",
+      "base_date": "2025-11-25(파일 안 기준일)",
+      "encoding_hint": "cp949",
+      "columns": {
+        "kind": {"const": "옥외광고물"},
+        "media_type": "광고물종류",
+        "address": "소재지지번주소",
+        "region": {"region_of": "address"},
+        "name": {"join": ["업소명", "광고물종류"]}
+      },
+      "size": {"width": "가로", "height": "세로", "unit": "m", "unit_stated": false, "check_column": "규격2"},
+      "quantity": "수량",
+      "coords": {"lat": "위도", "lng": "경도", "bounds": [37.20, 37.36, 126.90, 127.11]},
+      "note": "도로명 주소가 구 이름에서 끊긴 줄이 있어 지번 주소를 쓴다. '규격2' 대신 가로·세로 두 칸을 읽고, '규격2' 는 견주는 데만 쓴다(다르면 size_mismatch 표시)."
+    },
+    {
+      "id": "busan-yeongdo-banner-boards",
+      "name": "부산광역시 영도구_지정게시대 현황",
+      "provider": "부산광역시 영도구",
+      "landing_page": "https://www.data.go.kr/data/15133624/fileData.do",
+      "download_url": "https://www.data.go.kr/cmm/cmm/fileDownload.do?atchFileId=FILE_000000002999579&fileDetailSn=1&insertDataPrcus=N",
+      "license": "이용허락범위 제한 없음",
+      "base_date": "2024-07-31(파일 안 기준일)",
+      "encoding_hint": "cp949",
+      "columns": {
+        "kind": {"const": "지정게시대"},
+        "media_type": "특징",
+        "name": "위치",
+        "address": "주소",
+        "region": "구군명",
+        "operator": "관리기관명"
+      },
+      "size": {"column": "규격", "unit": "m", "unit_stated": false},
+      "quantity": "부착면수",
+      "coords": {"lat": "위도", "lng": "경도", "bounds": [35.02, 35.12, 129.00, 129.12]},
+      "note": "민원수수료·점용료 칸이 있지만 단위와 기간이 적혀 있지 않아 가격으로 읽지 않는다(원래 줄에만 남는다)."
+    }
+  ]
+}
