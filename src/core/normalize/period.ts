@@ -4,7 +4,7 @@ import type { PeriodOption, QuantityOption } from '@/contract/fields';
 import type { ReasonCode } from '@/contract/reasons';
 import { plain, read, unread } from '../text';
 import { DURATION, durationToDays } from './days';
-import { normalizeMoney } from './money';
+import { readMoney, type MoneyReadBy } from './money';
 
 interface Key {
   start: number;
@@ -22,8 +22,9 @@ interface Row {
  * 금액이 열쇠 뒤에 오는 꼴("1주 150만원")과 앞에 오는 꼴("150만원/1주")을 모두 읽는다.
  * 짝이 안 맞거나, 같은 열쇠에 값이 둘이거나, 금액 하나라도 못 읽으면 통째로 못 읽은 것이다.
  * 낱개 값("1잔당")이나 범위 열쇠("1~2주")가 섞여도 그렇다.
+ * 한 표 안에서 단위가 적힌 줄과 글의 선언을 따른 줄이 섞여도 그렇다(어느 쪽이 옳은지 글만으로 모른다).
  */
-function readTable(t: string, found: Key[]): NormalizeResult<Row[]> {
+function readTable(t: string, found: Key[], moneyUnits: readonly number[]): NormalizeResult<Row[]> {
   // 값표의 줄이 아닌 것이 섞였으면 통째로 못 읽은 것으로 둔다.
   // "1잔당 8,000원", "추가 1인당 5천원"(낱개 값), "2주차부터"(몇 번째), "1~2주"·"100~150잔"(범위).
   for (const k of found) {
@@ -46,23 +47,29 @@ function readTable(t: string, found: Key[]): NormalizeResult<Row[]> {
 
   const reasons: ReasonCode[] = [];
   const rows = new Map<number, number>();
+  const readBy = new Set<MoneyReadBy>();
   for (const [i, k] of keys.entries()) {
     const segment = priceFirst
       ? t.slice(keys[i - 1]?.end ?? 0, k.start)
       : t.slice(k.end, keys[i + 1]?.start ?? t.length);
-    const price = normalizeMoney(segment);
-    if (price.value === null) return unread();
+    const price = readMoney(segment, moneyUnits);
+    if (price.value === null || price.by === null) return unread();
+    readBy.add(price.by);
     if (rows.has(k.key) && rows.get(k.key) !== price.value) return unread();
     rows.set(k.key, price.value);
     reasons.push(...price.reasons);
     if (k.approx) reasons.push('UNIT_CONVERTED');
   }
+  if (readBy.has('declared') && readBy.has('own')) return unread();
   const sorted = [...rows].sort((a, b) => a[0] - b[0]).map(([key, price]) => ({ key, price }));
   return read(sorted, reasons);
 }
 
-/** "1주 150만원 / 2주 280만원" → 일수가 작은 것부터. 단위 없는 금액은 만원으로 짐작하고 UNIT_CONVERTED. */
-export function normalizePeriodOptions(raw: string): NormalizeResult<PeriodOption[]> {
+/**
+ * "1주 150만원 / 2주 280만원" → 일수가 작은 것부터. 단위 없는 금액은 만원으로 짐작하고 UNIT_CONVERTED.
+ * 글에 선언된 단위(moneyUnits)가 있으면 단위 없는 금액은 그것을 따른다(normalizeMoney 와 같은 규칙).
+ */
+export function normalizePeriodOptions(raw: string, moneyUnits: readonly number[] = []): NormalizeResult<PeriodOption[]> {
   const t = plain(raw);
   const keys: Key[] = [];
   for (const m of t.matchAll(new RegExp(DURATION, 'g'))) {
@@ -70,15 +77,15 @@ export function normalizePeriodOptions(raw: string): NormalizeResult<PeriodOptio
     if (!got || /시간|hours?|hrs?|小时/.test(m[2] ?? '')) return unread();
     keys.push({ start: m.index, end: m.index + m[0].length, key: got.days, approx: got.approx });
   }
-  const table = readTable(t, keys);
+  const table = readTable(t, keys, moneyUnits);
   if (table.value === null) return unread();
   return read(table.value.map((r) => ({ days: r.key, price_krw: r.price })), table.reasons);
 }
 
 const QUANTITY = /(\d{1,3}(?:,\d{3})+|\d+)\s*(?:잔|인분|인|명|개|세트|set|ea|cups?|pcs|份|杯|个)(?![a-z])/g;
 
-/** "100잔 80만원 / 200잔 150만원" → 수량이 적은 것부터. */
-export function normalizeQuantityOptions(raw: string): NormalizeResult<QuantityOption[]> {
+/** "100잔 80만원 / 200잔 150만원" → 수량이 적은 것부터. 단위 없는 금액은 기간 옵션과 같은 규칙으로 읽는다. */
+export function normalizeQuantityOptions(raw: string, moneyUnits: readonly number[] = []): NormalizeResult<QuantityOption[]> {
   const t = plain(raw);
   const keys: Key[] = [...t.matchAll(QUANTITY)].map((m) => ({
     start: m.index,
@@ -86,7 +93,7 @@ export function normalizeQuantityOptions(raw: string): NormalizeResult<QuantityO
     key: Number(m[1]!.replace(/,/g, '')),
     approx: false,
   }));
-  const table = readTable(t, keys);
+  const table = readTable(t, keys, moneyUnits);
   if (table.value === null) return unread();
   return read(table.value.map((r) => ({ qty: r.key, price_krw: r.price })), table.reasons);
 }

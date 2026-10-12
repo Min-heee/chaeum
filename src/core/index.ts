@@ -13,20 +13,21 @@ import { normalizeField } from './normalize/field';
 import { normalizeFootfall } from './normalize/footfall';
 import { normalizeHours } from './normalize/hours';
 import { normalizeMoney } from './normalize/money';
+import { declaredMoneyUnits } from './normalize/money-unit';
 import { normalizePeriodOptions } from './normalize/period';
 import { normalizeSize } from './normalize/size';
 import { routeDraft } from './route';
 import { rulesExtract } from './rules-extract';
 
 export {
-  normalizeMoney, normalizeSize, normalizeHours, normalizeFootfall, normalizePeriodOptions, normalizeDays, normalizeField,
+  normalizeMoney, normalizeSize, normalizeHours, normalizeFootfall, normalizePeriodOptions, normalizeDays, normalizeField, declaredMoneyUnits,
   checkEvidence, checkMismatch, checkRange, checkRequired, checkStructure,
   rulesExtract, routeDraft, checkContent, evaluateDraft, recheckDraft,
 };
 
 // 내보낸 것이 약속과 같은 꼴인지 타입 검사가 본다.
 const api: CoreApi = {
-  normalizeMoney, normalizeSize, normalizeHours, normalizeFootfall, normalizePeriodOptions, normalizeDays, normalizeField,
+  normalizeMoney, normalizeSize, normalizeHours, normalizeFootfall, normalizePeriodOptions, normalizeDays, normalizeField, declaredMoneyUnits,
   checkEvidence, checkMismatch, checkRange, checkRequired, checkStructure,
   rulesExtract, routeDraft, checkContent, evaluateDraft, recheckDraft,
 };

@@ -119,8 +119,19 @@ export interface ContentCheckInput {
 /** src/core/index.ts 가 이 꼴대로 내보낸다. */
 export interface CoreApi {
   // 맞추기 6종 (src/core/normalize)
-  /** "150만원", "1,500,000원", "150"(만원 생략) → 원. 단위를 짐작했으면 UNIT_CONVERTED. */
-  normalizeMoney(raw: string): NormalizeResult<number>;
+  /**
+   * "150만원", "1,500,000원", "150"(만원 생략) → 원. 단위를 짐작했으면 UNIT_CONVERTED.
+   * moneyUnits 는 글에 선언된 금액 단위(declaredMoneyUnits 의 결과)다. raw 에 단위가 없을 때만 쓴다:
+   * 하나(원·천원·만원)면 1만 미만의 수를 그 단위로 읽고 UNIT_CONVERTED. raw 에 단위가 있으면 raw 가 이긴다.
+   * 서로 다른 선언이 둘 이상, 만원보다 큰 선언, 천원·만원 선언 아래의 1만 이상인 수는 PARSE_FAILED.
+   */
+  normalizeMoney(raw: string, moneyUnits?: readonly number[]): NormalizeResult<number>;
+  /**
+   * 글에 선언된 금액 단위를 찾는다. "(단위: 천원)" → [1000]. 1단위가 몇 원인지로 낸다.
+   * 선언이 없으면 빈 목록. 서로 다른 선언이 있으면 둘 이상이 나온다. 애매한 꼴("주문 단위: 100개")은 선언이 아니다.
+   * near(근거 구절, 원문 표현)를 주면 그 자리에 걸리는 선언만 낸다: 같은 줄, 같은 단락의 아래 줄, 표 머리 바로 다음 단락.
+   */
+  declaredMoneyUnits(sourceText: string, near?: readonly (string | null)[]): number[];
   /** "7*12(m)", "7000x12000mm" → 바라는 단위의 가로·세로. 단위를 바꿨으면 UNIT_CONVERTED. */
   normalizeSize(raw: string, unit: 'm'): NormalizeResult<SizeM>;
   normalizeSize(raw: string, unit: 'mm'): NormalizeResult<SizeMm>;
@@ -129,11 +140,11 @@ export interface CoreApi {
   /** "월 300만명" → 하루 유동인구. 월·주·연 단위를 바꿨으면 UNIT_CONVERTED. */
   normalizeFootfall(raw: string): NormalizeResult<number>;
   /** "1주 150 2주 280" → [{ days: 7, price_krw: 1500000 }, …] */
-  normalizePeriodOptions(raw: string): NormalizeResult<PeriodOption[]>;
+  normalizePeriodOptions(raw: string, moneyUnits?: readonly number[]): NormalizeResult<PeriodOption[]>;
   /** "2주 전", "10일" → 일수 */
   normalizeDays(raw: string): NormalizeResult<number>;
   /** 칸 이름으로 알맞은 맞추기를 골라 돈다. 위 여섯으로 안 되는 칸(글자, 참·거짓, 횟수, 형식, 수량 옵션)도 여기서 맞춘다. */
-  normalizeField(field: FieldKey, raw: string): NormalizeResult<FieldValue>;
+  normalizeField(field: FieldKey, raw: string, moneyUnits?: readonly number[]): NormalizeResult<FieldValue>;
 
   // 따지기 5종 (src/core/checks)
   /** 값이 있는데 근거 구절이 없거나 원문에 없으면 NO_EVIDENCE. 공백·줄바꿈 차이는 봐준다. */

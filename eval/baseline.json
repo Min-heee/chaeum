@@ -1,0 +1,11 @@
+{
+  "split": "dev",
+  "method": "llm_code",
+  "model": "claude-haiku-5-5",
+  "promptVersion": "extract-v1",
+  "goldVersion": 2,
+  "docs": 20,
+  "docsAllCorrect": 17,
+  "gitCommit": "edee1dd-dirty",
+  "recordedOn": "2026-10-12"
+}

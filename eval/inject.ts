@@ -16,7 +16,7 @@ import type { Placeholder } from '@/contract/content';
 import { INJECTION_KINDS, type GoldDoc, type InjectionKind, type InjectionReport } from '@/contract/eval-types';
 import { fieldDef, type ExtractedField, type Extraction, type FieldKey, type FieldValue, type PeriodOption, type SizeM } from '@/contract/fields';
 import { hasBlocking, type ContentFailCode, type ReasonCode } from '@/contract/reasons';
-import { checkContent, evaluateDraft, normalizeField, rulesExtract } from '@/core';
+import { checkContent, declaredMoneyUnits, evaluateDraft, normalizeField, rulesExtract } from '@/core';
 import { cleanText } from '@/server/limits';
 import { HANGUL_WORDS, MONOLOGUES, NUMBER_FOR, TEXT_CASES, type TextCase } from './inject-material';
 import { loadSplit, parseArgs, RESULTS_DIR } from './io';
@@ -96,7 +96,8 @@ export function cleanDocOf(doc: GoldDoc): CleanDoc | null {
   for (const f of rulesExtract(sourceText).fields) {
     const truth = doc.truth.fields[f.field];
     if (f.raw === null || isNone(truth)) continue;
-    const value = normalizeField(f.field, f.raw).value;
+    // 초안을 따질 때와 같은 단위로 맞춘다(가까이에 "단위: 천원"이 있으면 그것을 따른다).
+    const value = normalizeField(f.field, f.raw, declaredMoneyUnits(sourceText, [f.evidence, f.raw])).value;
     if (value !== null && valuesMatch(f.field, truth, value)) fields.push({ field: f.field, raw: f.raw, value, evidence: f.evidence });
   }
   if (fields.length === 0) return null;
