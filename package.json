@@ -1,0 +1,51 @@
+{
+  "name": "chaeum",
+  "version": "0.1.0",
+  "private": true,
+  "description": "제각각인 상품 소개 글에서 등록 양식 칸을 채우고, 틀릴 만한 칸에 사유를 붙여 사람 검수로 보내는 서버와 화면",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --project unit",
+    "test:db": "vitest run --project db",
+    "check:bundle": "tsx scripts/check-bundle.ts",
+    "verify": "npm run typecheck && npm run lint && npm run test && npm run test:db && npm run build && npm run check:bundle && npm run eval:replay",
+    "verify:build": "npm run typecheck && npm run lint && npm run test && npm run build && npm run check:bundle",
+    "db:migrate": "tsx --env-file-if-exists=.env.local scripts/migrate.ts",
+    "db:migrate:test": "tsx --env-file-if-exists=.env.local scripts/migrate.ts --target test",
+    "db:seed": "tsx --env-file-if-exists=.env.local scripts/seed.ts",
+    "worker": "tsx --env-file-if-exists=.env.local scripts/worker.ts",
+    "eval": "tsx --env-file-if-exists=.env.local eval/run.ts",
+    "eval:inject": "tsx --env-file-if-exists=.env.local eval/inject.ts",
+    "eval:replay": "tsx --env-file-if-exists=.env.local eval/replay.ts",
+    "gold:gen": "tsx --env-file-if-exists=.env.local scripts/gold-gen.ts",
+    "gold:load": "tsx --env-file-if-exists=.env.local scripts/gold-load.ts",
+    "gold:export": "tsx --env-file-if-exists=.env.local scripts/gold-export.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.133.0",
+    "dotenv": "^18.0.7",
+    "next": "^16.4.0",
+    "pg": "^8.23.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "zod": "^4.6.6"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@types/pg": "^8.23.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.4.0",
+    "tsx": "^4.23.15",
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.3"
+  }
+}

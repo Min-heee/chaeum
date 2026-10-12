@@ -1,0 +1,17 @@
+# 비밀 값
+.env
+.env*.local
+
+# 설치물과 빌드 결과
+node_modules/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+
+# 로컬 DB 와 도구 흔적
+.pgdata/
+.vercel/
+.DS_Store
+npm-debug.log*

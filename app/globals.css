@@ -1,0 +1,36 @@
+/* 전역 스타일 한 장. UI 라이브러리는 쓰지 않는다. */
+:root {
+  --bg: #fafaf8;
+  --fg: #1c1c1a;
+  --muted: #6b6b66;
+  --line: #e3e3de;
+  --flag: #fff3c4;
+  --flag-line: #e0b400;
+  --accent: #1f5fd1;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: system-ui, -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  line-height: 1.6;
+}
+
+.notice {
+  margin: 0;
+  padding: 6px 16px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
