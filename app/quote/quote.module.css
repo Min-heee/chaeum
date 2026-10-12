@@ -1,0 +1,35 @@
+.inquiry,
+.reply {
+  width: 100%;
+  max-width: 760px;
+  font: inherit;
+  line-height: 1.6;
+  padding: 8px 10px;
+}
+.reply {
+  min-height: 190px;
+}
+.conditions {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 8px 14px;
+  max-width: 860px;
+  margin: 8px 0;
+}
+.conditions label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 13px;
+}
+.conditions input,
+.conditions select {
+  width: 100%;
+}
+.picked {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+.steps {
+  margin: 6px 0 14px;
+  padding-left: 20px;
+}

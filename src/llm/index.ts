@@ -5,6 +5,8 @@ import { cacheKeyFor } from './keys';
 import { costUsd, priceOf } from './pricing';
 import { buildContentRequestV1 } from './prompts/content.v1';
 import { buildExtractRequestV1 } from './prompts/extract.v1';
+import { buildQuoteExtractRequestV1 } from './prompts/quote-extract.v1';
+import { buildQuoteReplyRequestV1 } from './prompts/quote-reply.v1';
 import { buildTranscribeRequestV1 } from './prompts/transcribe.v1';
 import { createProvider } from './provider';
 
@@ -12,6 +14,10 @@ import { createProvider } from './provider';
 export const buildExtractRequest: LlmApi['buildExtractRequest'] = buildExtractRequestV1;
 export const buildContentRequest: LlmApi['buildContentRequest'] = buildContentRequestV1;
 export const buildTranscribeRequest: LlmApi['buildTranscribeRequest'] = buildTranscribeRequestV1;
+
+// 견적 도구의 둘(조건 뽑기, 답장 초안). 요청 안에서 바로 부른다(작업 줄을 타지 않는다).
+export const buildQuoteExtractRequest = buildQuoteExtractRequestV1;
+export const buildQuoteReplyRequest = buildQuoteReplyRequestV1;
 
 export { cacheKeyFor, costUsd, createProvider, priceOf };
 export { checkAttachments } from './attachments';

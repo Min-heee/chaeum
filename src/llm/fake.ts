@@ -1,6 +1,7 @@
 // 시험용. 정해 둔 답을 준다. 네트워크도 키도 쓰지 않는다.
 import type { ContentDraft } from '@/contract/content';
 import type { Extraction } from '@/contract/fields';
+import type { QuoteExtraction, QuoteReplyDraft } from '@/contract/tools/quote';
 import { LlmUnavailable, type LlmCallStore, type LlmProvider, type LlmRequest, type LlmResult, type Transcription } from '@/contract/llm-types';
 import { checkAttachments } from './attachments';
 import { cacheKeyFor } from './keys';
@@ -14,6 +15,20 @@ export function defaultFakeAnswer(req: LlmRequest<unknown>): unknown {
   if (req.task === 'transcribe') {
     const transcription: Transcription = { text: '옮긴 글 보기: 합정역 커피차 100잔 80만원', readable: true };
     return transcription;
+  }
+  if (req.task === 'quote_extract') {
+    // 아무 조건도 뽑지 않은 답. 조건이 없으면 값을 낼 수 있는 상품이 모두 맞는 쪽에 온다.
+    const none: QuoteExtraction = {
+      lang: 'ko', budget_raw: null, budget_krw: null, region: null, date_raw: null, date: null, type: null, subtype: null, qty: null, days: null,
+    };
+    return none;
+  }
+  if (req.task === 'quote_reply') {
+    // 써도 되는 자리표시를 모두 쓴 한 줄. 숫자는 쓰지 않는다.
+    const allowed = (req.input as { placeholders?: unknown } | null)?.placeholders;
+    const marks = Array.isArray(allowed) ? allowed.filter((p): p is string => typeof p === 'string').map((p) => `{${p}}`) : [];
+    const reply: QuoteReplyDraft = { reply: ['시험용 답장입니다.', ...marks].join(' ') };
+    return reply;
   }
   const name = (req.input as { name?: unknown } | null)?.name;
   const title = typeof name === 'string' && name ? name : 'Sample';

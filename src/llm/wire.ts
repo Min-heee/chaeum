@@ -4,7 +4,10 @@ import { z } from 'zod';
 import { ContentDraftSchema } from '@/contract/content';
 import type { LlmRequest } from '@/contract/llm-types';
 import { CONTENT_PROMPT_VERSION, CONTENT_SCHEMA_VERSION } from './prompts/content.v1';
+import { QuoteExtractionSchema, QuoteReplyDraftSchema } from '@/contract/tools/quote';
 import { EXTRACT_PROMPT_VERSION, EXTRACT_SCHEMA_VERSION, ExtractWireSchema, extractWireToOutput, type ExtractWire } from './prompts/extract.v1';
+import { QUOTE_EXTRACT_PROMPT_VERSION, QUOTE_EXTRACT_SCHEMA_VERSION } from './prompts/quote-extract.v1';
+import { QUOTE_REPLY_PROMPT_VERSION, QUOTE_REPLY_SCHEMA_VERSION } from './prompts/quote-reply.v1';
 import {
   TRANSCRIBE_PROMPT_VERSION,
   TRANSCRIBE_SCHEMA_VERSION,
@@ -41,6 +44,9 @@ const BY_PROMPT_VERSION: Record<string, WireFormat> = {
     wire: ContentDraftSchema,
     toOutput: (w) => w,
   },
+  // 견적의 둘은 약속의 꼴을 그대로 보낸다(그 꼴에는 길이·범위 제약이 없다).
+  [QUOTE_EXTRACT_PROMPT_VERSION]: { schemaVersion: QUOTE_EXTRACT_SCHEMA_VERSION, wire: QuoteExtractionSchema, toOutput: (w) => w },
+  [QUOTE_REPLY_PROMPT_VERSION]: { schemaVersion: QUOTE_REPLY_SCHEMA_VERSION, wire: QuoteReplyDraftSchema, toOutput: (w) => w },
 };
 
 /** 등록되지 않은 프롬프트 버전이면 요청의 schema 를 그대로 보낸다. */
