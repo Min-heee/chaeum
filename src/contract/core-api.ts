@@ -163,6 +163,9 @@ export interface CoreApi {
   /**
    * 뽑기 결과를 맞추고 따져 칸별 결과와 갈래를 낸다. 실패하지 않는다(걸린 것이 결과다).
    * type 이 not_product 면 칸은 비고 draftReasons 에 NOT_A_PRODUCT 가 들어간다.
+   * 따지기 5종에 더해 여기서만 붙는 사유가 둘 있다:
+   * 원문 표현(raw)이 원문에 없으면 NO_EVIDENCE, raw 없이 값만 왔으면 PARSE_FAILED(코드가 다시 읽어 볼 것이 없다).
+   * LLM_SKIPPED 는 붙이지 않는다. 규칙만 길로 내려온 쪽(파이프라인)이 draftReasons 에 더하고 routeDraft 를 다시 부른다.
    */
   evaluateDraft(input: EvaluateInput): DraftEvaluation;
   /**

@@ -38,7 +38,7 @@ export interface ReasonDef {
 export const REASONS: Record<ReasonCode, ReasonDef> = {
   NO_EVIDENCE: {
     label: '근거 없음',
-    description: '근거 구절이 원문에 없습니다.',
+    description: '근거 구절이나 원문 표현(raw)이 원문에 없습니다.',
     scope: 'field',
     blocking: true,
     source: 'checks/evidence',
@@ -52,7 +52,7 @@ export const REASONS: Record<ReasonCode, ReasonDef> = {
   },
   PARSE_FAILED: {
     label: '읽지 못함',
-    description: '코드가 원문 표현을 읽지 못했습니다.',
+    description: '코드가 원문 표현을 읽지 못했습니다. 원문 표현 없이 값만 온 칸도 여기에 듭니다.',
     scope: 'field',
     blocking: true,
     source: 'normalize',

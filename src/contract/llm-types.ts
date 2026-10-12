@@ -51,9 +51,10 @@ export interface LlmProvider {
  * - NO_KEY: 키가 없다           - CACHE_MISS: 녹화가 없다
  * - REFUSAL: 모델이 거절했다     - MAX_TOKENS: 답이 잘렸다
  * - BAD_OUTPUT: 답이 스키마와 다르다
+ * - BAD_REQUEST: 요청이 거절됐다(틀린 요청, 없는 모델, 잔액 부족 같은 4xx). 다시 해도 같다.
  * - TRANSIENT: 잠깐의 오류(429, 5xx, 시간 초과). 이것만 다시 해 볼 만하다.
  */
-export const LLM_UNAVAILABLE_CODES = ['NO_KEY', 'CACHE_MISS', 'REFUSAL', 'MAX_TOKENS', 'BAD_OUTPUT', 'TRANSIENT'] as const;
+export const LLM_UNAVAILABLE_CODES = ['NO_KEY', 'CACHE_MISS', 'REFUSAL', 'MAX_TOKENS', 'BAD_OUTPUT', 'BAD_REQUEST', 'TRANSIENT'] as const;
 export type LlmUnavailableCode = (typeof LLM_UNAVAILABLE_CODES)[number];
 
 /**
@@ -63,12 +64,15 @@ export type LlmUnavailableCode = (typeof LLM_UNAVAILABLE_CODES)[number];
 export class LlmUnavailable extends Error {
   readonly code: LlmUnavailableCode;
   readonly retryable: boolean;
+  /** 답은 못 썼지만 호출은 끝나 토큰이 나간 경우(거절, 잘림, 형식 오류)에만 있다. 비용을 셀 때 쓴다. */
+  readonly usage?: LlmUsage;
 
-  constructor(code: LlmUnavailableCode, message?: string) {
+  constructor(code: LlmUnavailableCode, message?: string, usage?: LlmUsage) {
     super(message ?? code);
     this.name = 'LlmUnavailable';
     this.code = code;
     this.retryable = code === 'TRANSIENT';
+    this.usage = usage;
   }
 }
 
@@ -84,7 +88,7 @@ export interface LlmCallRecord {
   provider: LlmProviderName;
   model: string;
   promptVersion: string;
-  /** sha256(task + model + promptVersion + 스키마 버전 + 정리한 입력) */
+  /** sha256(task + model + promptVersion + 스키마 버전 + 시스템 글·보내는 스키마의 해시 + 생각 깊이 + 정리한 입력) */
   cacheKey: string;
   /** 검사를 통과한 답 */
   response: unknown;

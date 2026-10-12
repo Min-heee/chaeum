@@ -26,7 +26,9 @@
     "eval:replay": "tsx --env-file-if-exists=.env.local eval/replay.ts",
     "gold:gen": "tsx --env-file-if-exists=.env.local scripts/gold-gen.ts",
     "gold:load": "tsx --env-file-if-exists=.env.local scripts/gold-load.ts",
-    "gold:export": "tsx --env-file-if-exists=.env.local scripts/gold-export.ts"
+    "gold:export": "tsx --env-file-if-exists=.env.local scripts/gold-export.ts",
+    "gold:assemble": "tsx --env-file-if-exists=.env.local scripts/gold-gen.ts assemble",
+    "llm:smoke": "tsx --env-file-if-exists=.env.local scripts/llm-smoke.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.133.0",

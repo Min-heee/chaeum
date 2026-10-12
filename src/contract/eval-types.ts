@@ -4,18 +4,19 @@ import { DOC_TYPES, FIELDS_BY_TYPE, isSubtypeOf, parseFieldValue, type DocType, 
 
 // ── 정답 세트 ──────────────────────────────────────────────
 
-/** 세 묶음. 점수를 합치지 않는다. */
-export const GOLD_SPLITS = ['dev', 'test', 'hand'] as const;
+/** 네 묶음. 점수를 합치지 않는다. real(실제 자료)과 hand(손글)는 파이프라인을 얼린 뒤에 모은다. */
+export const GOLD_SPLITS = ['dev', 'test', 'real', 'hand'] as const;
 export type GoldSplit = (typeof GOLD_SPLITS)[number];
 
 export const SPLIT_LABELS: Record<GoldSplit, string> = {
   dev: '연습',
   test: '안 여는 세트',
+  real: '실제 자료',
   hand: '손글',
 };
 
 /** 묶음별 건수. */
-export const SPLIT_SIZES: Record<GoldSplit, number> = { dev: 40, test: 60, hand: 20 };
+export const SPLIT_SIZES: Record<GoldSplit, number> = { dev: 40, test: 60, real: 20, hand: 10 };
 
 export const GOLD_AUTHORS = ['ai', 'human'] as const;
 export type GoldAuthor = (typeof GOLD_AUTHORS)[number];
@@ -71,7 +72,7 @@ export interface GoldDoc {
  */
 export const GoldDocSchema: z.ZodType<GoldDoc> = z
   .object({
-    id: z.string().regex(/^(dev|test|hand)-\d{3}$/),
+    id: z.string().regex(/^(dev|test|real|hand)-\d{3}$/),
     split: z.enum(GOLD_SPLITS),
     goldVersion: z.number().int().min(1),
     content: z.string().min(1),

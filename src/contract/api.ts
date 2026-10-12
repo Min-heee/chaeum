@@ -74,14 +74,28 @@ export type EventActor = (typeof EVENT_ACTORS)[number];
 export const EVENT_ACTIONS = ['status', 'edit'] as const;
 export type EventAction = (typeof EVENT_ACTIONS)[number];
 
+/**
+ * 사람이 아니라 시스템이 상태를 바꿨을 때 변경 기록(reason_code)에 남기는 까닭.
+ * 반려 사유(REJECT_CODES)와는 다른 목록이다.
+ */
+export const SYSTEM_EVENT_REASONS = {
+  JOB_DEAD: '처리를 세 번 해 보고도 끝내지 못해 실패로 돌렸다',
+  PRODUCT_INVALID: '상품으로 등록할 수 없는 값이 있어 확인 필요로 돌렸다',
+} as const;
+export type SystemEventReason = keyof typeof SYSTEM_EVENT_REASONS;
+
 // ── 오류 ───────────────────────────────────────────────────
 
-/** 오류 본문은 { code, message } 다. VERSION_CONFLICT 에는 current 가 함께 간다. */
+/**
+ * 오류 본문은 { code, message } 다. VERSION_CONFLICT 와 PRODUCT_INVALID 에는 current 가 함께 간다.
+ * PRODUCT_INVALID: 승인했지만 값이 상품 표의 조건에 안 맞아 등록하지 못했다(초안은 확인 필요로 간다).
+ */
 export const API_ERRORS = {
   BAD_INPUT: 400,
   NOT_FOUND: 404,
   VERSION_CONFLICT: 409,
   BAD_TRANSITION: 422,
+  PRODUCT_INVALID: 422,
   LIMIT_EXCEEDED: 429,
   READ_ONLY_WORKSPACE: 403,
   INTERNAL: 500,
@@ -91,7 +105,7 @@ export type ApiErrorCode = keyof typeof API_ERRORS;
 export interface ApiErrorBody {
   code: ApiErrorCode;
   message: string;
-  /** VERSION_CONFLICT 일 때 지금 상태 */
+  /** VERSION_CONFLICT·PRODUCT_INVALID 일 때 초안의 지금 상태 */
   current?: { status: string; version: number };
 }
 

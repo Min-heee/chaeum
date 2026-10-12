@@ -8,13 +8,17 @@ const noClockOrDice = [
 ];
 
 const config = [
-  { ignores: ['.next/**', 'node_modules/**', 'coverage/**', 'next-env.d.ts', 'eval/results/**', 'data/**'] },
+  { ignores: ['.next/**', 'node_modules/**', 'coverage/**', 'next-env.d.ts', 'eval/results/**', 'data/**', '.gold-work/**'] },
   ...nextVitals,
   ...nextTs,
   {
     files: ['src/core/**/*.ts', 'src/contract/**/*.ts', 'src/server/queue.ts'],
     ignores: ['**/*.test.ts'],
-    rules: { 'no-restricted-properties': ['error', ...noClockOrDice] },
+    rules: {
+      'no-restricted-properties': ['error', ...noClockOrDice],
+      // 인자 없는 new Date() 도 지금 시각을 읽는다.
+      'no-restricted-syntax': ['error', { selector: "NewExpression[callee.name='Date'][arguments.length=0]", message: '시각은 인자로 받는다.' }],
+    },
   },
   {
     // 판단 코드는 DB 와 네트워크를 모른다.

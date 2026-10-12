@@ -181,8 +181,9 @@ describe('평가와 API 의 약속', () => {
     expect(GoldDocSchema.safeParse(notProduct).success).toBe(true);
   });
 
-  it('묶음은 40 / 60 / 20, 판정은 다섯', () => {
-    expect(SPLIT_SIZES).toEqual({ dev: 40, test: 60, hand: 20 });
+  it('묶음은 넷(40 / 60 / 20 / 10), 판정은 다섯', () => {
+    expect(SPLIT_SIZES).toEqual({ dev: 40, test: 60, real: 20, hand: 10 });
+    expect(GoldDocSchema.safeParse({ ...doc, id: 'real-001', split: 'real' }).success).toBe(true);
     expect(VERDICTS).toHaveLength(5);
   });
 
