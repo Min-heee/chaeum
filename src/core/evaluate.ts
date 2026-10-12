@@ -1,6 +1,7 @@
 // 한 번에 돌기: 뽑기 결과를 맞추고 따져 칸별 결과와 갈래를 낸다.
 import type { DraftEvaluation, EvaluatedField, EvaluateInput, RecheckInput } from '@/contract/core-api';
 import {
+  fieldDef,
   FIELDS_BY_TYPE,
   parseFieldValue,
   type DocType,
@@ -15,6 +16,7 @@ import { checkRange } from './checks/range';
 import { checkRequired } from './checks/required';
 import { checkStructure, isPlaceholder } from './checks/structure';
 import { normalizeField } from './normalize/field';
+import { declaredMoneyUnits } from './normalize/money-unit';
 import { routeDraft } from './route';
 import { sortReasons } from './text';
 
@@ -28,6 +30,13 @@ interface Material {
   edited?: { value: FieldValue | null };
 }
 
+const MONEY_KINDS: ReadonlySet<string> = new Set(['money', 'period_options', 'quantity_options']);
+
+/** 이 칸의 금액에 걸리는 선언된 단위("단위: 천원"). 근거 구절과 원문 표현이 놓인 자리 가까이의 선언만 쓴다. */
+function moneyUnitsFor(sourceText: string, m: Material): number[] {
+  return MONEY_KINDS.has(fieldDef(m.field).kind) ? declaredMoneyUnits(sourceText, [m.evidence, m.raw]) : [];
+}
+
 /** 사람이 고치지 않은 칸: 원문 표현을 맞추고, 근거와 불일치를 본다. */
 function fromSource(sourceText: string, m: Material): EvaluatedField {
   const reasons: ReasonCode[] = [];
@@ -36,7 +45,7 @@ function fromSource(sourceText: string, m: Material): EvaluatedField {
   let codeValue: FieldValue | null = null;
   // 자리 채움 글자("-", "추후 안내")는 읽을 값이 아니다. 사유는 구조 검사가 붙인다.
   if (raw !== null && !isPlaceholder(raw)) {
-    const normalized = normalizeField(m.field, raw);
+    const normalized = normalizeField(m.field, raw, moneyUnitsFor(sourceText, m));
     codeValue = normalized.value;
     reasons.push(...normalized.reasons);
   }
@@ -69,7 +78,7 @@ function assemble(sourceText: string, type: DocType, subtype: string | null, mat
   const fields: EvaluatedField[] = FIELDS_BY_TYPE[type].map((field) => {
     const m = byField.get(field) ?? { field, raw: null, modelValue: null, evidence: null };
     if (!m.edited) return fromSource(sourceText, m);
-    const codeValue = m.raw !== null && !isPlaceholder(m.raw) ? normalizeField(field, m.raw).value : null;
+    const codeValue = m.raw !== null && !isPlaceholder(m.raw) ? normalizeField(field, m.raw, moneyUnitsFor(sourceText, m)).value : null;
     return {
       field,
       raw: m.raw,

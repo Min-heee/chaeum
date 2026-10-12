@@ -1,0 +1,1163 @@
+{
+  "split": "dev",
+  "goldVersion": 2,
+  "model": "claude-haiku-5-5",
+  "promptVersion": "extract-v2",
+  "gitCommit": "83d6422-dirty",
+  "startedAt": "2026-10-12T16:01:07.888Z",
+  "replayOnly": false,
+  "stoppedByBudget": false,
+  "runs": {
+    "rules": {
+      "runId": 16,
+      "metrics": {
+        "docs": 1,
+        "fieldAccuracy": {
+          "overall": {
+            "num": 8,
+            "den": 14
+          },
+          "byField": {
+            "name": {
+              "num": 0,
+              "den": 1
+            },
+            "price_krw": {
+              "num": 0,
+              "den": 1
+            },
+            "list_price_krw": {
+              "num": 0,
+              "den": 0
+            },
+            "vat_included": {
+              "num": 1,
+              "den": 1
+            },
+            "region": {
+              "num": 0,
+              "den": 1
+            },
+            "size_m": {
+              "num": 1,
+              "den": 1
+            },
+            "resolution_px": {
+              "num": 1,
+              "den": 1
+            },
+            "hours": {
+              "num": 1,
+              "den": 1
+            },
+            "spot_seconds": {
+              "num": 1,
+              "den": 1
+            },
+            "plays_per_day": {
+              "num": 0,
+              "den": 1
+            },
+            "footfall_per_day": {
+              "num": 0,
+              "den": 1
+            },
+            "period_options": {
+              "num": 0,
+              "den": 1
+            },
+            "material_deadline_days": {
+              "num": 0,
+              "den": 0
+            },
+            "file_format": {
+              "num": 1,
+              "den": 1
+            },
+            "refund_full_days": {
+              "num": 1,
+              "den": 1
+            },
+            "booking_deadline_days": {
+              "num": 1,
+              "den": 1
+            }
+          }
+        },
+        "fabricated": {
+          "overall": {
+            "num": 0,
+            "den": 2
+          },
+          "byField": {
+            "name": {
+              "num": 0,
+              "den": 0
+            },
+            "price_krw": {
+              "num": 0,
+              "den": 0
+            },
+            "list_price_krw": {
+              "num": 0,
+              "den": 1
+            },
+            "vat_included": {
+              "num": 0,
+              "den": 0
+            },
+            "region": {
+              "num": 0,
+              "den": 0
+            },
+            "size_m": {
+              "num": 0,
+              "den": 0
+            },
+            "resolution_px": {
+              "num": 0,
+              "den": 0
+            },
+            "hours": {
+              "num": 0,
+              "den": 0
+            },
+            "spot_seconds": {
+              "num": 0,
+              "den": 0
+            },
+            "plays_per_day": {
+              "num": 0,
+              "den": 0
+            },
+            "footfall_per_day": {
+              "num": 0,
+              "den": 0
+            },
+            "period_options": {
+              "num": 0,
+              "den": 0
+            },
+            "material_deadline_days": {
+              "num": 0,
+              "den": 1
+            },
+            "file_format": {
+              "num": 0,
+              "den": 0
+            },
+            "refund_full_days": {
+              "num": 0,
+              "den": 0
+            },
+            "booking_deadline_days": {
+              "num": 0,
+              "den": 0
+            }
+          }
+        },
+        "docsAllCorrect": {
+          "num": 0,
+          "den": 1
+        },
+        "autoApprove": {
+          "ready": {
+            "num": 0,
+            "den": 1
+          },
+          "readyWithError": {
+            "num": 0,
+            "den": 0
+          }
+        },
+        "checker": {
+          "caught": {
+            "num": 3,
+            "den": 6
+          },
+          "falseAlarm": {
+            "num": 0,
+            "den": 8
+          },
+          "flaggedTrueNone": {
+            "num": 0,
+            "den": 2
+          }
+        },
+        "costTime": null,
+        "typeAccuracy": {
+          "num": 1,
+          "den": 1
+        },
+        "subtypeAccuracy": {
+          "num": 0,
+          "den": 1
+        },
+        "missed": {
+          "num": 4,
+          "den": 14
+        }
+      }
+    },
+    "llm_only": {
+      "runId": 17,
+      "metrics": {
+        "docs": 1,
+        "fieldAccuracy": {
+          "overall": {
+            "num": 14,
+            "den": 14
+          },
+          "byField": {
+            "name": {
+              "num": 1,
+              "den": 1
+            },
+            "price_krw": {
+              "num": 1,
+              "den": 1
+            },
+            "list_price_krw": {
+              "num": 0,
+              "den": 0
+            },
+            "vat_included": {
+              "num": 1,
+              "den": 1
+            },
+            "region": {
+              "num": 1,
+              "den": 1
+            },
+            "size_m": {
+              "num": 1,
+              "den": 1
+            },
+            "resolution_px": {
+              "num": 1,
+              "den": 1
+            },
+            "hours": {
+              "num": 1,
+              "den": 1
+            },
+            "spot_seconds": {
+              "num": 1,
+              "den": 1
+            },
+            "plays_per_day": {
+              "num": 1,
+              "den": 1
+            },
+            "footfall_per_day": {
+              "num": 1,
+              "den": 1
+            },
+            "period_options": {
+              "num": 1,
+              "den": 1
+            },
+            "material_deadline_days": {
+              "num": 0,
+              "den": 0
+            },
+            "file_format": {
+              "num": 1,
+              "den": 1
+            },
+            "refund_full_days": {
+              "num": 1,
+              "den": 1
+            },
+            "booking_deadline_days": {
+              "num": 1,
+              "den": 1
+            }
+          }
+        },
+        "fabricated": {
+          "overall": {
+            "num": 0,
+            "den": 2
+          },
+          "byField": {
+            "name": {
+              "num": 0,
+              "den": 0
+            },
+            "price_krw": {
+              "num": 0,
+              "den": 0
+            },
+            "list_price_krw": {
+              "num": 0,
+              "den": 1
+            },
+            "vat_included": {
+              "num": 0,
+              "den": 0
+            },
+            "region": {
+              "num": 0,
+              "den": 0
+            },
+            "size_m": {
+              "num": 0,
+              "den": 0
+            },
+            "resolution_px": {
+              "num": 0,
+              "den": 0
+            },
+            "hours": {
+              "num": 0,
+              "den": 0
+            },
+            "spot_seconds": {
+              "num": 0,
+              "den": 0
+            },
+            "plays_per_day": {
+              "num": 0,
+              "den": 0
+            },
+            "footfall_per_day": {
+              "num": 0,
+              "den": 0
+            },
+            "period_options": {
+              "num": 0,
+              "den": 0
+            },
+            "material_deadline_days": {
+              "num": 0,
+              "den": 1
+            },
+            "file_format": {
+              "num": 0,
+              "den": 0
+            },
+            "refund_full_days": {
+              "num": 0,
+              "den": 0
+            },
+            "booking_deadline_days": {
+              "num": 0,
+              "den": 0
+            }
+          }
+        },
+        "docsAllCorrect": {
+          "num": 1,
+          "den": 1
+        },
+        "autoApprove": null,
+        "checker": null,
+        "costTime": {
+          "costUsdTotal": 0.0013878,
+          "costUsdPerDoc": 0.0013878,
+          "latencyMsP50": 9195,
+          "latencyMsP95": 9195,
+          "fromRecording": false
+        },
+        "typeAccuracy": {
+          "num": 1,
+          "den": 1
+        },
+        "subtypeAccuracy": {
+          "num": 1,
+          "den": 1
+        },
+        "missed": {
+          "num": 0,
+          "den": 14
+        }
+      }
+    },
+    "llm_code": {
+      "runId": 18,
+      "metrics": {
+        "docs": 1,
+        "fieldAccuracy": {
+          "overall": {
+            "num": 14,
+            "den": 14
+          },
+          "byField": {
+            "name": {
+              "num": 1,
+              "den": 1
+            },
+            "price_krw": {
+              "num": 1,
+              "den": 1
+            },
+            "list_price_krw": {
+              "num": 0,
+              "den": 0
+            },
+            "vat_included": {
+              "num": 1,
+              "den": 1
+            },
+            "region": {
+              "num": 1,
+              "den": 1
+            },
+            "size_m": {
+              "num": 1,
+              "den": 1
+            },
+            "resolution_px": {
+              "num": 1,
+              "den": 1
+            },
+            "hours": {
+              "num": 1,
+              "den": 1
+            },
+            "spot_seconds": {
+              "num": 1,
+              "den": 1
+            },
+            "plays_per_day": {
+              "num": 1,
+              "den": 1
+            },
+            "footfall_per_day": {
+              "num": 1,
+              "den": 1
+            },
+            "period_options": {
+              "num": 1,
+              "den": 1
+            },
+            "material_deadline_days": {
+              "num": 0,
+              "den": 0
+            },
+            "file_format": {
+              "num": 1,
+              "den": 1
+            },
+            "refund_full_days": {
+              "num": 1,
+              "den": 1
+            },
+            "booking_deadline_days": {
+              "num": 1,
+              "den": 1
+            }
+          }
+        },
+        "fabricated": {
+          "overall": {
+            "num": 0,
+            "den": 2
+          },
+          "byField": {
+            "name": {
+              "num": 0,
+              "den": 0
+            },
+            "price_krw": {
+              "num": 0,
+              "den": 0
+            },
+            "list_price_krw": {
+              "num": 0,
+              "den": 1
+            },
+            "vat_included": {
+              "num": 0,
+              "den": 0
+            },
+            "region": {
+              "num": 0,
+              "den": 0
+            },
+            "size_m": {
+              "num": 0,
+              "den": 0
+            },
+            "resolution_px": {
+              "num": 0,
+              "den": 0
+            },
+            "hours": {
+              "num": 0,
+              "den": 0
+            },
+            "spot_seconds": {
+              "num": 0,
+              "den": 0
+            },
+            "plays_per_day": {
+              "num": 0,
+              "den": 0
+            },
+            "footfall_per_day": {
+              "num": 0,
+              "den": 0
+            },
+            "period_options": {
+              "num": 0,
+              "den": 0
+            },
+            "material_deadline_days": {
+              "num": 0,
+              "den": 1
+            },
+            "file_format": {
+              "num": 0,
+              "den": 0
+            },
+            "refund_full_days": {
+              "num": 0,
+              "den": 0
+            },
+            "booking_deadline_days": {
+              "num": 0,
+              "den": 0
+            }
+          }
+        },
+        "docsAllCorrect": {
+          "num": 1,
+          "den": 1
+        },
+        "autoApprove": {
+          "ready": {
+            "num": 1,
+            "den": 1
+          },
+          "readyWithError": {
+            "num": 0,
+            "den": 1
+          }
+        },
+        "checker": {
+          "caught": {
+            "num": 0,
+            "den": 0
+          },
+          "falseAlarm": {
+            "num": 0,
+            "den": 14
+          },
+          "flaggedTrueNone": {
+            "num": 0,
+            "den": 2
+          }
+        },
+        "costTime": {
+          "costUsdTotal": 0.0013878,
+          "costUsdPerDoc": 0.0013878,
+          "latencyMsP50": 9195,
+          "latencyMsP95": 9195,
+          "fromRecording": false
+        },
+        "typeAccuracy": {
+          "num": 1,
+          "den": 1
+        },
+        "subtypeAccuracy": {
+          "num": 1,
+          "den": 1
+        },
+        "missed": {
+          "num": 0,
+          "den": 14
+        }
+      }
+    }
+  },
+  "costUsd": 0.0013878,
+  "info": {
+    "includeUnreviewed": false,
+    "excludedUnreviewed": 20,
+    "excludedDropped": 0,
+    "limit": 1,
+    "stoppedByBudget": false,
+    "replayOnly": false,
+    "callFailures": 0
+  },
+  "docIds": [
+    "dev-001"
+  ],
+  "notRun": [],
+  "failures": [],
+  "calls": [
+    {
+      "goldDocId": "dev-001",
+      "costUsd": 0.0013878,
+      "latencyMs": 9195,
+      "recorded": false,
+      "inputTokens": 5003,
+      "outputTokens": 1775
+    }
+  ],
+  "cells": {
+    "rules": [
+      {
+        "goldDocId": "dev-001",
+        "field": "type",
+        "expected": "ad",
+        "actual": "ad",
+        "verdict": "correct",
+        "flagged": true
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "subtype",
+        "expected": "전광판",
+        "actual": null,
+        "verdict": "wrong",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "name",
+        "expected": "에스카론 미디어월",
+        "actual": "넵 대표님~ 아까 통화한 건 정리해서 보내요",
+        "verdict": "wrong",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "price_krw",
+        "expected": 10400000,
+        "actual": null,
+        "verdict": "missed",
+        "flagged": true
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "list_price_krw",
+        "expected": null,
+        "actual": null,
+        "verdict": "true_none",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "vat_included",
+        "expected": true,
+        "actual": true,
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "region",
+        "expected": "압구정동",
+        "actual": "압구정동 요",
+        "verdict": "wrong",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "size_m",
+        "expected": {
+          "height": 2.8,
+          "width": 5
+        },
+        "actual": {
+          "width": 5,
+          "height": 2.8
+        },
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "resolution_px",
+        "expected": {
+          "height": 720,
+          "width": 1280
+        },
+        "actual": {
+          "width": 1280,
+          "height": 720
+        },
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "hours",
+        "expected": {
+          "close": "22:00",
+          "nextDay": false,
+          "open": "07:00"
+        },
+        "actual": {
+          "open": "07:00",
+          "close": "22:00",
+          "nextDay": false
+        },
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "spot_seconds",
+        "expected": 10,
+        "actual": 10,
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "plays_per_day",
+        "expected": 240,
+        "actual": null,
+        "verdict": "missed",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "footfall_per_day",
+        "expected": 131000,
+        "actual": null,
+        "verdict": "missed",
+        "flagged": true
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "period_options",
+        "expected": [
+          {
+            "days": 7,
+            "price_krw": 10400000
+          },
+          {
+            "days": 14,
+            "price_krw": 19800000
+          }
+        ],
+        "actual": null,
+        "verdict": "missed",
+        "flagged": true
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "material_deadline_days",
+        "expected": null,
+        "actual": null,
+        "verdict": "true_none",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "file_format",
+        "expected": [
+          "mov",
+          "mp4"
+        ],
+        "actual": [
+          "mov",
+          "mp4"
+        ],
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "refund_full_days",
+        "expected": 7,
+        "actual": 7,
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "booking_deadline_days",
+        "expected": 20,
+        "actual": 20,
+        "verdict": "correct",
+        "flagged": false
+      }
+    ],
+    "llm_only": [
+      {
+        "goldDocId": "dev-001",
+        "field": "type",
+        "expected": "ad",
+        "actual": "ad",
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "subtype",
+        "expected": "전광판",
+        "actual": "전광판",
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "name",
+        "expected": "에스카론 미디어월",
+        "actual": "에스카론 미디어월",
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "price_krw",
+        "expected": 10400000,
+        "actual": 10400000,
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "list_price_krw",
+        "expected": null,
+        "actual": null,
+        "verdict": "true_none",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "vat_included",
+        "expected": true,
+        "actual": true,
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "region",
+        "expected": "압구정동",
+        "actual": "압구정동",
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "size_m",
+        "expected": {
+          "height": 2.8,
+          "width": 5
+        },
+        "actual": {
+          "width": 5,
+          "height": 2.8
+        },
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "resolution_px",
+        "expected": {
+          "height": 720,
+          "width": 1280
+        },
+        "actual": {
+          "width": 1280,
+          "height": 720
+        },
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "hours",
+        "expected": {
+          "close": "22:00",
+          "nextDay": false,
+          "open": "07:00"
+        },
+        "actual": {
+          "open": "07:00",
+          "close": "22:00",
+          "nextDay": false
+        },
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "spot_seconds",
+        "expected": 10,
+        "actual": 10,
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "plays_per_day",
+        "expected": 240,
+        "actual": 240,
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "footfall_per_day",
+        "expected": 131000,
+        "actual": 131000,
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "period_options",
+        "expected": [
+          {
+            "days": 7,
+            "price_krw": 10400000
+          },
+          {
+            "days": 14,
+            "price_krw": 19800000
+          }
+        ],
+        "actual": [
+          {
+            "days": 7,
+            "price_krw": 10400000
+          },
+          {
+            "days": 14,
+            "price_krw": 19800000
+          }
+        ],
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "material_deadline_days",
+        "expected": null,
+        "actual": null,
+        "verdict": "true_none",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "file_format",
+        "expected": [
+          "mov",
+          "mp4"
+        ],
+        "actual": [
+          "mov",
+          "mp4"
+        ],
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "refund_full_days",
+        "expected": 7,
+        "actual": 7,
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "booking_deadline_days",
+        "expected": 20,
+        "actual": 20,
+        "verdict": "correct",
+        "flagged": false
+      }
+    ],
+    "llm_code": [
+      {
+        "goldDocId": "dev-001",
+        "field": "type",
+        "expected": "ad",
+        "actual": "ad",
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "subtype",
+        "expected": "전광판",
+        "actual": "전광판",
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "name",
+        "expected": "에스카론 미디어월",
+        "actual": "에스카론 미디어월",
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "price_krw",
+        "expected": 10400000,
+        "actual": 10400000,
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "list_price_krw",
+        "expected": null,
+        "actual": null,
+        "verdict": "true_none",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "vat_included",
+        "expected": true,
+        "actual": true,
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "region",
+        "expected": "압구정동",
+        "actual": "압구정동",
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "size_m",
+        "expected": {
+          "height": 2.8,
+          "width": 5
+        },
+        "actual": {
+          "width": 5,
+          "height": 2.8
+        },
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "resolution_px",
+        "expected": {
+          "height": 720,
+          "width": 1280
+        },
+        "actual": {
+          "width": 1280,
+          "height": 720
+        },
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "hours",
+        "expected": {
+          "close": "22:00",
+          "nextDay": false,
+          "open": "07:00"
+        },
+        "actual": {
+          "open": "07:00",
+          "close": "22:00",
+          "nextDay": false
+        },
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "spot_seconds",
+        "expected": 10,
+        "actual": 10,
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "plays_per_day",
+        "expected": 240,
+        "actual": 240,
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "footfall_per_day",
+        "expected": 131000,
+        "actual": 131000,
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "period_options",
+        "expected": [
+          {
+            "days": 7,
+            "price_krw": 10400000
+          },
+          {
+            "days": 14,
+            "price_krw": 19800000
+          }
+        ],
+        "actual": [
+          {
+            "days": 7,
+            "price_krw": 10400000
+          },
+          {
+            "days": 14,
+            "price_krw": 19800000
+          }
+        ],
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "material_deadline_days",
+        "expected": null,
+        "actual": null,
+        "verdict": "true_none",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "file_format",
+        "expected": [
+          "mov",
+          "mp4"
+        ],
+        "actual": [
+          "mov",
+          "mp4"
+        ],
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "refund_full_days",
+        "expected": 7,
+        "actual": 7,
+        "verdict": "correct",
+        "flagged": false
+      },
+      {
+        "goldDocId": "dev-001",
+        "field": "booking_deadline_days",
+        "expected": 20,
+        "actual": 20,
+        "verdict": "correct",
+        "flagged": false
+      }
+    ]
+  }
+}

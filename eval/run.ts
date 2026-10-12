@@ -4,6 +4,7 @@
 //   npm run eval -- --split dev --limit 3        3건만
 //   npm run eval -- --split dev --max-usd 0.3    넘을 것 같으면 멈추고 끝난 데까지 저장
 //   npm run eval -- --split dev --prompts v1,current   프롬프트 판 견주기
+//   npm run eval -- --split dev --prompts v2 --fresh   장부를 읽지도 쓰지도 않고 모든 문서를 다시 부른다(같은 판을 두 번 재 볼 때)
 //
 // 기본으로 도는 것은 연습 세트(dev)뿐이다. 안 여는 묶음(test·real)은 긴 깃발과 --sealed 경로가 함께 있어야 열린다.
 // 사람 확인 기록이 없는 문서는 채점에서 뺀다(--include-unreviewed 로만 넣고, 기록에 "확인 전 포함"이 남는다).
@@ -51,6 +52,12 @@ export interface ExecuteParams {
   extraWriter: LlmCallStore | null;
   /** 장부를 받아 실제 공급자를 만든다. null 이면 장부에 있는 것만 쓴다. */
   makeLive: ((store: LlmCallStore) => LlmProvider) | null;
+  /**
+   * 참이면 장부를 읽지도 쓰지도 않는다. 모든 문서를 실제로 다시 부른다.
+   * 같은 프롬프트라도 답이 달라질 수 있어 한 판을 두 번 잴 때 쓴다. 먼저 돌린 실행의 녹화본은 그대로 남는다.
+   * 채점 결과(eval_runs, eval_results, 기록 파일)는 평소처럼 남는다.
+   */
+  fresh?: boolean;
   maxUsd: number | null;
   startedAt: Date;
   gitCommit: string;
@@ -74,7 +81,7 @@ export async function executeRun(p: ExecuteParams): Promise<{ file: EvalRunFile;
 
   // 이번 실행이 적는 장부 줄에는 llm_code 실행 번호가 붙는다.
   const pg = new PgLlmCallStore({ db: p.db, evalRunId: runIds.llm_code });
-  const store = new ChainStore([...p.extraReaders, pg], p.extraWriter ? [pg, p.extraWriter] : [pg]);
+  const store = p.fresh ? new ChainStore([], []) : new ChainStore([...p.extraReaders, pg], p.extraWriter ? [pg, p.extraWriter] : [pg]);
   const outcome = await runDocs(p.docs, {
     model: p.model,
     buildRequest: p.build,
@@ -94,6 +101,7 @@ export async function executeRun(p: ExecuteParams): Promise<{ file: EvalRunFile;
     stoppedByBudget: outcome.stoppedByBudget,
     replayOnly: p.makeLive === null,
     callFailures: outcome.failures.length,
+    ...(p.fresh ? { fresh: true } : {}),
   };
   // 실제 자료 묶음은 원문에서 온 값을 DB 에도 파일에도 싣지 않는다.
   const strip = p.split === 'real';
@@ -169,13 +177,15 @@ async function main(argv: string[]): Promise<number> {
   const args = parseArgs(
     argv,
     ['--split', '--limit', '--max-usd', '--prompts', '--model', '--sealed'],
-    ['--dry-run', '--include-unreviewed', '--replay-only', '--no-record-file', SEALED_FLAG],
+    ['--dry-run', '--include-unreviewed', '--replay-only', '--no-record-file', '--fresh', SEALED_FLAG],
   );
   const splits = parseSplits(args.values.get('--split'));
   const prompts = pickPrompts(args.values.get('--prompts'));
   const model = args.values.get('--model') ?? (process.env.LLM_MODEL?.trim() || DEFAULT_LLM_MODEL);
   const price = priceOf(model); // 단가를 모르는 모델이면 여기서 멈춘다
   const dryRun = args.flags.has('--dry-run');
+  const fresh = args.flags.has('--fresh');
+  if (fresh && args.flags.has('--replay-only')) throw new Error('--fresh 와 --replay-only 는 함께 쓰지 않는다(하나는 장부를 안 읽고, 하나는 장부만 읽는다)');
 
   const limit = args.values.has('--limit') ? Number(args.values.get('--limit')) : null;
   if (limit !== null && (!Number.isInteger(limit) || limit < 1)) throw new Error('--limit 은 1 이상의 정수다');
@@ -210,7 +220,8 @@ async function main(argv: string[]): Promise<number> {
   try {
     if (dryRun) {
       if (!hasDb) console.log('DB 에 닿지 않는다. 녹화 파일만 보고 어림한다.');
-      const store = new ChainStore(hasDb ? [files, new PgLlmCallStore({ db: getPool() })] : [files], []);
+      if (fresh) console.log('--fresh: 장부를 보지 않는다. 모든 문서를 실제로 부르는 것으로 어림한다.');
+      const store = fresh ? new ChainStore([], []) : new ChainStore(hasDb ? [files, new PgLlmCallStore({ db: getPool() })] : [files], []);
       console.log(`모델 ${model} · 단가 입력 ${price.inputPerMTok} / 출력 ${price.outputPerMTok} 달러(100만 토큰) · ${price.checkedOn} 확인`);
       for (const plan of plans) {
         for (const prompt of prompts) {
@@ -230,6 +241,8 @@ async function main(argv: string[]): Promise<number> {
     const db = getPool();
     const apiKey = process.env.ANTHROPIC_API_KEY?.trim() || undefined;
     const replayOnly = args.flags.has('--replay-only') || process.env.LLM_PROVIDER?.trim() === 'replay' || !apiKey;
+    if (fresh && replayOnly) throw new Error('--fresh 는 실제 호출이 필요하다. API 키가 없거나 LLM_PROVIDER 가 replay 다.');
+    if (fresh) console.log('--fresh: 장부를 읽지도 쓰지도 않고 모든 문서를 다시 부른다.');
     if (replayOnly) console.log(apiKey ? '녹화본만으로 돈다(실제 호출 없음).' : 'API 키가 없다. 장부에 있는 답만으로 돈다(없는 건은 CACHE_MISS 로 적힌다).');
     const makeLive = replayOnly ? null : (store: LlmCallStore) => createProvider({ kind: 'anthropic', model, apiKey, store });
 
@@ -258,6 +271,7 @@ async function main(argv: string[]): Promise<number> {
           extraReaders: [files],
           extraWriter: recordFile ? new JsonlCallStore(RECORDINGS_DIR, `eval-${plan.split}.jsonl`) : null,
           makeLive,
+          fresh,
           maxUsd: left,
           startedAt: new Date(),
           gitCommit: commit,

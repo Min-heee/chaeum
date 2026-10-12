@@ -84,12 +84,13 @@ function normalizeFormats(raw: string): NormalizeResult<string[]> {
   return found.length > 0 ? read(found) : unread();
 }
 
-export function normalizeField(field: FieldKey, raw: string): NormalizeResult<FieldValue> {
+/** moneyUnits 는 글에 선언된 금액 단위다. 금액이 든 칸(판매가·정가·기간 옵션·수량 옵션)만 쓴다. */
+export function normalizeField(field: FieldKey, raw: string, moneyUnits: readonly number[] = []): NormalizeResult<FieldValue> {
   switch (fieldDef(field).kind) {
     case 'text':
       return normalizeText(raw);
     case 'money':
-      return normalizeMoney(raw);
+      return normalizeMoney(raw, moneyUnits);
     case 'bool':
       return normalizeVat(raw);
     case 'days':
@@ -105,9 +106,9 @@ export function normalizeField(field: FieldKey, raw: string): NormalizeResult<Fi
     case 'hours':
       return normalizeHours(raw);
     case 'period_options':
-      return normalizePeriodOptions(raw);
+      return normalizePeriodOptions(raw, moneyUnits);
     case 'quantity_options':
-      return normalizeQuantityOptions(raw);
+      return normalizeQuantityOptions(raw, moneyUnits);
     case 'formats':
       return normalizeFormats(raw);
     case 'count':

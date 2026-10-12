@@ -29,6 +29,8 @@ export interface RunInfo {
   replayOnly: boolean;
   /** 답을 못 받은 문서 수(llm 방식에서 빈 답으로 채점됐다) */
   callFailures: number;
+  /** --fresh: 장부를 읽지도 쓰지도 않고 모든 문서를 다시 불렀는가. 옛 기록에는 이 줄이 없다. */
+  fresh?: boolean;
 }
 
 /**

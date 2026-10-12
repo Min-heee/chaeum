@@ -54,6 +54,26 @@ describe('주입 시험', () => {
     for (const d of missed) expect(text).toContain(d.target);
   });
 
+  it('글에 금액 단위가 선언돼 있으면 "틀린 데 없는 답"도 그 단위로 맞춘다', () => {
+    const doc = (header: string): GoldDoc => ({
+      id: 'dev-999',
+      split: 'dev',
+      goldVersion: 1,
+      content: `[별하늘 커피차 응원 세트]\n${header}\n100잔 550\n200잔 990\n출장 지역: 전국`,
+      truth: {
+        type: 'catering',
+        subtype: '커피차',
+        fields: { quantity_options: [{ qty: 100, price_krw: 550_000 }, { qty: 200, price_krw: 990_000 }] },
+      },
+      author: 'synthetic',
+      traps: [],
+    } as unknown as GoldDoc);
+    const options = (header: string) => cleanDocOf(doc(header))?.extraction.fields.find((f) => f.field === 'quantity_options')?.value;
+    expect(options('가격표 (단위: 천원)')).toEqual([{ qty: 100, price_krw: 550_000 }, { qty: 200, price_krw: 990_000 }]);
+    // 선언이 없으면 만원으로 짐작한 값이 정답과 달라 재료에서 빠진다.
+    expect(options('가격표')).toBeUndefined();
+  });
+
   it('정답이 "등록 대상 아님"인 문서는 값 재료가 되지 않는다', () => {
     const notProduct = docs.find((d) => d.truth.type === 'not_product');
     expect(notProduct && cleanDocOf(notProduct)).toBeNull();
