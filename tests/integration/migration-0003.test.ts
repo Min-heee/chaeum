@@ -57,9 +57,13 @@ describe('이행 0003', () => {
     const client = await getPool().connect();
     try {
       await client.query('BEGIN');
+      // 이행 0004 가 장부의 일 종류를 넓혔다(견적의 둘). 그 뒤에 쌓인 줄이 있으면 0003 의 좁은 목록을 다시 거는 문장이 걸린다.
+      // 0003 이 알던 종류의 줄만 남긴 채로 해 본다. 이 트랜잭션은 되돌리므로 줄은 지워지지 않는다.
+      await client.query(`DELETE FROM llm_calls WHERE task NOT IN ('transcribe', 'extract', 'content')`);
       await client.query(sql);
-      await client.query('ROLLBACK');
     } finally {
+      // 중간에 실패해도 연결을 깨끗이 돌려준다(뒤의 시험이 멈춘 트랜잭션을 물려받지 않게).
+      await client.query('ROLLBACK');
       client.release();
     }
   });

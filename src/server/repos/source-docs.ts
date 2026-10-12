@@ -40,7 +40,7 @@ export async function findByFileHash(db: Db, workspaceId: string, fileHash: stri
 
 /** 올린 파일에서 온 글이면 붙는 것. 파일 자체는 어디에도 저장하지 않는다. */
 export interface FileOrigin {
-  kind: Exclude<SourceKind, 'text'>;
+  kind: Exclude<SourceKind, 'text' | 'import'>;
   originName: string | null;
   fileHash: string;
 }
@@ -48,17 +48,21 @@ export interface FileOrigin {
 /**
  * 정리된 글 한 건을 받는다. 트랜잭션 안에서 부른다(셋이 함께 들어가거나 함께 안 들어간다).
  * 같은 글을 둘이 동시에 넣어도 UNIQUE 가 하나만 남기고, 진 쪽은 있던 건을 돌려받는다.
+ * imported 가 참이면 모으기 도구가 가져온 줄이다. 원문 종류가 'import' 로 남고 뽑기 작업을 줄에 넣지 않는다
+ * (부르는 쪽이 같은 트랜잭션에서 칸을 쓰고 초안을 PROCESSING 밖으로 옮긴다. 모델을 부를 일이 없다).
  */
 export async function receiveDoc(
   db: Db,
-  input: { workspaceId: string; clean: string; hash: string; batchNo?: number | null; file?: FileOrigin; now: Date },
+  input: { workspaceId: string; clean: string; hash: string; batchNo?: number | null; file?: FileOrigin; imported?: boolean; now: Date },
 ): Promise<ReceivedDoc> {
   const { workspaceId, clean, hash, now } = input;
+  if (input.imported && input.file) throw new Error('가져온 줄에는 파일이 붙지 않는다');
+  const sourceKind: SourceKind = input.imported ? 'import' : (input.file?.kind ?? 'text');
   const doc = await db.query<{ id: string }>(
     `INSERT INTO source_docs (workspace_id, clean_text, content_hash, batch_no, created_at, source_kind, origin_name, file_hash)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
      ON CONFLICT (workspace_id, content_hash) DO NOTHING RETURNING id`,
-    [workspaceId, clean, hash, input.batchNo ?? null, now, input.file?.kind ?? 'text', input.file?.originName ?? null, input.file?.fileHash ?? null],
+    [workspaceId, clean, hash, input.batchNo ?? null, now, sourceKind, input.file?.originName ?? null, input.file?.fileHash ?? null],
   );
   const docRow = doc.rows[0];
   if (!docRow) {
@@ -78,7 +82,7 @@ export async function receiveDoc(
   const draftId = toId(draftRow.id);
 
   await addStatusEvent(db, { draftId, actor: 'system', from: null, to: 'PROCESSING', now });
-  await enqueue(db, 'extract', draftId, now);
+  if (!input.imported) await enqueue(db, 'extract', draftId, now);
   return { sourceDocId, draftId, status: 'PROCESSING', duplicate: false };
 }
 

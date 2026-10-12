@@ -174,7 +174,8 @@ function sourceValue(from: ExportSource, product: Product, texts: readonly Produ
   }
 }
 
-function cellOf(column: ExportColumn, product: Product, texts: readonly ProductText[]): string | number {
+/** 열 하나의 값을 양식의 서식대로 적는다. 값이 없으면 빈 글자. CSV 와 XLSX 내려받기가 함께 쓴다. */
+export function cellOf(column: ExportColumn, product: Product, texts: readonly ProductText[]): string | number {
   if ('value' in column) return column.value;
   return formatExportValue(sourceValue(column.from, product, texts), column.format);
 }

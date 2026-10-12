@@ -367,7 +367,7 @@ export async function transitionDraft(db: PoolClient, input: TransitionInput): P
   const current = await currentOrNotFound(db, workspaceId, draftId);
   if (current.version !== expectedVersion) throw conflict(current);
   if (!canTransition(current.status, to)) {
-    throw new AppError('BAD_TRANSITION', `'${STATUS_LABELS[current.status]}'에서 '${STATUS_LABELS[to]}'(으)로는 바꿀 수 없습니다.`);
+    throw new AppError('BAD_TRANSITION', `'${STATUS_LABELS[current.status]}'에서 '${STATUS_LABELS[to]}' 상태로는 바꿀 수 없습니다.`);
   }
 
   const patch: DraftPatch = { ...input.patch };
