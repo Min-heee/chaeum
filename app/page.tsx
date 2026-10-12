@@ -1,9 +1,19 @@
-// 임시 첫 화면. 작업 화면은 뒤에 만든다.
-export default function HomePage() {
-  return (
-    <main className="page">
-      <h1>채움</h1>
-      <p>응원장터(가상 마켓)의 상품 등록 초안을 채우는 도구입니다. 화면은 아직 만드는 중입니다.</p>
-    </main>
-  );
+// 첫 화면 = 작업 화면. 보기 글을 서버에서 읽어 넘기므로 열자마자 왼쪽에 글이 들어 있다.
+import type { SampleListResponse } from '@/contract/api';
+import { sampleList } from '@/server/service';
+import { Workbench } from '../components/Workbench';
+
+export const dynamic = 'force-dynamic';
+
+export default async function HomePage() {
+  let samples: SampleListResponse['items'] = [];
+  let failed = false;
+  try {
+    samples = (await sampleList()).items;
+  } catch (err) {
+    // 연결 주소 같은 값이 새지 않게 오류의 이름만 남긴다.
+    console.error('[page] 보기 글을 읽지 못했다:', err instanceof Error ? err.name : 'unknown');
+    failed = true;
+  }
+  return <Workbench samples={samples} samplesError={failed} />;
 }
