@@ -2,12 +2,14 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { GoldDocSchema, type GoldDoc } from '@/contract/eval-types';
-import { BATCH_COUNT, batchOutputName } from './batches';
+import { BATCH_COUNT, batchOutputName, batchOutputPath } from './batches';
 import { hashLine, writeJsonlFile } from './files';
 import type { GoldSpec } from './spec';
 
 export const CONTENT_MIN = 100;
 export const CONTENT_MAX = 900;
+/** 조립이 쓰는 정답 버전. 1판은 좁은 표기 틀의 원문, 2판은 표기 틀을 넓혀 원문을 새로 쓴 것이다(정답 값은 같다). DB 는 버전이 높을 때만 바뀐다. */
+export const GOLD_VERSION = 2;
 
 export interface WrittenDoc {
   id: string;
@@ -52,7 +54,7 @@ export function assemble(specs: readonly GoldSpec[], written: readonly WrittenDo
     const doc: GoldDoc = {
       id: spec.id,
       split: spec.split,
-      goldVersion: 1,
+      goldVersion: GOLD_VERSION,
       content,
       truth: { type: spec.type, subtype: spec.subtype, fields: spec.truth },
       author: 'ai',
@@ -66,12 +68,12 @@ export function assemble(specs: readonly GoldSpec[], written: readonly WrittenDo
   return { docs, problems };
 }
 
-/** 묶음별 원문 파일을 읽는다. 없는 파일은 problems 에 적는다. */
+/** 묶음별 원문 파일을 읽는다(묶음 파일의 output_path 와 같은 자리). 없는 파일은 problems 에 적는다. */
 export async function readWritten(workDir: string): Promise<{ written: WrittenDoc[]; problems: string[] }> {
   const written: WrittenDoc[] = [];
   const problems: string[] = [];
   for (let n = 1; n <= BATCH_COUNT; n += 1) {
-    const file = path.join(workDir, batchOutputName(n));
+    const file = batchOutputPath(workDir, n);
     let raw: unknown;
     try {
       raw = JSON.parse(await readFile(file, 'utf8'));

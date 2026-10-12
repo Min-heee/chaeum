@@ -1,5 +1,6 @@
 // 정답 100건을 만든다. 씨앗이 같으면 결과가 같다. 원문은 여기서 쓰지 않는다.
-// 순서: 묶음별로 종류·꼴·함정을 나눈다 → 건마다 값을 뽑는다 → 값과 함께 "원문에 적을 표기"를 남긴다.
+// 순서: 묶음별로 종류·꼴·함정을 나눈다 → 건마다 값을 뽑는다 → 값이 다 정해진 뒤 "원문에 적을 표기"를 고른다(assign.ts).
+// 이 파일 안의 표기(show)는 옛 틀이다. 값의 갈래를 전하는 데만 쓴다. 난수를 부르는 차례를 바꾸면 정답 값이 바뀌므로 그대로 둔다.
 import {
   FIELDS_BY_TYPE,
   REQUIRED_BY_TYPE,
@@ -39,8 +40,10 @@ import {
   type GoodsItem,
   type NotProductTopic,
 } from './catalog';
+import { applyForms, type RawHint, type RawSpec } from './assign';
+import type { Sem } from './forms';
 import { hashSeed, makeRng, type Rng } from './rng';
-import { DEFAULT_SEED, type AbsentHint, type GoldSpec, type SurfaceHint } from './spec';
+import { DEFAULT_SEED, type AbsentHint, type GoldSpec } from './spec';
 
 /**
  * 묶음별 건수. 연습과 안 여는 세트의 비율이 같다(2 : 3).
@@ -95,14 +98,18 @@ const hhmm = (h: number, m = 0) => `${pad(h)}:${pad(m)}`;
 /** 한 건을 채우는 동안 쓰는 그릇 */
 class Draft {
   truth: Partial<Record<FieldKey, FieldValue | null>> = {};
-  hints: SurfaceHint[] = [];
+  hints: RawHint[] = [];
   absent: AbsentHint[] = [];
   detail: string[] = [];
   nulls = new Set<FieldKey>();
 
-  put(field: FieldKey, value: FieldValue, show: string, tokens: string[], form: string, note?: string) {
+  /**
+   * 값과 "옛 표기"를 적는다. 옛 표기(show·tokens·form)는 값의 갈래(m 인가 mm 인가, 주 단위인가)를 전하는 데만 쓰고,
+   * 원문에 적을 진짜 표기는 값을 다 뽑은 뒤 assign.ts 가 따로 고른다. sem 은 그때 쓸 재료다.
+   */
+  put(field: FieldKey, value: FieldValue, show: string, tokens: string[], form: string, note?: string, sem?: Sem) {
     this.truth[field] = value;
-    this.hints.push({ field, label: fieldDef(field).label, show, tokens, form, ...(note ? { note } : {}) });
+    this.hints.push({ field, label: fieldDef(field).label, show, tokens, form, ...(note ? { note } : {}), ...(sem ? { sem } : {}) });
   }
 
   none(field: FieldKey, how: 'omit' | 'placeholder', placeholder?: string, note?: string) {
@@ -350,7 +357,7 @@ function buildAd(r: Rng, slot: Slot, choice: AdChoice, takeName: (make: () => st
     const words = options.map((o) => r.pick(PERIOD_WORDS[o.days] as readonly string[]));
     const show = options.map((o, i) => `${words[i]} ${showMoney(o.price_krw, form)}`).join(' / ');
     const tokens = options.flatMap((o, i) => [words[i] as string, showMoney(o.price_krw, form)]);
-    d.put('period_options', options, show, tokens, `money:${form}`, [note, '기간마다 값을 짝지어 쓴다.'].filter(Boolean).join(' '));
+    d.put('period_options', options, show, tokens, `money:${form}`, [note, '기간마다 값을 짝지어 쓴다.'].filter(Boolean).join(' '), { words });
     d.put('price_krw', first.price_krw, showMoney(first.price_krw, form), [showMoney(first.price_krw, form)], `money:${form}`, '가장 짧은 기간의 값과 같다. 따로 한 번 더 쓰지 않아도 된다.');
     const listMan = Math.max(first.price_krw / 10_000 + 10, Math.ceil((first.price_krw / 10_000) * r.pick([1.1, 1.2, 1.25, 1.5]) / 10) * 10);
     putListPrice(d, price.has('list_and_sale'), listMan * 10_000, form);
@@ -397,13 +404,13 @@ function buildAd(r: Rng, slot: Slot, choice: AdChoice, takeName: (make: () => st
         const man = r.int(10, 120) * 10;
         const withUnit = r.chance(0.7);
         const num = withUnit ? `${comma(man)}만` : comma(man * 10_000);
-        d.put('footfall_per_day', Math.round((man * 10_000) / 30), `월 ${num}${withUnit ? ' ' : ''}명`, [num], 'footfall:month', '월 단위 숫자라는 것을 밝힌다. 하루 값으로 바꿔 적지 않는다.');
+        d.put('footfall_per_day', Math.round((man * 10_000) / 30), `월 ${num}${withUnit ? ' ' : ''}명`, [num], 'footfall:month', '월 단위 숫자라는 것을 밝힌다. 하루 값으로 바꿔 적지 않는다.', { src: man * 10_000 });
       } else if (period === '주') {
         const man = r.int(2, 28) * 10;
-        d.put('footfall_per_day', Math.round((man * 10_000) / 7), `주 ${man}만 명`, [`${man}만`], 'footfall:week', '주 단위 숫자라는 것을 밝힌다. 하루 값으로 바꿔 적지 않는다.');
+        d.put('footfall_per_day', Math.round((man * 10_000) / 7), `주 ${man}만 명`, [`${man}만`], 'footfall:week', '주 단위 숫자라는 것을 밝힌다. 하루 값으로 바꿔 적지 않는다.', { src: man * 10_000 });
       } else {
         const man = r.int(10, 150) * 100;
-        d.put('footfall_per_day', Math.round((man * 10_000) / 365), `연 ${comma(man)}만 명`, [`${comma(man)}만`], 'footfall:year', '연 단위 숫자라는 것을 밝힌다. 하루 값으로 바꿔 적지 않는다.');
+        d.put('footfall_per_day', Math.round((man * 10_000) / 365), `연 ${comma(man)}만 명`, [`${comma(man)}만`], 'footfall:year', '연 단위 숫자라는 것을 밝힌다. 하루 값으로 바꿔 적지 않는다.', { src: man * 10_000 });
       }
     } else if (r.chance(0.6)) {
       const man = r.int(3, 40);
@@ -465,7 +472,7 @@ function buildCatering(r: Rng, slot: Slot, takeName: (make: () => string) => str
   if (has('price_krw')) {
     const show = options.map((o) => `${o.qty}${word} ${showMoney(o.price_krw, form)}`).join(' / ');
     const tokens = options.flatMap((o) => [`${o.qty}${word}`, showMoney(o.price_krw, form)]);
-    d.put('quantity_options', options, show, tokens, `money:${form}`, [note, '수량마다 값을 짝지어 쓴다.'].filter(Boolean).join(' '));
+    d.put('quantity_options', options, show, tokens, `money:${form}`, [note, '수량마다 값을 짝지어 쓴다.'].filter(Boolean).join(' '), { unitWord: word });
     d.put('price_krw', first.price_krw, showMoney(first.price_krw, form), [showMoney(first.price_krw, form)], `money:${form}`, '가장 적은 수량의 값과 같다. 따로 한 번 더 쓰지 않아도 된다.');
     const listMan = Math.max(first.price_krw / 10_000 + 1, Math.ceil((first.price_krw / 10_000) * r.pick([1.1, 1.2, 1.25])));
     putListPrice(d, price.has('list_and_sale'), listMan * 10_000, form);
@@ -534,7 +541,7 @@ function buildGoods(r: Rng, slot: Slot, takeName: (make: () => string) => string
   if (has('lead_time_days')) putDays(d, r, 'lead_time_days', unit.has('days_week'), (s) => `제작 기간 ${s}`);
   if (has('min_order_qty')) {
     const n = r.pick([10, 20, 30, 50, 100]);
-    d.put('min_order_qty', n, `최소 ${n}${item.unit}`, [`${n}${item.unit}`], 'count');
+    d.put('min_order_qty', n, `최소 ${n}${item.unit}`, [`${n}${item.unit}`], 'count', undefined, { unitWord: item.unit });
   }
 
   writeNulls(d, 'goods', nulls, placeholders, []);
@@ -608,7 +615,7 @@ export function generateSpecs(seed: number = DEFAULT_SEED): GoldSpec[] {
     throw new Error('겹치지 않는 이름을 못 만들었다. 재료를 늘린다.');
   };
 
-  const specs: GoldSpec[] = [];
+  const specs: RawSpec[] = [];
   let recipeAt = 0;
   let sentenceAt = 0;
   let topicAt = 0;
@@ -698,5 +705,6 @@ export function generateSpecs(seed: number = DEFAULT_SEED): GoldSpec[] {
       });
     }
   }
-  return specs;
+  // 값은 여기까지에서 다 정해졌다. 표기는 따로 도는 난수로 고르므로 값의 난수 흐름을 건드리지 않는다.
+  return applyForms(seed, specs);
 }

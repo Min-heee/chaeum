@@ -5,8 +5,9 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { GOLD_STYLES, GoldDocSchema, type GoldDoc } from '@/contract/eval-types';
 import { FIELDS_BY_TYPE } from '@/contract/fields';
-import { assemble, writeAssembled, type WrittenDoc } from './assemble';
+import { GOLD_VERSION, assemble, writeAssembled, type WrittenDoc } from './assemble';
 import { splitBatches, writerGuide } from './batches';
+import { alikePairs, checkDoc, cleanIndexes, lengthStats, shapeOf } from './check';
 import { canon, docsToJsonl, parseJsonl, sha256 } from './files';
 import { PLAN, generateSpecs } from './generate';
 import { labelEnabled } from './label';
@@ -223,7 +224,7 @@ describe('검산: 원문에 적을 표기를 다시 읽으면 정답 값이 나�
   it('표기가 정답과 어긋나면 검산이 잡는다', () => {
     const spec = specs.find((s) => typeof s.truth.price_krw === 'number') as GoldSpec;
     const h = spec.surface_hints.find((x) => x.field === 'price_krw') as SurfaceHint;
-    expect(recalc({ ...h, show: h.form === 'money:bare' ? `${h.show}0` : h.show.replace(/(\d)/, '$10') })).not.toBe(spec.truth.price_krw);
+    expect(recalc({ ...h, show: h.show.replace(/(\d)/, '$10') })).not.toBe(spec.truth.price_krw);
   });
 });
 
@@ -242,7 +243,7 @@ describe('묶음 나누기와 안내', () => {
 
   it('안내 글에 꼭 지킬 것이 들어 있다', () => {
     const guide = writerGuide('.gold-work');
-    for (const word of ['tokens', 'absent', '100자에서 900자', '응원장터', 'src/llm', 'output_path']) expect(guide).toContain(word);
+    for (const word of ['tokens', 'absent', '100자에서 900자', '응원장터', 'output_path']) expect(guide).toContain(word);
   });
 });
 
@@ -306,7 +307,7 @@ describe('파일과 내보내기', () => {
   it('DB 가 파일과 같으면 버전이 그대로다', () => {
     const plan = planExport(docs, docs);
     expect(plan.changed).toEqual([]);
-    expect(plan.version).toBe(1);
+    expect(plan.version).toBe(GOLD_VERSION);
   });
 
   it('한 건이라도 고쳤으면 그 묶음 전체의 버전이 하나 오르고 꼴은 파일의 것을 잇는다', () => {
@@ -315,15 +316,15 @@ describe('파일과 내보내기', () => {
     const fromDb = [fixed, ...docs.slice(1).map((d) => ({ ...d, style: undefined }))];
     const plan = planExport(docs, fromDb);
     expect(plan.changed).toEqual([first.id]);
-    expect(plan.version).toBe(2);
-    expect(plan.docs.every((d) => d.goldVersion === 2)).toBe(true);
+    expect(plan.version).toBe(GOLD_VERSION + 1);
+    expect(plan.docs.every((d) => d.goldVersion === GOLD_VERSION + 1)).toBe(true);
     expect(plan.docs[0]?.style).toBe(first.style);
     // 한 번 내보낸 뒤 다시 내보내면 더 오르지 않는다.
-    expect(planExport(plan.docs, plan.docs).version).toBe(2);
+    expect(planExport(plan.docs, plan.docs).version).toBe(GOLD_VERSION + 1);
   });
 
   it('파일이 아직 없으면 DB 의 버전을 그대로 쓴다', () => {
-    expect(planExport(null, docs).version).toBe(1);
+    expect(planExport(null, docs).version).toBe(GOLD_VERSION);
   });
 });
 
@@ -346,5 +347,43 @@ describe('그 밖', () => {
     const a = makeRng(42);
     const b = makeRng(42);
     expect([a.next(), a.int(1, 9), a.shuffle([1, 2, 3, 4, 5])]).toEqual([b.next(), b.int(1, 9), b.shuffle([1, 2, 3, 4, 5])]);
+  });
+});
+
+describe('조립된 문서의 검산(check.ts)', () => {
+  const spec = generateSpecs(DEFAULT_SEED).find((s) => s.type === 'ad' && s.absent.some((a) => a.field === 'list_price_krw') && s.surface_hints.some((h) => h.field === 'price_krw')) as GoldSpec;
+  // 조각을 한 줄에 하나씩 늘어놓은 글. 조각이 다 있고 다른 값이 없다.
+  const body = [...new Set(spec.surface_hints.flatMap((h) => h.tokens))].join('\n');
+  const content = `${body}\n${spec.must_include.join('\n')}\n${'문의는 응원장터로 주세요. '.repeat(8)}`;
+  const doc = { id: spec.id, split: spec.split, goldVersion: 2, content, truth: { type: spec.type, subtype: spec.subtype, fields: spec.truth }, author: 'ai', traps: spec.traps, style: spec.style } as GoldDoc;
+  const hardKinds = (c: string) => checkDoc(spec, { ...doc, content: c }).filter((f) => f.level === 'hard').map((f) => f.kind);
+
+  it('조각만 늘어놓은 글에서는 정답에 없는 값을 찾지 않는다', () => {
+    const kinds = hardKinds(content);
+    expect(kinds).not.toContain('정답에 없는 금액');
+    expect(kinds).not.toContain('표기 없음');
+    expect(kinds).not.toContain('검산');
+  });
+
+  it('정답에 없는 금액과 빠진 조각을 잡는다', () => {
+    expect(hardKinds(`${content}\n설치비 33,000원`)).toContain('정답에 없는 금액');
+    const token = spec.surface_hints.find((h) => h.field === 'price_krw')?.tokens[0] as string;
+    expect(hardKinds(content.split(token).join(''))).toContain('표기 없음');
+  });
+
+  it('없는 칸에 값이 새면 잡는다', () => {
+    expect(hardKinds(`${content}\n정가는 9,990,000원`)).toContain('없는 칸에 값');
+  });
+
+  it('"7일"이 "17일" 안에 있으면 세지 않는다', () => {
+    expect(cleanIndexes('게재 17일 전', '7일')).toEqual([]);
+    expect(cleanIndexes('게재 7일 전', '7일')).toEqual([3]);
+  });
+
+  it('표기 뼈대는 수를 지운 글자다', () => {
+    expect(shapeOf('게재 7일 전까지')).toBe('게재 N일 전까지');
+    expect(shapeOf('1,500,000원')).toBe('N원');
+    expect(lengthStats([3, 1, 2]).median).toBe(2);
+    expect(alikePairs([{ id: 'a', content: '가나다라마바' }, { id: 'b', content: '가나다라마바' }])[0]?.rate).toBe(1);
   });
 });

@@ -10,8 +10,14 @@ export interface SurfaceHint {
   show: string;
   /** 원문에 글자 그대로 들어가야 하는 조각들 */
   tokens: string[];
-  /** 표기의 갈래. 검산이 이것을 보고 읽는 법을 고른다. */
+  /** 표기의 꼴 이름("묶음:꼴"). 꼴의 목록은 forms.ts 에 있다. 검산은 이 이름을 보지 않고 show 의 글자를 읽는다. */
   form: string;
+  /** 수 옆에 단위를 붙이지 않는 꼴에서 그 수의 단위. 예: "만원", "mm". 검산이 이것으로 수를 읽는다. */
+  unit?: string;
+  /** unit 이 있을 때: 그 단위를 글 다른 곳(칸 이름·표 머리·문장)에 밝혀야 하는가. false 면 일부러 밝히지 않는 꼴이다. */
+  declare_unit?: boolean;
+  /** 보조 갈래. 값표에서 금액 꼴(money)과 기간·수량 낱말 꼴(words) */
+  parts?: Record<string, string>;
   note?: string;
 }
 

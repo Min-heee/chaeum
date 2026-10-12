@@ -20,6 +20,14 @@ export function workDir(env: NodeJS.ProcessEnv = process.env): string {
   return fromHome(env.GOLD_WORK_DIR?.trim() || path.join(os.homedir(), 'chaeum-gold-work'));
 }
 
+/** 원문을 쓰는 차례. 표기 틀을 넓혀 원문을 새로 쓰는 것이 둘째 차례(v2)다. 첫 차례의 파일은 작업 폴더 바로 아래에 그대로 있다. */
+export const WORK_ROUND = 'v2';
+
+/** 이번 차례의 설계도·묶음·안내·써 온 원문이 놓이는 폴더. 정답 만들기와 조립이 둘 다 이 자리를 쓴다. */
+export function roundDir(env: NodeJS.ProcessEnv = process.env): string {
+  return path.join(workDir(env), WORK_ROUND);
+}
+
 /**
  * 안 여는 세트의 파일. 저장소 밖에 둔다.
  * SEALED_GOLD_PATH 가 폴더면 그 안의 test.jsonl, 파일이면 그 파일이다. 없으면 홈 아래 chaeum-sealed.
