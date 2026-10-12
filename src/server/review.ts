@@ -2,13 +2,14 @@
 // 결정마다 맨 앞에서 공간을 본다(본보기 공간은 읽기 전용, 쓰면 마지막 쓰기 시각이 오른다).
 // (칸 고치기는 맞추기·따지기를 다시 돌려야 해서 판단 코드가 붙는 다음 단계에서 더한다.)
 import type { PoolClient } from 'pg';
-import type { EventActor, SystemEventReason } from '@/contract/api';
+import { LIMITS, type EventActor, type SystemEventReason } from '@/contract/api';
 import type { RejectCode } from '@/contract/reasons';
 import type { DraftStatus } from '@/contract/transitions';
 import { withTx } from './db';
 import { AppError, isAppError, isConstraintViolation } from './errors';
+import { assertEventRoom } from './limits';
 import { enqueue, requeue } from './queue';
-import { getDraftById, listFields, transitionDraft, type Draft } from './repos/drafts';
+import { getDraftById, listFields, saveFields, transitionDraft, type Draft } from './repos/drafts';
 import { buildProduct, insertProduct, ProductInvalid } from './repos/products';
 import { touchWorkspaceForWrite } from './workspace';
 
@@ -71,9 +72,19 @@ async function sendBackToReview(client: PoolClient, workspaceId: string, draftId
   }
 }
 
+/** 반려 메모를 정리한다. DB 가 받지 못하는 글자(NUL)와 제어 글자를 빼고(줄바꿈은 둔다) 상한에서 자른다. 비면 null. */
+function cleanMemo(memo: string | null | undefined): string | null {
+  const clean = (memo ?? '')
+    .replace(/\r\n?/g, '\n')
+    .replace(/[\u0000-\u0009\u000b-\u001f\u007f-\u009f]/g, ' ')
+    .replace(/[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/g, '\ufffd')
+    .trim();
+  return clean ? [...clean].slice(0, LIMITS.rejectMemoMaxChars).join('') : null;
+}
+
 /** 반려. 사유 코드가 꼭 있어야 한다. */
 export async function rejectDraft(input: Decision & { reasonCode: RejectCode; memo?: string | null }): Promise<DecisionResult> {
-  const memo = input.memo?.trim() ? input.memo.trim().slice(0, 500) : null;
+  const memo = cleanMemo(input.memo);
   return withTx(async (client) => {
     await touchWorkspaceForWrite(client, input.workspaceId, input.now);
     return result(
@@ -90,7 +101,10 @@ export async function rejectDraft(input: Decision & { reasonCode: RejectCode; me
   });
 }
 
-/** 다시 돌리기. FAILED·REJECTED 를 PROCESSING 으로 돌리고 뽑기 작업을 처음부터 다시 줄에 세운다. */
+/**
+ * 다시 돌리기. FAILED·REJECTED 를 PROCESSING 으로 돌리고 뽑기 작업을 처음부터 다시 줄에 세운다.
+ * 반려 → 다시 돌리기를 끝없이 되풀이하지 못하게, 변경 기록이 상한에 닿은 초안은 LIMIT_EXCEEDED(429).
+ */
 export async function reprocessDraft(input: Decision): Promise<DecisionResult> {
   return withTx(async (client) => {
     await touchWorkspaceForWrite(client, input.workspaceId, input.now);
@@ -102,6 +116,10 @@ export async function reprocessDraft(input: Decision): Promise<DecisionResult> {
       actor: input.actor ?? 'seller',
       now: input.now,
     });
+    // 위에서 공간과 상태를 확인했다. 넘쳤으면 던져서 방금 바꾼 것까지 되돌린다.
+    await assertEventRoom(client, input.draftId);
+    // 지난 칸을 지운다. 처리 중인 초안의 상세는 칸이 빈 목록이다(약속).
+    await saveFields(client, input.draftId, []);
     await requeue(client, 'extract', input.draftId, input.now);
     return result(draft);
   });

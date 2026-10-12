@@ -1,0 +1,23 @@
+{
+  "name": "ad-board",
+  "description": "다른 마켓 양식의 보기. 광고 지면 칸만, 영문 칸 이름으로, 가로·세로와 시작·끝 시각(끝이 다음 날인지도)을 따로 낸다.",
+  "columns": [
+    { "header": "sku", "from": "product_id" },
+    { "header": "category", "from": "type" },
+    { "header": "sub_category", "from": "subtype" },
+    { "header": "title_ko", "from": "name" },
+    { "header": "title_en", "from": "title_en" },
+    { "header": "title_zh", "from": "title_zh" },
+    { "header": "location", "from": "region" },
+    { "header": "width_m", "from": "size_m", "format": "width" },
+    { "header": "height_m", "from": "size_m", "format": "height" },
+    { "header": "open_time", "from": "hours", "format": "open" },
+    { "header": "close_time", "from": "hours", "format": "close" },
+    { "header": "close_next_day", "from": "hours", "format": "next_day" },
+    { "header": "price", "from": "price_krw", "format": "comma" },
+    { "header": "currency", "value": "KRW" },
+    { "header": "tax_included", "from": "vat_included", "format": "bool" },
+    { "header": "period_prices_json", "from": "period_options", "format": "json" },
+    { "header": "file_types", "from": "file_format" }
+  ]
+}

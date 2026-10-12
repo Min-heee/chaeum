@@ -2,6 +2,7 @@
 // 넣기 전에 코드가 꼴을 보고(zod), 그래도 놓친 것은 표의 제약이 막는다.
 import { z } from 'zod';
 import type { EvaluatedField } from '@/contract/core-api';
+import type { ProductTextState } from '@/contract/api';
 import type { ProductText } from '@/contract/content';
 import {
   COMMON_FIELD_KEYS,
@@ -9,6 +10,7 @@ import {
   FIELDS_BY_TYPE,
   isSubtypeOf,
   PeriodOptionSchema,
+  PRODUCT_NAME_MIN_CHARS,
   PRODUCT_TYPES,
   QuantityOptionSchema,
   type DocType,
@@ -45,7 +47,7 @@ const OPTION_FIELD: Record<ProductType, FieldKey | null> = { ad: 'period_options
 const BaseSchema = z.object({
   type: z.enum(PRODUCT_TYPES),
   subtype: z.string().min(1),
-  name: z.string().min(2),
+  name: z.string().min(PRODUCT_NAME_MIN_CHARS),
   price_krw: z.number().int().positive(),
   list_price_krw: z.number().int().positive().nullable(),
   vat_included: z.boolean().nullable(),
@@ -195,4 +197,29 @@ export async function listProductTexts(db: Db, productId: number): Promise<Produ
     [productId],
   );
   return rows.map((r) => ({ field: r.field, lang: r.lang, text: r.text, source: r.source, status: r.status, failCodes: r.fail_codes }));
+}
+
+/** 글 넷의 상태를 한마디로. 글이 아직 없으면 pending, 하나라도 확인이 필요하면 needs_review. */
+export function textStateOf(texts: readonly Pick<ProductText, 'status'>[]): ProductTextState {
+  if (texts.length === 0) return 'pending';
+  return texts.some((t) => t.status === 'needs_review') ? 'needs_review' : 'ok';
+}
+
+/** 공간 안 상품들의 글. 상품 번호 → 글 목록. 글이 없는 상품은 지도에 없다. */
+export async function listProductTextsByWorkspace(db: Db, workspaceId: string): Promise<Map<number, ProductText[]>> {
+  const { rows } = await db.query<{ product_id: string; field: ProductText['field']; lang: ProductText['lang']; text: string; source: ProductText['source']; status: ProductText['status']; fail_codes: ProductText['failCodes'] }>(
+    `SELECT t.product_id, t.field, t.lang, t.text, t.source, t.status, t.fail_codes
+       FROM product_texts t JOIN products p ON p.id = t.product_id
+      WHERE p.workspace_id = $1
+      ORDER BY t.product_id, t.lang, t.field DESC`,
+    [workspaceId],
+  );
+  const out = new Map<number, ProductText[]>();
+  for (const r of rows) {
+    const id = toId(r.product_id);
+    const list = out.get(id) ?? [];
+    list.push({ field: r.field, lang: r.lang, text: r.text, source: r.source, status: r.status, failCodes: r.fail_codes });
+    out.set(id, list);
+  }
+  return out;
 }

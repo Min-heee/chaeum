@@ -21,6 +21,18 @@ afterAll(async () => {
   await closePool();
 });
 
+describe('글 정리: 제어 글자', () => {
+  it('NUL 같은 제어 글자는 빠진다. DB 가 받지 못하는 글자 때문에 접수가 터지지 않는다', async () => {
+    expect(cleanText('abc\u0000def\u0007 광고\t100만원')).toBe('abcdef 광고 100만원');
+    const ws = await newWorkspace();
+    const one = await intakeOne(`널 글자 ${sampleText()}\u0000 끝`, { workspaceId: ws, now: T0 });
+    expect(one.duplicate).toBe(false);
+    // 여러 건에서도 그 한 건 때문에 묶음이 통째로 실패하지 않는다.
+    const many = await intakeMany([sampleText('정상'), `널 \u0000 글자 ${sampleText()}`, '\u0000'], { workspaceId: ws, now: T0 });
+    expect(many.items.map((i) => i.result)).toEqual(['new', 'new', 'error']);
+  });
+});
+
 describe('글 정리', () => {
   it('전각 글자, 줄바꿈 꼴, 이어진 공백이 달라도 같은 글이 된다', () => {
     const a = cleanText('강남역  ４번출구 LED\r\n\r\n\r\n１주 150만원  ');
@@ -102,7 +114,7 @@ describe('접수', () => {
 
   it('여러 건은 50건까지다', async () => {
     const texts = Array.from({ length: LIMITS.bulkMaxDocs + 1 }, (_, i) => `글 ${i}`);
-    await expect(intakeMany(texts, { workspaceId: await newWorkspace(), now: T0 })).rejects.toMatchObject({ code: 'LIMIT_EXCEEDED' });
+    await expect(intakeMany(texts, { workspaceId: await newWorkspace(), now: T0 })).rejects.toMatchObject({ code: 'BAD_INPUT' });
     await expect(intakeMany([], local)).rejects.toMatchObject({ code: 'BAD_INPUT' });
   });
 });
@@ -132,6 +144,34 @@ describe('상한', () => {
     // T0 은 한국 시각 낮 12시. 12시간 뒤는 다음 날이다.
     await expect(intakeOne(sampleText(), { workspaceId: ws, now: at(12 * 3600_000) })).resolves.toBeDefined();
     expect(await count('drafts WHERE workspace_id = $1', [ws])).toBe(2);
+  });
+
+  it('상한이 찬 날에 공간 번호 없이 온 접수는 빈 공간을 남기지 않는다', async () => {
+    await bumpCounter(getPool(), 'intake', T0, LIMITS.intakePerDay, LIMITS.intakePerDay);
+    const before = await count('workspaces');
+    await expect(intakeOne(sampleText(), { workspaceId: null, now: T0 })).rejects.toMatchObject({ code: 'LIMIT_EXCEEDED' });
+    const many = await intakeMany([sampleText(), sampleText()], { workspaceId: null, now: T0 });
+    expect(many.workspace).toBeNull();
+    expect(many.items.map((i) => i.result)).toEqual(['error', 'error']);
+    expect(await count('workspaces')).toBe(before);
+  });
+
+  it('상한이 찬 날에 모르는 공간 번호로 온 접수도 빈 공간을 남기지 않는다', async () => {
+    await bumpCounter(getPool(), 'intake', T0, LIMITS.intakePerDay, LIMITS.intakePerDay);
+    const before = await count('workspaces');
+    const ids = ['22222222-2222-4222-8222-222222222221', '22222222-2222-4222-8222-222222222222'];
+    for (const id of ids) {
+      const many = await intakeMany([sampleText(), sampleText()], { workspaceId: track(id), now: T0 });
+      // 받은 번호는 그대로 돌려준다(약속). 공간 줄은 남지 않는다.
+      expect(many.workspace).toBe(id);
+      expect(many.items.map((i) => i.result)).toEqual(['error', 'error']);
+    }
+    expect(await count('workspaces WHERE id = ANY($1::uuid[])', [ids])).toBe(0);
+    expect(await count('workspaces')).toBe(before);
+    // 있던 공간은 한 건도 못 넣어도 그대로 있다.
+    const mine = await newWorkspace();
+    await intakeMany([sampleText()], { workspaceId: mine, now: T0 });
+    expect(await count('workspaces WHERE id = $1', [mine])).toBe(1);
   });
 
   it('하루 세기는 여럿이 동시에 올려도 상한을 넘지 않는다', async () => {

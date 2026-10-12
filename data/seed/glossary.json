@@ -1,0 +1,17 @@
+[
+  { "ko": "전광판", "en": "digital billboard", "zh-Hans": "电子屏" },
+  { "ko": "지하철", "en": "subway", "zh-Hans": "地铁" },
+  { "ko": "버스", "en": "bus", "zh-Hans": "公交" },
+  { "ko": "커피차", "en": "coffee truck", "zh-Hans": "咖啡车" },
+  { "ko": "도시락", "en": "lunch box", "zh-Hans": "便当" },
+  { "ko": "슬로건", "en": "slogan banner", "zh-Hans": "应援手幅" },
+  { "ko": "포토카드", "en": "photocard", "zh-Hans": "小卡" },
+  { "ko": "스티커", "en": "sticker", "zh-Hans": "贴纸" },
+  { "ko": "현수막", "en": "banner", "zh-Hans": "横幅" },
+  { "ko": "컵홀더", "en": "cup sleeve", "zh-Hans": "杯套" },
+  { "ko": "생일", "en": "birthday", "zh-Hans": "生日" },
+  { "ko": "홍대입구역", "en": "Hongik Univ. Station", "zh-Hans": "弘大入口站" },
+  { "ko": "강남역", "en": "Gangnam Station", "zh-Hans": "江南站" },
+  { "ko": "합정역", "en": "Hapjeong Station", "zh-Hans": "合井站" },
+  { "ko": "성수동", "en": "Seongsu-dong", "zh-Hans": "圣水洞" }
+]

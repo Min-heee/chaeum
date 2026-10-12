@@ -4,14 +4,15 @@
 //   UPDATE drafts SET … version = version + 1 WHERE id = … AND status = … AND version = …
 // 0줄이면 그사이 누가 먼저 바꾼 것이다(409). 어디로 갈 수 있는지는 약속의 이동 표만 본다.
 import type { PoolClient } from 'pg';
-import { LIMITS, type EventActor } from '@/contract/api';
+import { LIMITS, type EventActor, type SourceKind } from '@/contract/api';
 import type { EvaluatedField } from '@/contract/core-api';
 import { DOC_TYPES, FIELD_KEYS, type DocType, type ExtractedBy, type FieldKey, type FieldValue } from '@/contract/fields';
-import { isReasonCode, REJECT_CODES, type ReasonCode, type RejectCode } from '@/contract/reasons';
+import { isReasonCode, REJECT_CODES, type LlmSkipCause, type ReasonCode, type RejectCode } from '@/contract/reasons';
 import { canTransition, isDraftStatus, STATUS_LABELS, type DraftStatus } from '@/contract/transitions';
 import { AppError } from '../errors';
 import { toId, type Db } from '../types';
 import { addStatusEvent, listEvents, type DraftEvent } from './draft-events';
+import { getSource, type SourceDoc } from './source-docs';
 
 export interface Draft {
   id: number;
@@ -27,6 +28,12 @@ export interface Draft {
   promptVersion: string | null;
   model: string | null;
   extractedBy: ExtractedBy | null;
+  /** 규칙만 길로 내려간 까닭. LLM 으로 뽑았거나 아직 처리 중이면 null. */
+  llmSkipCause: LlmSkipCause | null;
+  /** LLM 으로 뽑았을 때만 값이 있다: 장부에서 꺼낸 답인가, 그 답을 받을 때 잰 시간과 비용. */
+  llmRecorded: boolean | null;
+  llmLatencyMs: number | null;
+  llmCostUsd: number | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -45,6 +52,10 @@ interface DraftRow {
   prompt_version: string | null;
   model: string | null;
   extracted_by: ExtractedBy | null;
+  llm_skip_cause: LlmSkipCause | null;
+  llm_recorded: boolean | null;
+  llm_latency_ms: number | null;
+  llm_cost_usd: string | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -63,6 +74,10 @@ const toDraft = (r: DraftRow): Draft => ({
   promptVersion: r.prompt_version,
   model: r.model,
   extractedBy: r.extracted_by,
+  llmSkipCause: r.llm_skip_cause,
+  llmRecorded: r.llm_recorded,
+  llmLatencyMs: r.llm_latency_ms,
+  llmCostUsd: r.llm_cost_usd === null ? null : Number(r.llm_cost_usd),
   createdAt: r.created_at,
   updatedAt: r.updated_at,
 });
@@ -119,20 +134,26 @@ export async function listFields(db: Db, draftId: number): Promise<EvaluatedFiel
 export interface DraftDetail {
   draft: Draft;
   sourceText: string;
+  source: SourceDoc;
   fields: EvaluatedField[];
   events: DraftEvent[];
+  /** 승인돼 상품이 됐으면 그 번호 */
+  productId: number | null;
 }
 
 /** 화면 한 장에 필요한 것 전부: 원문 + 칸 + 상태 + 변경 기록. */
 export async function getDraftDetail(db: Db, workspaceId: string, draftId: number): Promise<DraftDetail | null> {
   const draft = await getDraft(db, workspaceId, draftId);
   if (!draft) return null;
-  const doc = await db.query<{ clean_text: string }>('SELECT clean_text FROM source_docs WHERE id = $1', [draft.sourceDocId]);
+  const source = (await getSource(db, draft.sourceDocId)) ?? { id: draft.sourceDocId, kind: 'text' as const, originName: null, text: '' };
+  const product = await db.query<{ id: string }>('SELECT id FROM products WHERE draft_id = $1 AND workspace_id = $2', [draftId, workspaceId]);
   return {
     draft,
-    sourceText: doc.rows[0]?.clean_text ?? '',
+    sourceText: source.text,
+    source,
     fields: await listFields(db, draftId),
     events: await listEvents(db, draftId),
+    productId: product.rows[0] ? toId(product.rows[0].id) : null,
   };
 }
 
@@ -159,6 +180,8 @@ export interface DraftListItem {
   /** 초안 사유와 칸 사유를 합친 것(겹침 없이) */
   reasons: ReasonCode[];
   extractedBy: ExtractedBy | null;
+  /** 글·그림·PDF 가운데 무엇으로 들어왔나 */
+  sourceKind: SourceKind;
   /** 원문 앞머리 */
   preview: string;
   updatedAt: Date;
@@ -177,7 +200,7 @@ export async function listDrafts(
 
   const { rows } = await db.query<{
     id: string; status: DraftStatus; version: number; type: DocType | null; subtype: string | null;
-    name: unknown; all_reasons: ReasonCode[]; extracted_by: ExtractedBy | null; preview: string; updated_at: Date;
+    name: unknown; all_reasons: ReasonCode[]; extracted_by: ExtractedBy | null; source_kind: SourceKind; preview: string; updated_at: Date;
   }>(
     `SELECT d.id, d.status, d.version, d.type, d.subtype, d.extracted_by, d.updated_at,
             (SELECT f.final_value FROM draft_fields f WHERE f.draft_id = d.id AND f.field = 'name') AS name,
@@ -185,7 +208,7 @@ export async function listDrafts(
                     SELECT unnest(d.reasons) AS r
                     UNION ALL
                     SELECT unnest(f.reasons) FROM draft_fields f WHERE f.draft_id = d.id) x ORDER BY r) AS all_reasons,
-            left(s.clean_text, 80) AS preview
+            s.source_kind, left(s.clean_text, 80) AS preview
        FROM drafts d JOIN source_docs s ON s.id = d.source_doc_id
       WHERE d.workspace_id = $1
         AND ($2::text IS NULL OR d.status = $2)
@@ -207,6 +230,7 @@ export async function listDrafts(
     name: typeof r.name === 'string' ? r.name : null,
     reasons: r.all_reasons,
     extractedBy: r.extracted_by,
+    sourceKind: r.source_kind,
     preview: r.preview,
     updatedAt: r.updated_at,
   }));
@@ -261,6 +285,10 @@ export interface DraftPatch {
   promptVersion?: string | null;
   model?: string | null;
   extractedBy?: ExtractedBy | null;
+  llmSkipCause?: LlmSkipCause | null;
+  llmRecorded?: boolean | null;
+  llmLatencyMs?: number | null;
+  llmCostUsd?: number | null;
 }
 
 const PATCH_COLUMNS: Record<keyof DraftPatch, string> = {
@@ -272,6 +300,10 @@ const PATCH_COLUMNS: Record<keyof DraftPatch, string> = {
   promptVersion: 'prompt_version',
   model: 'model',
   extractedBy: 'extracted_by',
+  llmSkipCause: 'llm_skip_cause',
+  llmRecorded: 'llm_recorded',
+  llmLatencyMs: 'llm_latency_ms',
+  llmCostUsd: 'llm_cost_usd',
 };
 
 /** 한 문장으로 바꾼다. 조건(번호·공간·상태·version)이 안 맞으면 null. */
@@ -328,7 +360,7 @@ export interface TransitionInput {
  * 초안의 상태를 바꾸고 변경 기록 한 줄을 남긴다. 부르는 쪽의 트랜잭션 안에서 돈다.
  * 풀이 아니라 연결 하나(PoolClient)만 받는다. 풀로 부르면 상태 변경과 기록이 서로 다른 트랜잭션이 되기 때문이다.
  * - 없는 초안 NOT_FOUND(404) · 낡은 version VERSION_CONFLICT(409) · 표에 없는 이동 BAD_TRANSITION(422)
- * - 반려에는 반려 사유가 꼭 있어야 한다. 다시 돌리기(→ PROCESSING)는 반려 사유를 지운다.
+ * - 반려에는 반려 사유가 꼭 있어야 한다. 다시 돌리기(→ PROCESSING)는 반려 사유, 지난 결과(종류·갈래·사유), 지난 LLM 길 기록을 지운다.
  */
 export async function transitionDraft(db: PoolClient, input: TransitionInput): Promise<Draft> {
   const { workspaceId, draftId, to, expectedVersion, now } = input;
@@ -346,6 +378,18 @@ export async function transitionDraft(db: PoolClient, input: TransitionInput): P
   } else if (to === 'PROCESSING') {
     patch.rejectCode = null;
     patch.rejectMemo = null;
+    // 다시 돌리면 지난 결과(종류·갈래·사유)와 지난번에 어떤 길로 뽑았는지도 비운다(끝나면 새로 적힌다).
+    // 처리 중인 초안에 지난 결과가 보이면 안 된다. 칸은 부르는 쪽(reprocessDraft)이 같은 트랜잭션에서 지운다.
+    patch.type = null;
+    patch.subtype = null;
+    patch.reasons = [];
+    patch.extractedBy = null;
+    patch.model = null;
+    patch.promptVersion = null;
+    patch.llmSkipCause = null;
+    patch.llmRecorded = null;
+    patch.llmLatencyMs = null;
+    patch.llmCostUsd = null;
   }
 
   const updated = await conditionalUpdate(db, { workspaceId, draftId, status: current.status, version: expectedVersion }, to, patch, now);

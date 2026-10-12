@@ -79,6 +79,21 @@ describe('집기', () => {
     expect((await claim(pool(), T0, 10, ['content'])).map((j) => j.kind)).toEqual(['content']);
   });
 
+  it('표의 통계가 비어 있어도(줄 수 추정 0) 달라는 만큼만 집는다', async () => {
+    // 빈 표를 ANALYZE 하면 계획이 "하위 질의를 바깥 줄마다 다시 돌리기"로 바뀐다. 그때도 한 건만 집어야 한다.
+    // (TRUNCATE 뒤에는 쪽 수가 0 이라 추정이 달라진다. 줄을 넣었다 지워 쪽은 남기고 줄 수 추정만 0 으로 만든다.)
+    await seedJobs(6);
+    await pool().query('DELETE FROM jobs');
+    await pool().query('ANALYZE jobs');
+    await seedJobs(6);
+
+    const got = await claim(pool(), T0, 1);
+    expect(got).toHaveLength(1);
+    expect(await queueDepth(pool())).toEqual({ queued: 5, running: 1, done: 0, dead: 0 });
+    const { rows } = await pool().query<{ n: string }>('SELECT count(*) AS n FROM jobs WHERE attempts > 0');
+    expect(Number(rows[0]?.n)).toBe(1);
+  });
+
   it('넷이 동시에 10건씩 집어도 20건이 겹치지 않게 나뉜다', async () => {
     await seedJobs(20);
     const batches = await Promise.all([1, 2, 3, 4].map(() => claim(pool(), T0, 10)));

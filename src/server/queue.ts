@@ -117,14 +117,18 @@ export async function claim(db: Db, now: Date, limit: number, kinds?: readonly J
   if (limit <= 0 || (kinds && kinds.length === 0)) return [];
   const leasedUntil = new Date(now.getTime() + QUEUE.leaseMs);
   const { rows } = await db.query<JobRow>(
-    `UPDATE jobs SET status = 'running', attempts = attempts + 1, leased_until = $2
-      WHERE id IN (
-        SELECT id FROM jobs
-         WHERE status = 'queued' AND run_at <= $1 AND ($4::text[] IS NULL OR kind = ANY($4))
-         ORDER BY run_at, id
-         FOR UPDATE SKIP LOCKED
-         LIMIT $3)
-      RETURNING *`,
+    // 집을 번호는 한 번만 뽑는다(MATERIALIZED). "id IN (하위 질의)"로 쓰면 계획에 따라 하위 질의가
+    // 바깥 줄마다 다시 돌고, 방금 바꾼 줄을 건너뛴 채 다음 줄을 뽑아 LIMIT 보다 많이 집힌다.
+    `WITH picked AS MATERIALIZED (
+       SELECT id FROM jobs
+        WHERE status = 'queued' AND run_at <= $1 AND ($4::text[] IS NULL OR kind = ANY($4))
+        ORDER BY run_at, id
+        FOR UPDATE SKIP LOCKED
+        LIMIT $3)
+     UPDATE jobs SET status = 'running', attempts = attempts + 1, leased_until = $2
+       FROM picked
+      WHERE jobs.id = picked.id
+      RETURNING jobs.*`,
     [now, leasedUntil, limit, kinds ? [...kinds] : null],
   );
   return rows.map(toJob).sort((a, b) => a.runAt.getTime() - b.runAt.getTime() || a.id - b.id);

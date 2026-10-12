@@ -39,7 +39,7 @@ export async function intakeMany(texts: readonly unknown[], options: IntakeOptio
     return { workspace: options.workspaceId, items: prepared.map((p) => asErrorItem((p as { error: AppError }).error)) };
   }
 
-  const out = await withTx(async (client) => {
+  const run = () => withTx(async (client) => {
     // 공간 줄이 여기서 잠긴다. 같은 공간의 접수는 한 줄로 서므로 건수 상한과 중복 확인이 어긋나지 않는다.
     const workspace = await workspaceForWrite(client, options.workspaceId, now, options.kindForNew);
     const batchNo = texts.length > 1 ? await nextBatchNo(client, workspace.id) : null;
@@ -67,7 +67,13 @@ export async function intakeMany(texts: readonly unknown[], options: IntakeOptio
       const doc = await receiveDoc(client, { workspaceId: workspace.id, clean: p.clean, hash: p.hash, batchNo, now });
       items.push({ result: doc.duplicate ? 'duplicate' : 'new', sourceDocId: doc.sourceDocId, draftId: doc.draftId, status: doc.status });
     }
-    return { workspace: workspace.id, items };
+    // 이번에 공간을 만들었는데(번호 없이 왔거나 모르는 번호로 왔거나) 한 건도 못 넣었으면(상한 초과) 빈 공간을 남기지 않게 되돌린다.
+    if (workspace.created && items.every((item) => item.result === 'error')) throw new NothingStored(items);
+    return { workspace: workspace.id as string | null, items };
+  });
+  const out = await run().catch((err: unknown) => {
+    if (err instanceof NothingStored) return { workspace: options.workspaceId, items: err.items };
+    throw err;
   });
 
   await sweepQuietly(now);
@@ -82,9 +88,16 @@ export async function intakeOne(
   prepareText(text); // 틀린 글이면 DB 를 건드리기 전에 400
   const { workspace, items } = await intakeMany([text], options);
   const item = items[0];
+  if (item?.result === 'error') throw new AppError(item.code as AppError['code'], item.message);
   if (!item || !workspace) throw new Error('접수 결과가 없다');
-  if (item.result === 'error') throw new AppError(item.code as AppError['code'], item.message);
   return { workspace, sourceDocId: item.sourceDocId, draftId: item.draftId, status: item.status, duplicate: item.result === 'duplicate' };
+}
+
+/** 트랜잭션을 되돌리려고 던지는 표식. 건별 결과를 들고 나온다. */
+class NothingStored extends Error {
+  constructor(readonly items: IntakeItem[]) {
+    super('넣은 글이 없다');
+  }
 }
 
 const asErrorItem = (err: AppError): IntakeItem => ({ result: 'error', code: err.code, message: err.message });

@@ -62,7 +62,7 @@ export async function addStatusEvent(
 
 export async function addEditEvent(
   db: Db,
-  e: { draftId: number; actor: EventActor; field: FieldKey; before: FieldValue | null; after: FieldValue | null; now: Date },
+  e: { draftId: number; actor: EventActor; field: FieldKey | 'type' | 'subtype'; before: FieldValue | null; after: FieldValue | null; now: Date },
 ): Promise<void> {
   await db.query(
     `INSERT INTO draft_events (draft_id, actor, action, field, before, after, created_at)
@@ -71,6 +71,13 @@ export async function addEditEvent(
   );
 }
 
+/** 초안 하나의 변경 기록 줄 수. 공간을 보지 않는다. */
+export async function countEvents(db: Db, draftId: number): Promise<number> {
+  const { rows } = await db.query<{ n: string }>('SELECT count(*) AS n FROM draft_events WHERE draft_id = $1', [draftId]);
+  return Number(rows[0]?.n ?? 0);
+}
+
+/** 공간을 보지 않는다. 공간을 확인한 초안의 번호로만 부른다. */
 export async function listEvents(db: Db, draftId: number): Promise<DraftEvent[]> {
   const { rows } = await db.query<EventRow>('SELECT * FROM draft_events WHERE draft_id = $1 ORDER BY id', [draftId]);
   return rows.map(toEvent);
