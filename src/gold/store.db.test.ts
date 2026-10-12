@@ -6,12 +6,28 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { GoldDoc } from '@/contract/eval-types';
 import { migrate } from '../../scripts/migrate';
 import { GOLD_VERSION, assemble } from './assemble';
+import { canon } from './files';
 import { generateSpecs } from './generate';
-import { firstPassQueue, getDoc, GoldError, listDocs, listReviews, loadDocs, loadReviews, planExport, recheckQueue, recordReview, summarize } from './store';
+import {
+  firstPassQueue,
+  getDoc,
+  GoldError,
+  listDocs,
+  listReviews,
+  loadDocs,
+  loadReviews,
+  planExport,
+  recheckQueue,
+  recordReview,
+  reviewSeconds,
+  summarize,
+  undoReview,
+} from './store';
 
 config({ path: '.env.local', quiet: true });
 const url = process.env.TEST_DATABASE_URL;
-const usable = url !== undefined && new URL(url).pathname.endsWith('_test');
+// 이름이 _test 로 끝나는 DB 에서만 돈다(_test_b 처럼 꼬리가 하나 더 붙은 것도 된다). tests/setup 의 지킴이와 같은 틀이다.
+const usable = url !== undefined && /_test(_[a-z0-9]+)?$/.test(new URL(url).pathname);
 
 // 진짜 정답과 겹치지 않게 손글 묶음의 높은 번호를 쓴다.
 const specs = generateSpecs(3).slice(0, 12);
@@ -56,7 +72,9 @@ describe.skipIf(!usable)('정답 세트 DB', { shuffle: false }, () => {
 
   it('맞음: 판정과 걸린 초가 남고 정답은 그대로다', async () => {
     const id = docs[0]?.id as string;
-    expect(await recordReview(client, { docId: id, pass: 1, seconds: 41.6 })).toEqual({ verdict: 'ok', fixedFields: 0 });
+    const out = await recordReview(client, { docId: id, pass: 1, seconds: 41.6 });
+    expect(out).toMatchObject({ verdict: 'ok', fixedFields: 0, before: null });
+    expect(out.reviewId).toMatch(/^\d+$/);
     const { rows } = await client.query('SELECT pass, verdict, fixed_fields, seconds FROM gold_reviews WHERE gold_doc_id = $1', [id]);
     expect(rows).toEqual([{ pass: 1, verdict: 'ok', fixed_fields: 0, seconds: 42 }]);
     const q = await firstPassQueue(client, 'hand', 30);
@@ -73,7 +91,9 @@ describe.skipIf(!usable)('정답 세트 DB', { shuffle: false }, () => {
       seconds: 90,
     });
     const changed = doc.truth.fields.vat_included === null ? 1 : 2;
-    expect(out).toEqual({ verdict: 'fixed', fixedFields: changed });
+    expect(out).toMatchObject({ verdict: 'fixed', fixedFields: changed });
+    // 고치기 전 정답을 함께 돌려준다(되돌리기가 이것을 다시 보낸다).
+    expect(canon(out.before)).toEqual(canon(doc.truth));
     const after = await getDoc(client, doc.id);
     expect(after?.truth.fields.name).toBe('고친 이름');
     expect(after?.truth.fields.vat_included).toBeNull();
@@ -92,7 +112,7 @@ describe.skipIf(!usable)('정답 세트 DB', { shuffle: false }, () => {
 
   it('버림: 판정만 남는다', async () => {
     const id = docs[11]?.id as string;
-    expect(await recordReview(client, { docId: id, pass: 1, drop: true, seconds: 5 })).toEqual({ verdict: 'dropped', fixedFields: 0 });
+    expect(await recordReview(client, { docId: id, pass: 1, drop: true, seconds: 5 })).toMatchObject({ verdict: 'dropped', fixedFields: 0, before: null });
   });
 
   it('진행 상황은 가장 최근 판정으로 센다', async () => {
@@ -109,7 +129,7 @@ describe.skipIf(!usable)('정답 세트 DB', { shuffle: false }, () => {
     expect(before.fixedFields).toBeGreaterThan(0);
     const fixed = (await listDocs(client, 'hand')).find((d) => d.truth.fields.name === '고친 이름') as GoldDoc;
 
-    expect(await recordReview(client, { docId: fixed.id, pass: 1, seconds: 3 })).toEqual({ verdict: 'ok', fixedFields: 0 });
+    expect(await recordReview(client, { docId: fixed.id, pass: 1, seconds: 3 })).toMatchObject({ verdict: 'ok', fixedFields: 0 });
     expect(await hand()).toMatchObject({
       reviewed: before.reviewed, ok: before.ok, fixed: before.fixed, fixedFields: before.fixedFields, seconds: before.seconds + 3,
     });
@@ -151,5 +171,73 @@ describe.skipIf(!usable)('정답 세트 DB', { shuffle: false }, () => {
     expect(await loadReviews(client, rows)).toBe(rows.length);
     expect(await loadReviews(client, rows)).toBe(0);
     expect((await listReviews(client)).map((r) => r.verdict)).toEqual(rows.map((r) => r.verdict));
+  });
+
+  it('고른 문서 안에서만 줄을 세우고 센다', async () => {
+    const all = await firstPassQueue(client, 'hand', 30);
+    expect(all.total).toBe(12);
+    const only = docs.slice(0, 4).map((d) => d.id);
+    const q = await firstPassQueue(client, 'hand', 30, only);
+    expect(q.total).toBe(4);
+    expect(q.docs.every((d) => only.includes(d.id))).toBe(true);
+    expect(q.done + q.docs.length).toBe(4);
+    expect(await firstPassQueue(client, 'hand', 30, [])).toEqual({ docs: [], total: 0, done: 0 });
+  });
+
+  it('되돌리기: 가장 최근 기록이 그 판정일 때만 지우고, 고친 정답은 고치기 전 값으로 돌린다', async () => {
+    const doc = (await listDocs(client, 'hand')).find((d) => d.truth.type !== 'not_product') as GoldDoc;
+    const count = async () => (await listReviews(client)).filter((r) => r.goldDocId === doc.id).length;
+    const nameNow = async () => (await getDoc(client, doc.id))?.truth.fields.name;
+    const start = await count();
+
+    const first = await recordReview(client, { docId: doc.id, pass: 1, fixes: { name: '되돌릴 이름' }, seconds: 7 });
+    expect(first).toMatchObject({ verdict: 'fixed', fixedFields: 1 });
+    expect(first.before?.fields.name).toBe(doc.truth.fields.name);
+    const second = await recordReview(client, { docId: doc.id, pass: 1, seconds: 2 });
+    expect(second).toMatchObject({ verdict: 'ok', before: null });
+    expect(second.reviewId).not.toBe(first.reviewId);
+
+    // 가장 최근 기록이 아니면 되돌리지 않는다.
+    await expect(undoReview(client, { docId: doc.id, reviewId: first.reviewId, before: first.before })).rejects.toMatchObject({ code: 'CONFLICT' });
+    expect(await count()).toBe(start + 2);
+    expect(await undoReview(client, { docId: doc.id, reviewId: second.reviewId })).toEqual({ verdict: 'ok', restored: false });
+    expect(await nameNow()).toBe('되돌릴 이름');
+
+    // 정답을 고친 판정: 고치기 전 정답이 없거나 꼴이 다르면 되돌리지 않는다.
+    await expect(undoReview(client, { docId: doc.id, reviewId: first.reviewId })).rejects.toMatchObject({ code: 'INVALID' });
+    await expect(undoReview(client, { docId: doc.id, reviewId: first.reviewId, before: { ...first.before, type: 'not_product' } })).rejects.toMatchObject({ code: 'INVALID' });
+    await expect(undoReview(client, { docId: doc.id, reviewId: first.reviewId, before: { ...first.before, fields: { name: '칸이 모자란 정답' } } })).rejects.toMatchObject({ code: 'INVALID' });
+    expect(await count()).toBe(start + 1);
+    expect(await nameNow()).toBe('되돌릴 이름');
+
+    expect(await undoReview(client, { docId: doc.id, reviewId: first.reviewId, before: first.before })).toEqual({ verdict: 'fixed', restored: true });
+    expect(await count()).toBe(start);
+    expect(canon((await getDoc(client, doc.id))?.truth)).toEqual(canon(doc.truth));
+
+    // 같은 것을 두 번 되돌릴 수 없다. 없는 문서도 받지 않는다.
+    await expect(undoReview(client, { docId: doc.id, reviewId: first.reviewId, before: first.before })).rejects.toMatchObject({ code: 'CONFLICT' });
+    await expect(undoReview(client, { docId: 'hand-000', reviewId: first.reviewId })).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    expect(await count()).toBe(start);
+  });
+
+  it('되돌린 문서는 "아직"으로 돌아가 첫 확인 줄에 다시 나온다', async () => {
+    await client.query('DELETE FROM gold_reviews');
+    const id = docs[3]?.id as string;
+    const made = await recordReview(client, { docId: id, pass: 1, seconds: 9 });
+    expect((await firstPassQueue(client, 'hand', 30)).docs.map((d) => d.id)).not.toContain(id);
+    await undoReview(client, { docId: id, reviewId: made.reviewId });
+    const q = await firstPassQueue(client, 'hand', 30);
+    expect(q.docs.map((d) => d.id)).toContain(id);
+    expect(q.done).toBe(0);
+  });
+
+  it('걸린 초는 그 차례의 것만, 적힌 순서대로 준다', async () => {
+    await client.query('DELETE FROM gold_reviews');
+    await recordReview(client, { docId: docs[0]?.id as string, pass: 1, seconds: 75 });
+    await recordReview(client, { docId: docs[1]?.id as string, pass: 1 });
+    await recordReview(client, { docId: docs[2]?.id as string, pass: 1, seconds: 20.4 });
+    await recordReview(client, { docId: docs[0]?.id as string, pass: 2, seconds: 8 });
+    expect(await reviewSeconds(client, 1)).toEqual([75, 20]);
+    expect(await reviewSeconds(client, 2)).toEqual([8]);
   });
 });

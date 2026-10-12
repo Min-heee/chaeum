@@ -20,7 +20,7 @@ export interface Db {
 
 export class GoldError extends Error {
   constructor(
-    public code: 'NOT_FOUND' | 'INVALID',
+    public code: 'NOT_FOUND' | 'INVALID' | 'CONFLICT',
     message: string,
   ) {
     super(message);
@@ -109,19 +109,23 @@ export interface Queue {
   done: number;
 }
 
-/** 첫 확인: 아직 한 번도 안 본 문서를 번호순으로 limit 건. */
-export async function firstPassQueue(db: Db, split: GoldSplit, limit: number): Promise<Queue> {
+/**
+ * 첫 확인: 아직 한 번도 안 본 문서를 번호순으로 limit 건.
+ * only 를 주면 그 번호들(이번에 확인하기로 고른 문서) 안에서만 고르고 센다.
+ */
+export async function firstPassQueue(db: Db, split: GoldSplit, limit: number, only?: readonly string[]): Promise<Queue> {
+  const within = only ? 'AND d.id = ANY($3::text[])' : '';
   const { rows } = await db.query(
     `SELECT ${DOC_COLUMNS} FROM gold_docs d
-      WHERE d.split = $1 AND NOT EXISTS (SELECT 1 FROM gold_reviews r WHERE r.gold_doc_id = d.id AND r.pass = 1)
+      WHERE d.split = $1 AND NOT EXISTS (SELECT 1 FROM gold_reviews r WHERE r.gold_doc_id = d.id AND r.pass = 1) ${within}
       ORDER BY d.id LIMIT $2`,
-    [split, limit],
+    only ? [split, limit, only] : [split, limit],
   );
   const count = await db.query(
     `SELECT count(*)::int AS total,
             count(*) FILTER (WHERE EXISTS (SELECT 1 FROM gold_reviews r WHERE r.gold_doc_id = d.id AND r.pass = 1))::int AS done
-       FROM gold_docs d WHERE d.split = $1`,
-    [split],
+       FROM gold_docs d WHERE d.split = $1 ${only ? 'AND d.id = ANY($2::text[])' : ''}`,
+    only ? [split, only] : [split],
   );
   const c = count.rows[0] as { total: number; done: number };
   return { docs: (rows as DocRow[]).map(rowToDoc), total: c.total, done: c.done };
@@ -167,6 +171,10 @@ export interface ReviewInput {
 export interface ReviewOutcome {
   verdict: ReviewVerdict;
   fixedFields: number;
+  /** 방금 적은 확인 기록의 번호. 되돌리기가 이 번호를 다시 보낸다. */
+  reviewId: string;
+  /** 정답을 고쳤으면 고치기 전 정답. 되돌리기가 이것을 다시 보낸다. 고치지 않았으면 null. */
+  before: GoldTruth | null;
 }
 
 const same = (a: unknown, b: unknown) => JSON.stringify(canon(a ?? null)) === JSON.stringify(canon(b ?? null));
@@ -183,6 +191,7 @@ export async function recordReview(db: Db, input: ReviewInput): Promise<ReviewOu
 
   let verdict: ReviewVerdict = 'ok';
   let fixedFields = 0;
+  let before: GoldTruth | null = null;
 
   if (input.drop) {
     verdict = 'dropped';
@@ -213,14 +222,68 @@ export async function recordReview(db: Db, input: ReviewInput): Promise<ReviewOu
       if (!GoldDocSchema.safeParse({ ...doc, truth }).success) throw new GoldError('INVALID', '고친 정답의 꼴이 약속과 다르다');
       await db.query('UPDATE gold_docs SET truth = $2::jsonb WHERE id = $1', [doc.id, JSON.stringify(truth)]);
       verdict = 'fixed';
+      before = doc.truth;
     }
   }
 
-  await db.query(
-    'INSERT INTO gold_reviews (gold_doc_id, pass, verdict, fixed_fields, seconds) VALUES ($1, $2, $3, $4, $5)',
+  const made = await db.query(
+    'INSERT INTO gold_reviews (gold_doc_id, pass, verdict, fixed_fields, seconds) VALUES ($1, $2, $3, $4, $5) RETURNING id::text AS id',
     [doc.id, input.pass, verdict, fixedFields, seconds],
   );
-  return { verdict, fixedFields };
+  return { verdict, fixedFields, reviewId: (made.rows[0] as { id: string }).id, before };
+}
+
+// ── 방금 판정 되돌리기 ─────────────────────────────────────
+
+export interface UndoInput {
+  docId: string;
+  /** 되돌릴 확인 기록의 번호(판정을 적을 때 받은 것) */
+  reviewId: string;
+  /** 그 판정이 정답을 고쳤다면, 그때 받은 고치기 전 정답 */
+  before?: unknown;
+}
+
+export interface UndoOutcome {
+  /** 지운 기록의 판정 */
+  verdict: ReviewVerdict;
+  /** 정답을 고치기 전 값으로 돌렸는가 */
+  restored: boolean;
+}
+
+/**
+ * 잘못 누른 판정 하나를 되돌린다. 그 문서의 가장 최근 확인 기록이 방금 그 판정(reviewId)일 때만 지운다.
+ * 그 판정이 정답을 고친 것이었으면 정답도 고치기 전 값(before)으로 돌린다. 지우고 나면 그 문서는 "아직"으로 돌아간다.
+ * 트랜잭션 안에서 부른다(정답 되돌림과 기록 지움이 함께 들어가야 한다).
+ */
+export async function undoReview(db: Db, input: UndoInput): Promise<UndoOutcome> {
+  const { rows } = await db.query(`SELECT ${DOC_COLUMNS} FROM gold_docs WHERE id = $1 FOR UPDATE`, [input.docId]);
+  if (!rows[0]) throw new GoldError('NOT_FOUND', `없는 정답 문서: ${input.docId}`);
+  const doc = rowToDoc(rows[0] as DocRow);
+
+  // 번호는 수로 줄 세운다(글자로 줄 세우면 "9"가 "10"보다 뒤에 온다). 그래서 글자로 바꾼 것에는 다른 이름을 붙인다.
+  const latest = await db.query('SELECT r.id::text AS review_id, r.verdict FROM gold_reviews r WHERE r.gold_doc_id = $1 ORDER BY r.id DESC LIMIT 1', [doc.id]);
+  const last = latest.rows[0] as { review_id: string; verdict: ReviewVerdict } | undefined;
+  if (!last || last.review_id !== input.reviewId) {
+    throw new GoldError('CONFLICT', '그 문서의 가장 최근 확인 기록이 방금 그 판정이 아니다. 되돌리지 않았다.');
+  }
+
+  let restored = false;
+  if (last.verdict === 'fixed') {
+    const before = input.before as GoldTruth | undefined;
+    const ok = before !== null && typeof before === 'object' && before.type === doc.truth.type && GoldDocSchema.safeParse({ ...doc, truth: before }).success;
+    if (!ok) throw new GoldError('INVALID', '고치기 전 정답이 없거나 꼴이 약속과 다르다. 되돌리지 않았다.');
+    const truth: GoldTruth = { type: before.type, subtype: before.subtype, fields: before.fields };
+    await db.query('UPDATE gold_docs SET truth = $2::jsonb WHERE id = $1', [doc.id, JSON.stringify(truth)]);
+    restored = true;
+  }
+  await db.query('DELETE FROM gold_reviews WHERE id = $1::bigint', [last.review_id]);
+  return { verdict: last.verdict, restored };
+}
+
+/** 지금까지 건마다 걸린 초(그 차례의 확인만, 적힌 순서대로). 남은 시간을 어림할 때 쓴다. */
+export async function reviewSeconds(db: Db, pass: 1 | 2): Promise<number[]> {
+  const { rows } = await db.query('SELECT seconds FROM gold_reviews WHERE pass = $1 AND seconds IS NOT NULL ORDER BY id', [pass]);
+  return (rows as { seconds: number }[]).map((r) => r.seconds);
 }
 
 // ── 진행 상황 ──────────────────────────────────────────────

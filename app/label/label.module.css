@@ -56,17 +56,43 @@
   padding: 0 16px 24px;
 }
 
+/* 맨 위 줄: 남은 건수와 예상 시간이 늘 보이게 화면에 붙인다. */
 .bar {
+  position: sticky;
+  top: 0;
+  z-index: 3;
   display: flex;
-  gap: 16px;
+  flex-wrap: wrap;
+  gap: 4px 16px;
   align-items: center;
-  padding: 10px 0;
+  min-height: 44px;
+  padding: 6px 0;
   border-bottom: 1px solid var(--line);
+  background: var(--bg);
   font-size: 14px;
 }
 
 .bar progress {
   flex: 1;
+  min-width: 80px;
+}
+
+.left {
+  font-weight: 600;
+}
+
+.noticeLine {
+  margin: 8px 0 0;
+  padding: 6px 10px;
+  border: 1px solid var(--flag-line);
+  border-radius: 6px;
+  background: var(--flag);
+  font-size: 14px;
+}
+
+.rest {
+  font-size: 18px;
+  font-weight: 600;
 }
 
 .split {
@@ -76,18 +102,25 @@
   margin-top: 12px;
 }
 
+/* 원문 칸: 화면에 붙어 따라온다. 길면 칸 안에서만 움직인다. */
+.source {
+  position: sticky;
+  top: 56px;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 64px);
+}
+
 @media (max-width: 800px) {
   .split {
     grid-template-columns: 1fr;
   }
-}
 
-.source {
-  position: sticky;
-  top: 8px;
-  align-self: start;
-  max-height: calc(100vh - 16px);
-  overflow: auto;
+  .source {
+    position: static;
+    max-height: 45vh;
+  }
 }
 
 .meta {
@@ -97,14 +130,60 @@
 }
 
 .content {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
   margin: 0;
   padding: 12px;
   border: 1px solid var(--line);
   border-radius: 6px;
   background: #fff;
   font: inherit;
+  line-height: 1.9;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+/* 표기 조각: 어느 칸인지는 색이 아니라 밑줄과 작은 꼬리표로 알린다. */
+.mark {
+  text-decoration: underline;
+  text-decoration-color: #9a9a92;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+
+/* 고른 칸의 조각 */
+.markOn {
+  background: #ffe27a;
+  font-weight: 700;
+  text-decoration-color: var(--fg);
+  text-decoration-thickness: 2px;
+  box-shadow: 0 0 0 2px #ffe27a;
+  border-radius: 2px;
+}
+
+.tag {
+  display: inline-block;
+  margin: 0 3px 0 2px;
+  padding: 0 4px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--bg);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.5;
+  vertical-align: 2px;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.tagOn {
+  border-color: var(--fg);
+  background: var(--fg);
+  color: #fff;
+  font-weight: 600;
 }
 
 .kind {
@@ -121,13 +200,30 @@
 }
 
 .field {
-  padding: 6px 10px;
+  padding: 5px 10px;
   border: 1px solid var(--line);
   border-left-width: 4px;
   border-radius: 4px;
   margin-bottom: 4px;
   background: #fff;
   cursor: pointer;
+  /* 키보드로 옮길 때 맨 위 줄과 아래 줄에 가리지 않게 */
+  scroll-margin: 64px 0 96px;
+}
+
+.fieldNone {
+  padding-top: 2px;
+  padding-bottom: 2px;
+  background: transparent;
+}
+
+.groupHead {
+  margin: 12px 0 6px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--line);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .active {
@@ -145,17 +241,38 @@
 
 .fieldHead {
   display: flex;
-  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+  min-height: 26px;
   font-size: 13px;
   color: var(--muted);
 }
 
+.label {
+  white-space: nowrap;
+}
+
+.noneLine {
+  flex: 1;
+  font-style: italic;
+}
+
 .state {
+  margin-left: auto;
   font-weight: 600;
+  white-space: nowrap;
+}
+
+.valueRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  align-items: baseline;
 }
 
 .value {
   font-size: 15px;
+  font-weight: 600;
 }
 
 .none {
@@ -164,10 +281,41 @@
   font-style: italic;
 }
 
+.shown {
+  color: var(--muted);
+  font-size: 13px;
+  white-space: pre-wrap;
+}
+
+.convert {
+  font-size: 13px;
+}
+
+.warn {
+  color: #b3261e;
+  font-size: 13px;
+}
+
+.rule {
+  color: var(--muted);
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+
+/* 고른 칸에서만 보인다. 자리는 늘 차지해서, 마우스를 올려도 칸 높이가 바뀌지 않는다. */
 .actions {
   display: flex;
-  gap: 6px;
-  margin-top: 6px;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.actions button {
+  padding: 1px 6px;
+  font-size: 12px;
+}
+
+.hidden {
+  visibility: hidden;
 }
 
 .edit {
@@ -183,13 +331,49 @@
 }
 
 .error {
+  margin: 0 0 6px;
   color: #b3261e;
   font-size: 14px;
 }
 
+/* 아래 줄: 확인 끝·버림과 남은 칸 수가 늘 보이게 화면 아래에 붙인다. */
 .footer {
+  position: sticky;
+  bottom: 0;
+  margin-top: 8px;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+  background: var(--bg);
+}
+
+.footerRow {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   align-items: center;
-  margin-top: 12px;
+}
+
+.danger {
+  border: 1px solid #b3261e;
+  border-radius: 6px;
+  background: #b3261e;
+  color: #fff;
+  padding: 6px 12px;
+  font-size: 14px;
+}
+
+.keys {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* 첫 장의 문서 목록: 이번에 안 보는 문서는 흐리게 */
+.skip {
+  color: var(--muted);
+  opacity: 0.6;
+}
+
+.truth {
+  min-width: 0;
 }

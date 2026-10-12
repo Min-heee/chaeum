@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { SPLIT_LABELS, type GoldSplit } from '@/contract/eval-types';
 import { TYPE_LABELS, type DocType } from '@/contract/fields';
-import { LABEL_BATCH, RECHECK_COUNT, labelEnabled, listStatus, syncForLabel } from '@/gold/label';
+import { readHintFile } from '@/gold/hints';
+import { LABEL_BATCH, RECHECK_COUNT, labelEnabled, labelTarget, listStatus, syncForLabel } from '@/gold/label';
 import { summarize } from '@/gold/store';
 import { getPool } from '@/server/db';
 import styles from './label.module.css';
@@ -20,11 +21,26 @@ export default async function LabelHome() {
   const status = await listStatus(pool);
   const missing = sync.files.filter((f) => !f.found).length;
 
+  // 묶음마다 이번에 확인하기로 고른 문서. 목표가 없는 묶음은 전부 본다(null).
+  const hintFile = await readHintFile();
+  const targets = new Map<string, Set<string> | null>();
+  for (const s of summary.splits) {
+    const ids = await labelTarget(pool, s.split, hintFile);
+    targets.set(s.split, ids ? new Set(ids) : null);
+  }
+  const inTarget = (split: string, id: string) => targets.get(split)?.has(id) ?? true;
+  /** 그 묶음의 목표 건수와 그 가운데 확인한 건수 */
+  const progress = (split: string) => {
+    const mine = status.filter((d) => d.split === split && inTarget(split, d.id));
+    return { total: mine.length, done: mine.filter((d) => d.verdict !== null).length };
+  };
+
   return (
     <main className={styles.home}>
       <h1>정답 확인</h1>
       <p className={styles.muted}>
-        원문과 정답을 나란히 놓고 칸마다 맞는지 본다. 한 번에 {LABEL_BATCH}건씩. 판정과 걸린 시간이 기록된다.
+        원문과 정답을 나란히 놓고 칸마다 맞는지 본다. 한 번에 {LABEL_BATCH}건씩 보고 쉰다. 판정과 걸린 시간이 기록된다. 묶음마다 종류와 글 꼴이 고르게 섞이도록 고른 문서만
+        확인한다(목표). 잘못 누른 판정은 확인 화면에서 u 로 바로 되돌린다.
         {missing > 0 ? ` (정답 파일 ${sync.files.length}개 가운데 ${missing}개는 아직 없다)` : ''}
       </p>
 
@@ -32,7 +48,7 @@ export default async function LabelHome() {
         <thead>
           <tr>
             <th>묶음</th>
-            <th>확인 / 전체</th>
+            <th>확인 / 목표</th>
             <th>맞음</th>
             <th>고침</th>
             <th>버림</th>
@@ -42,11 +58,14 @@ export default async function LabelHome() {
           </tr>
         </thead>
         <tbody>
-          {summary.splits.map((s) => (
+          {summary.splits.map((s) => ({ s, p: progress(s.split) })).map(({ s, p }) => (
             <tr key={s.split}>
               <td>{SPLIT_LABELS[s.split as GoldSplit]}</td>
               <td>
-                {s.reviewed} / {s.total}
+                <strong>
+                  {p.done} / {p.total}
+                </strong>
+                {p.total < s.total ? <span className={styles.muted}> (전체 {s.total}건 가운데 {p.total}건만 봄)</span> : null}
               </td>
               <td>{s.ok}</td>
               <td>{s.fixed}</td>
@@ -54,7 +73,7 @@ export default async function LabelHome() {
               <td>{s.fixedFields}</td>
               <td>{s.reviewed > 0 ? Math.round(s.seconds / s.reviewed) : '-'}</td>
               <td>
-                {s.reviewed < s.total ? (
+                {p.done < p.total ? (
                   <Link className={styles.button} href={`/label/review?split=${s.split}`}>
                     이어서 확인
                   </Link>
@@ -88,7 +107,9 @@ export default async function LabelHome() {
       </form>
 
       <h2>문서별 상태</h2>
-      <p className={styles.muted}>판정을 잘못 눌렀으면 그 문서를 다시 확인한다. 가장 최근 판정이 쓰인다.</p>
+      <p className={styles.muted}>
+        판정을 잘못 눌렀으면 그 문서를 다시 확인한다. 가장 최근 판정이 쓰인다. 흐린 줄은 이번 목표에 들지 않은 문서다. 원하면 따로 열어 확인할 수 있고, 확인하면 목표에 들어온다.
+      </p>
       <table className={styles.table}>
         <thead>
           <tr>
@@ -100,17 +121,20 @@ export default async function LabelHome() {
           </tr>
         </thead>
         <tbody>
-          {status.map((d) => (
-            <tr key={d.id}>
-              <td>{d.id}</td>
-              <td>{TYPE_LABELS[d.type as DocType] ?? d.type}</td>
-              <td>{d.verdict ? VERDICT_LABELS[d.verdict] : '아직'}</td>
-              <td>{d.seconds ?? '-'}</td>
-              <td>
-                <Link href={`/label/review?id=${d.id}`}>{d.verdict ? '다시 확인' : '확인'}</Link>
-              </td>
-            </tr>
-          ))}
+          {status.map((d) => {
+            const skip = !inTarget(d.split, d.id);
+            return (
+              <tr key={d.id} className={skip ? styles.skip : undefined}>
+                <td>{d.id}</td>
+                <td>{TYPE_LABELS[d.type as DocType] ?? d.type}</td>
+                <td>{d.verdict ? VERDICT_LABELS[d.verdict] : skip ? '이번에는 안 봄' : '아직'}</td>
+                <td>{d.seconds ?? '-'}</td>
+                <td>
+                  <Link href={`/label/review?id=${d.id}`}>{d.verdict ? '다시 확인' : skip ? '따로 열기' : '확인'}</Link>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </main>
