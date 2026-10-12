@@ -1,10 +1,11 @@
 'use client';
 
-// 맨 위 띠: 이 사이트가 무엇으로 도는지 한 줄, 화면 이동, 보는 사람 전환, 작업 공간 번호.
+// 맨 위 띠: 이 사이트가 무엇으로 도는지 한 줄, 화면 이동(본체 다섯 + 딸린 도구 여섯), 보는 사람 전환, 작업 공간 번호.
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import type { HealthResponse } from '@/contract/api';
+import { TOOLS } from '@/contract/tools';
 import { call, ROLE_LABELS, setRole, useRole, useWorkspace, type Role } from './client';
 
 const TABS = [
@@ -51,7 +52,7 @@ export function TopBar() {
   return (
     <header className="top">
       <p className="notice">
-        가상 마켓 · 합성 자료 · 보기 글의 AI 답은 미리 받아 둔 실제 응답, {liveNotice(health)}
+        가상 마켓 · 합성 자료(모으기의 공공 자료 30줄만 실제 자료) · 보기 글의 AI 답은 미리 받아 둔 실제 응답, {liveNotice(health)}
       </p>
       <div className="bar">
         <Link href="/" className="brand">
@@ -61,6 +62,17 @@ export function TopBar() {
           {TABS.map((tab) => (
             <Link key={tab.href} href={tab.href} className="tab" aria-current={isCurrent(pathname, tab.href) ? 'page' : undefined}>
               {tab.label}
+            </Link>
+          ))}
+        </nav>
+        {/* 딸린 도구는 둘째 줄에 따로 묶는다. 좁은 화면에서는 줄이 바뀌어 넘치지 않는다. */}
+        <nav aria-label="도구" className="tabs tools">
+          <span className="tabs-label" aria-hidden="true">
+            도구
+          </span>
+          {TOOLS.map((tool) => (
+            <Link key={tool.href} href={tool.href} className="tab" title={tool.blurb} aria-current={pathname.startsWith(tool.href) ? 'page' : undefined}>
+              {tool.label}
             </Link>
           ))}
         </nav>

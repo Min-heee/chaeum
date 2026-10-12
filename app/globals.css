@@ -151,6 +151,21 @@ code {
   color: var(--accent);
   font-weight: 600;
 }
+/* 딸린 도구 묶음: 본체 메뉴 아래 둘째 줄. 줄이 모자라면 다음 줄로 넘어간다(가로로 넘치지 않는다). */
+.tabs.tools {
+  flex: 1 1 100%;
+  order: 4;
+  align-items: center;
+  min-width: 0;
+  padding-top: 4px;
+  border-top: 1px dashed var(--line);
+  font-size: 14px;
+}
+.tabs-label {
+  padding: 6px 8px 6px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
 .who {
   display: inline-flex;
   flex-wrap: wrap;
@@ -295,6 +310,14 @@ code {
   align-items: center;
   gap: 8px;
   margin: 8px 0;
+}
+/* 긴 선택지(출처 이름 등)가 든 고르기 상자가 좁은 화면을 가로로 밀지 않게 한다. */
+.actions > label {
+  min-width: 0;
+  max-width: 100%;
+}
+select {
+  max-width: 100%;
 }
 .pair {
   display: flex;
@@ -828,7 +851,29 @@ code {
     flex-basis: 100%;
     order: 3;
   }
-  .tab {
+  /* 좁은 화면: 메뉴 두 줄(본체, 도구)을 각각 한 줄로 두고 옆으로 민다. 줄이 접혀 맨 위 띠가 화면을 덮지 않게. */
+  .tabs,
+  .tabs.tools {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    min-width: 0;
+    scrollbar-width: thin;
+  }
+  .tab,
+  .tabs-label {
     padding: 6px 8px;
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+  .notice {
+    padding: 4px 12px;
+    font-size: 12px;
+  }
+  .bar {
+    gap: 4px 12px;
+    padding: 6px 12px 2px;
+  }
+  .space {
+    padding: 0 12px 6px;
   }
 }

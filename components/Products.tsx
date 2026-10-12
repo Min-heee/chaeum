@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import type { ProductBody, ProductListResponse, ProductTextState } from '@/contract/api';
 import { TYPE_LABELS } from '@/contract/fields';
 import { CopyButton, Notice } from './bits';
-import { call, callText, failureMessage, pollUntil, useMounted, useWorkspace } from './client';
+import { call, callBlob, callText, failureMessage, pollUntil, productHref, useMounted, useWorkspace } from './client';
 import { formatTime, won } from './format';
 
 export const TEXT_STATE_LABELS: Record<ProductTextState, string> = {
@@ -20,9 +20,9 @@ export interface TemplateInfo {
   description: string | null;
 }
 
-/** 받은 CSV 글을 파일로 내려 준다. 공간 헤더를 실어야 해서 그냥 링크로는 받지 못한다. */
-function saveFile(name: string, text: string) {
-  const url = URL.createObjectURL(new Blob([text], { type: 'text/csv;charset=utf-8' }));
+/** 받은 CSV 글이나 XLSX 파일을 내려 준다. 공간 헤더를 실어야 해서 그냥 링크로는 받지 못한다. */
+function saveFile(name: string, content: string | Blob) {
+  const url = URL.createObjectURL(typeof content === 'string' ? new Blob([content], { type: 'text/csv;charset=utf-8' }) : content);
   const a = document.createElement('a');
   a.href = url;
   a.download = name;
@@ -55,11 +55,26 @@ function Export({ templates, disabled }: { templates: TemplateInfo[]; disabled: 
     }
   };
 
+  const downloadXlsx = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const file = await callBlob(`/api/export.xlsx?template=${template}`, { label: `엑셀 파일로 내려받기 (${template})` });
+      saveFile(`chaeum-products-${template}.xlsx`, file);
+      setPreview(null);
+    } catch (err) {
+      setError(failureMessage(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <section className="export" aria-label="양식으로 내려받기">
       <h2>양식으로 내려받기</h2>
       <p className="muted small">
         승인된 상품이 등록 양식 꼴의 CSV 한 줄씩으로 나옵니다. 양식 맞춤 파일(칸 이름·순서 대응표)을 바꾸면 다른 마켓의 양식 꼴로 나옵니다.
+        엑셀 파일(XLSX)은 같은 양식을 시트 셋으로 나눕니다: 상품(한 줄에 하나), 옵션(기간·수량 옵션 하나가 한 줄), 안내.
       </p>
       <div className="actions">
         <label>
@@ -74,6 +89,9 @@ function Export({ templates, disabled }: { templates: TemplateInfo[]; disabled: 
         </label>
         <button type="button" className="btn primary" disabled={busy || disabled} onClick={() => download('products')}>
           양식으로 내려받기
+        </button>
+        <button type="button" className="btn" disabled={busy || disabled} onClick={downloadXlsx}>
+          엑셀 파일(XLSX)로 내려받기
         </button>
         <button type="button" className="btn" disabled={busy || disabled} onClick={() => download('corrections')}>
           사람이 고친 값 내려받기
@@ -93,10 +111,10 @@ function Export({ templates, disabled }: { templates: TemplateInfo[]; disabled: 
   );
 }
 
-function Row({ product }: { product: ProductBody }) {
+function Row({ product, publicSpace = false }: { product: ProductBody; publicSpace?: boolean }) {
   return (
     <li className="card">
-      <Link href={`/products/${product.id}`} className="card-title">
+      <Link href={productHref(product.id, publicSpace)} className="card-title">
         #{product.id} {product.name}
       </Link>
       <div className="muted small">
@@ -112,6 +130,23 @@ export function Products({ templates }: { templates: TemplateInfo[] }) {
   const workspace = useWorkspace();
   const [items, setItems] = useState<ProductBody[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [demo, setDemo] = useState<ProductBody[] | null>(null);
+
+  // 본보기 공간의 상품(읽기 전용). 공간 헤더 없이 읽는다.
+  useEffect(() => {
+    if (!mounted) return;
+    let alive = true;
+    call<ProductListResponse>('GET', '/api/products', { publicSpace: true })
+      .then((list) => {
+        if (alive) setDemo(list.items);
+      })
+      .catch(() => {
+        if (alive) setDemo([]);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [mounted]);
 
   useEffect(() => {
     if (!mounted || !workspace) return;
@@ -155,6 +190,20 @@ export function Products({ templates }: { templates: TemplateInfo[] }) {
         </ul>
       )}
       <Export templates={templates} disabled={!workspace || !items || items.length === 0} />
+      {demo && demo.length > 0 ? (
+        <section aria-label="본보기 공간">
+          <h2>본보기 공간 (읽기 전용)</h2>
+          <p className="muted small">
+            사이트를 처음 깔 때 보기 글의 초안 가운데 {demo.length}건을 미리 승인해 넣어 둔 상품입니다(사람이 눌러 승인한 것이 아닙니다). 도구(점검·견적·시안 검사·달력)가 이 상품으로 돌아갑니다. 내려받기는
+            내 작업 공간의 상품만 됩니다.
+          </p>
+          <ul className="cards">
+            {demo.map((p) => (
+              <Row key={p.id} product={p} publicSpace />
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </main>
   );
 }

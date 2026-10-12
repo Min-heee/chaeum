@@ -19,7 +19,7 @@ const CHECK_LABELS: Record<ContentCheck, string> = {
   number: '자리표시 밖 숫자',
   language: '한글 섞임·빈 글',
   monologue: '혼잣말·머리말 흔적',
-  glossary: '용어집 표기',
+  glossary: '용어 사전 표기',
 };
 
 type Text = ProductDetailResponse['texts'][number];
@@ -71,7 +71,7 @@ function TextBlock({ text }: { text: Text }) {
   );
 }
 
-export function ProductDetail({ productId }: { productId: number }) {
+export function ProductDetail({ productId, publicSpace = false }: { productId: number; publicSpace?: boolean }) {
   const mounted = useMounted();
   const [product, setProduct] = useState<ProductDetailResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -79,7 +79,7 @@ export function ProductDetail({ productId }: { productId: number }) {
   useEffect(() => {
     if (!mounted) return;
     let alive = true;
-    const read = () => call<ProductDetailResponse>('GET', `/api/products/${productId}`);
+    const read = () => call<ProductDetailResponse>('GET', `/api/products/${productId}`, { publicSpace });
     // 먼저 지금 것을 보여 주고, 글이 아직이면 줄을 굴리며 기다린다.
     read()
       .then((first) => {
@@ -96,7 +96,7 @@ export function ProductDetail({ productId }: { productId: number }) {
     return () => {
       alive = false;
     };
-  }, [mounted, productId]);
+  }, [mounted, productId, publicSpace]);
 
   const optionKey = product?.type === 'ad' ? 'period_options' : product?.type === 'catering' ? 'quantity_options' : null;
 
@@ -113,8 +113,9 @@ export function ProductDetail({ productId }: { productId: number }) {
             #{product.id} {product.name}
           </h1>
           <p className="muted">
-            {TYPE_LABELS[product.type]} · {product.subtype} · {formatTime(product.createdAt)}에 승인 ·{' '}
-            <Link href={`/drafts/${product.draftId}`}>초안 #{product.draftId}의 변경 기록 보기</Link>
+            {TYPE_LABELS[product.type]} · {product.subtype} · {formatTime(product.createdAt)}에 승인
+            {publicSpace ? ' · 읽기 전용 본보기(사이트를 처음 깔 때 보기 글의 초안을 미리 승인해 넣어 둔 것. 사람이 눌러 승인한 것이 아닙니다)' : ''} ·{' '}
+            <Link href={`/drafts/${product.draftId}${publicSpace ? '?pub=1' : ''}`}>초안 #{product.draftId}의 변경 기록 보기</Link>
           </p>
 
           <section aria-label="등록된 값">

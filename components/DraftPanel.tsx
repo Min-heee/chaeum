@@ -10,7 +10,7 @@ import { DOC_TYPES, SUBTYPES, TYPE_LABELS, isFieldKey, type DocType, type FieldK
 import { REASONS, REJECT_CODES, REJECT_LABELS, hasBlocking, type RejectCode } from '@/contract/reasons';
 import { REPROCESSABLE_STATUSES, REVIEWABLE_STATUSES, STATUS_LABELS } from '@/contract/transitions';
 import { Notice, ReasonList, RouteBanner, StatusBadge } from './bits';
-import { ApiFailure, ROLE_LABELS, call, failureMessage, setRole, useRole, waitForDraft } from './client';
+import { ApiFailure, ROLE_LABELS, call, failureMessage, productHref, setRole, useRole, waitForDraft } from './client';
 import { FieldEditor } from './FieldEditor';
 import { fieldLabel, formatTime, formatValue, sameValue } from './format';
 
@@ -175,8 +175,10 @@ export function DraftPanel({
         {sourceTop}
         <h2 className="pane-title">
           원문
-          {draft.source.kind !== 'text' ? (
+          {draft.source.kind === 'image' || draft.source.kind === 'pdf' ? (
             <span className="muted"> · {draft.source.kind === 'pdf' ? 'PDF' : '그림'}에서 옮긴 글{draft.source.originName ? ` (${draft.source.originName})` : ''}</span>
+          ) : draft.source.kind === 'import' ? (
+            <span className="muted"> · 모으기 도구가 가져온 줄을 글로 적은 것</span>
           ) : null}
         </h2>
         <SourceText text={draft.source.text} span={span} scrollKey={pinned} />
@@ -372,7 +374,7 @@ export function DraftPanel({
             본보기 공간의 초안은 읽기만 됩니다.{' '}
             {onCopyToMine ? (
               <button type="button" className="btn small" onClick={onCopyToMine}>
-                내 공간으로 가져와 고치기
+                내 작업 공간으로 가져와 고치기
               </button>
             ) : null}
           </Notice>
@@ -393,7 +395,7 @@ export function DraftPanel({
               <p className="ok-line">
                 승인되어 상품이 됐습니다.{' '}
                 {draft.productId ? (
-                  <Link className="btn primary small" href={`/products/${draft.productId}`}>
+                  <Link className="btn primary small" href={productHref(draft.productId, publicSpace)}>
                     상품 보기
                   </Link>
                 ) : null}
@@ -452,7 +454,7 @@ export function DraftPanel({
                   <button type="button" className="btn" disabled={busy !== null} onClick={() => setRejecting(true)}>
                     반려
                   </button>
-                  {flagged ? <span className="muted small">표시가 남아 있어도 사람이 보고 승인할 수 있습니다. 필수 값이 비면 등록되지 않습니다.</span> : null}
+                  {flagged ? <span className="muted small">표시가 남아 있어도 사람이 보고 승인할 수 있습니다. 이름과 판매가가 비면 등록되지 않습니다. 그 밖의 필수 칸은 빈 채로도 등록되고, 등록된 뒤 점검에 &ldquo;필수 칸 빔&rdquo;으로 잡힙니다.</span> : null}
                 </div>
               )
             ) : null}

@@ -37,7 +37,7 @@ export function DraftDetail({ draftId, publicSpace }: { draftId: number; publicS
     if (!draft) return;
     setCopying(true);
     try {
-      const got = await call<IntakeResponse>('POST', '/api/source-docs', { body: { text: draft.source.text }, label: '본보기 글을 내 공간에 접수' });
+      const got = await call<IntakeResponse>('POST', '/api/source-docs', { body: { text: draft.source.text }, label: '본보기 글을 내 작업 공간에 접수' });
       await waitForDraft(got.draftId, { label: '줄 굴리기' });
       router.push(`/drafts/${got.draftId}`);
     } catch (err) {
@@ -58,7 +58,7 @@ export function DraftDetail({ draftId, publicSpace }: { draftId: number; publicS
           {error.missing ? ' 이 브라우저의 작업 공간에 없는 초안입니다. 이틀 넘게 쓰지 않은 공간은 지워집니다.' : ''}
         </Notice>
       ) : null}
-      {copying ? <Notice>내 공간으로 가져오는 중입니다…</Notice> : null}
+      {copying ? <Notice>내 작업 공간으로 가져오는 중입니다…</Notice> : null}
       {!draft && !error ? <p className="muted">읽어 오는 중…</p> : null}
       {draft ? <DraftPanel draft={draft} onDraft={setDraft} publicSpace={publicSpace} mode="detail" onCopyToMine={publicSpace ? copyToMine : undefined} /> : null}
     </main>

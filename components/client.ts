@@ -93,6 +93,8 @@ export interface CallRecord {
   body?: unknown;
   /** 올린 파일 이름(파일 올리기일 때만) */
   fileName?: string;
+  /** 파일과 함께 실은 글자 칸(시안 검사의 productId 같은 것) */
+  fields?: Record<string, string>;
   /** 본보기 공간을 읽은 요청(공간 헤더 없이 부름) */
   publicSpace: boolean;
   status: number;
@@ -148,6 +150,9 @@ export class ApiFailure extends Error {
   }
 }
 
+/** 상품 화면의 주소. 본보기 공간의 상품은 pub=1 을 붙여 공간 헤더 없이 읽게 한다(내 공간 번호로는 열리지 않는다). */
+export const productHref = (productId: number, publicSpace: boolean): string => `/products/${productId}${publicSpace ? '?pub=1' : ''}`;
+
 export function failureMessage(err: unknown): string {
   if (err instanceof ApiFailure) return err.message;
   return '요청을 보내지 못했습니다. 잠시 뒤 다시 해 주세요.';
@@ -158,6 +163,8 @@ export interface CallOptions {
   body?: unknown;
   /** 파일 올리기 */
   file?: File;
+  /** 파일과 함께 싣는 글자 칸(multipart). file 이 있을 때만 쓴다. */
+  fields?: Record<string, string>;
   /** API 탭에 남길 이름. 주면 기록한다. */
   label?: string;
   /** 본보기 공간을 읽는다(공간 헤더를 싣지 않는다) */
@@ -171,6 +178,7 @@ async function send(method: string, path: string, options: CallOptions): Promise
   let body: BodyInit | undefined;
   if (options.file) {
     const form = new FormData();
+    for (const [name, value] of Object.entries(options.fields ?? {})) form.append(name, value);
     form.append('file', options.file);
     body = form;
   } else if (options.body !== undefined) {
@@ -190,6 +198,7 @@ async function send(method: string, path: string, options: CallOptions): Promise
       path,
       body: options.file ? undefined : options.body,
       fileName: options.file?.name,
+      fields: options.file ? options.fields : undefined,
       publicSpace: options.publicSpace === true,
       status: response.status,
     });
@@ -225,6 +234,12 @@ export async function call<T>(method: string, path: string, options: CallOptions
 export async function callText(path: string, options: CallOptions = {}): Promise<string> {
   const response = await send('GET', path, options);
   return response.text();
+}
+
+/** 파일 바이트로 받는 요청(XLSX). */
+export async function callBlob(path: string, options: CallOptions = {}): Promise<Blob> {
+  const response = await send('GET', path, options);
+  return response.blob();
 }
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));

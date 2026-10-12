@@ -7,10 +7,9 @@
 // 저장(돌려주는 함수)은 줄이 "done 표시"와 같은 트랜잭션에서 부른다. 여러 번 돌아도 결과가 한 번만 남는다:
 // 뽑기는 초안이 PROCESSING 일 때만 쓰고, 글은 (상품, 칸, 언어)가 같으면 덮어쓴다.
 import type { PoolClient } from 'pg';
-import { GlossarySchema, type ContentApi, type GeneratedText, type GlossaryEntry, type ProductText } from '@/contract/content';
+import type { ContentApi, GeneratedText, GlossaryEntry, ProductText } from '@/contract/content';
 import type { ExtractOutcome, ExtractStep, LlmRouter } from '@/contract/pipeline-api';
 import type { DraftStatus } from '@/contract/transitions';
-import glossaryJson from '../../data/seed/glossary.json';
 import { contentApi } from './content-api';
 import { contentInputOf } from './content-input';
 import { getPool } from './db';
@@ -19,6 +18,7 @@ import { createContentStep } from './pipeline/content';
 import { extract as extractStep } from './pipeline/extract';
 import type { JobHandler, JobHandlers, SaveFn } from './queue';
 import { getDraftById, saveFields, transitionDraft } from './repos/drafts';
+import { approvedGlossary } from './repos/glossary-terms';
 import { getProductById, saveProductTexts } from './repos/products';
 import { getSource } from './repos/source-docs';
 import { failDraftIfProcessing } from './review';
@@ -32,17 +32,15 @@ export interface JobHandlerDeps {
   extract?: ExtractStep;
   /** 글 만들기(src/content 가 내보내는 것). 없으면 글 처리기를 두지 않고, 글 작업은 줄에서 기다린다. */
   content?: ContentPort;
-  /** 용어집. 비우면 data/seed/glossary.json. */
+  /** 용어집. 비우면 그 상품이 든 공간의 승인된 용어(용어 사전의 공용 줄 + 그 공간의 줄). */
   glossary?: readonly GlossaryEntry[];
 }
 
 /** 처리기가 글 만들기에서 쓰는 것. templateTexts 가 있으면 글 작업이 죽었을 때 틀 문장을 그것으로 만든다. */
 export type ContentPort = Pick<ContentApi, 'generateContent' | 'pickGlossary'> & Partial<Pick<ContentApi, 'templateTexts'>>;
 
-/** data/seed/glossary.json. 꼴이 틀리면 여기서 멈춘다. */
-export function seedGlossary(): GlossaryEntry[] {
-  return GlossarySchema.parse(glossaryJson);
-}
+// 씨앗 파일의 용어집. 지금은 용어 사전의 표(glossary_terms)가 먼저이고, 이것은 그 표에 싣는 씨앗이다.
+export { seedGlossary } from './repos/glossary-terms';
 
 /** 뽑기 결과를 초안에 쓴다. 초안이 아직 PROCESSING 일 때만 쓴다(줄을 잠그고 본다). */
 export function saveExtraction(draftId: number, outcome: ExtractOutcome): SaveFn {
@@ -93,7 +91,7 @@ function extractHandler(deps: JobHandlerDeps): JobHandler {
       if (!source) return;
 
       const outcome = await step(
-        { sourceText: source.text, transcribed: source.kind !== 'text', attempt: job.attempts, now: deps.now() },
+        { sourceText: source.text, transcribed: source.kind === 'image' || source.kind === 'pdf', attempt: job.attempts, now: deps.now() },
         deps.router ?? llmRouterFromEnv(),
       );
       return saveExtraction(draft.id, outcome);
@@ -119,15 +117,17 @@ function contentHandler(deps: JobHandlerDeps, content: NonNullable<JobHandlerDep
       if (!product) return;
       const has = await client.query('SELECT 1 FROM product_texts WHERE product_id = $1 LIMIT 1', [product.id]);
       if ((has.rowCount ?? 0) > 0) return;
-      const input = contentInputOf(product, deps.glossary ?? seedGlossary(), content.pickGlossary);
+      const input = contentInputOf(product, deps.glossary ?? (await approvedGlossary(client, product.workspaceId)), content.pickGlossary);
       const texts = content.templateTexts ? content.templateTexts(input) : (await content.generateContent(input, null, 'error')).texts;
       await saveProductTexts(client, product.id, plainTexts(texts));
     },
     async work(job) {
       const product = await getProductById(getPool(), job.refId);
       if (!product) return;
+      // 용어집은 일할 때마다 표에서 읽는다. 승인된 용어가 그대로면 요청이 같아 장부 키도 같다.
+      const glossary = deps.glossary ?? (await approvedGlossary(getPool(), product.workspaceId));
       const generated = await step(
-        { generate: contentInputOf(product, deps.glossary ?? seedGlossary(), content.pickGlossary), attempt: job.attempts, now: deps.now() },
+        { generate: contentInputOf(product, glossary, content.pickGlossary), attempt: job.attempts, now: deps.now() },
         deps.router ?? llmRouterFromEnv(),
       );
       const texts = plainTexts(generated.texts);

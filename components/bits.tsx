@@ -103,7 +103,7 @@ export function RouteBanner({
   extractedBy: ExtractedBy | null;
 }) {
   if (status === 'PROCESSING') return null;
-  const transcribed = sourceKind !== 'text';
+  const transcribed = sourceKind === 'image' || sourceKind === 'pdf';
   const measured =
     llm.originalLatencyMs !== null && llm.originalCostUsd !== null
       ? `원래 걸린 시간 ${seconds(llm.originalLatencyMs)}, 원래 비용 ${usd(llm.originalCostUsd)}`
@@ -123,6 +123,15 @@ export function RouteBanner({
     body = (
       <>
         <strong>방금 실제로 호출</strong>해 뽑았습니다{measured ? ` (${measured.replaceAll('원래 ', '')})` : ''}.
+      </>
+    );
+  } else if (extractedBy === 'import') {
+    // 모으기 도구가 정리해 온 줄이다. 글에서 뽑은 것이 아니고 모델도 거치지 않았다.
+    kind = 'rules';
+    body = (
+      <>
+        <strong>모으기 도구가 가져온 줄입니다. AI를 거치지 않았습니다.</strong> 줄에 적힌 값을 코드가 그대로 맞추고 따졌습니다. 자료에 없는 칸(값 등)은
+        비어 있습니다.
       </>
     );
   } else if (extractedBy === 'rules' || llm.skipCause !== null) {

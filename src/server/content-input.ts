@@ -6,12 +6,14 @@ import {
   type GenerateContentInput,
   type GlossaryEntry,
   type Placeholder,
-  type PlaceholderValues,
 } from '@/contract/content';
-import { PeriodOptionSchema, QuantityOptionSchema } from '@/contract/fields';
+import { placeholderValuesOf } from '@/content/placeholder-values';
 import type { ProductDraft } from './repos/products';
 
 type ProductFacts = Pick<ProductDraft, 'type' | 'subtype' | 'name' | 'price_krw' | 'spec' | 'options'>;
+
+// 자리표시에 넣을 숫자를 고르는 규칙은 src/content/placeholder-values.ts 에 있다(점검도 같은 함수를 쓴다).
+export { placeholderValuesOf };
 
 const textOrNull = (value: unknown): string | null => (typeof value === 'string' && value.trim() !== '' ? value.trim() : null);
 
@@ -20,27 +22,6 @@ export function regionOf(product: Pick<ProductDraft, 'type' | 'spec'>): string |
   if (product.type === 'ad') return textOrNull(product.spec.region);
   if (product.type === 'catering') return textOrNull(product.spec.service_region);
   return null;
-}
-
-/** 자리표시에 넣을 숫자. price: 대표 판매가, days: 가장 짧은 기간, qty: 가장 적은 수량(굿즈는 최소 주문 수량). */
-export function placeholderValuesOf(product: ProductFacts): PlaceholderValues {
-  const values: PlaceholderValues = { price: product.price_krw };
-  if (product.type === 'ad') {
-    const days = product.options.flatMap((o) => {
-      const parsed = PeriodOptionSchema.safeParse(o);
-      return parsed.success ? [parsed.data.days] : [];
-    });
-    if (days.length > 0) values.days = Math.min(...days);
-  } else if (product.type === 'catering') {
-    const qty = product.options.flatMap((o) => {
-      const parsed = QuantityOptionSchema.safeParse(o);
-      return parsed.success ? [parsed.data.qty] : [];
-    });
-    if (qty.length > 0) values.qty = Math.min(...qty);
-  } else if (typeof product.spec.min_order_qty === 'number') {
-    values.qty = product.spec.min_order_qty;
-  }
-  return values;
 }
 
 /**

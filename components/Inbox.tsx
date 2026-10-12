@@ -1,7 +1,7 @@
 'use client';
 
 // 검수함. 두 갈래(확인 필요 / 바로 승인 가능)이고, 확인 필요는 사유별로 묶는다.
-// 내 공간의 것과 읽기 전용 본보기 공간의 것을 나눠 보여 준다.
+// 내 작업 공간의 것과 읽기 전용 본보기 공간의 것을 나눠 보여 준다.
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import type { DraftListItemBody, DraftListResponse } from '@/contract/api';
@@ -29,7 +29,7 @@ const GROUP_ORDER: readonly ReasonCode[] = [
   'UNIT_CONVERTED',
 ];
 
-const SOURCE_KIND_LABELS = { text: '글', image: '그림', pdf: 'PDF' } as const;
+const SOURCE_KIND_LABELS = { text: '글', image: '그림', pdf: 'PDF', import: '가져온 줄' } as const;
 
 interface Lane {
   items: DraftListItemBody[];
@@ -64,7 +64,7 @@ function Item({ item, publicSpace }: { item: DraftListItemBody; publicSpace: boo
       <div className="muted small">
         {item.type ? TYPE_LABELS[item.type] : '종류 모름'}
         {item.subtype ? ` · ${item.subtype}` : ''} · {SOURCE_KIND_LABELS[item.sourceKind]}로 들어옴 ·{' '}
-        {item.extractedBy === 'rules' ? '규칙만으로 뽑음' : item.extractedBy === 'llm' ? (publicSpace ? 'AI로 뽑음(미리 받아 둔 답)' : 'AI로 뽑음') : '아직 안 뽑음'} · {formatTime(item.updatedAt)}
+        {item.extractedBy === 'import' ? 'AI 없이 줄의 값을 그대로 맞춤' : item.extractedBy === 'rules' ? '규칙만으로 뽑음' : item.extractedBy === 'llm' ? (publicSpace ? 'AI로 뽑음(미리 받아 둔 답)' : 'AI로 뽑음') : '아직 안 뽑음'} · {formatTime(item.updatedAt)}
       </div>
       <p className="preview">{item.preview}</p>
       <ReasonChips codes={item.reasons} />
@@ -239,10 +239,10 @@ export function Inbox() {
       ) : (
         <>
           {workspace ? (
-            <Space key={workspace} title="내 공간" note="이 브라우저에서 넣은 글의 초안입니다. 고치고 승인할 수 있습니다." publicSpace={false} refreshKey={refreshKey} />
+            <Space key={workspace} title="내 작업 공간" note="이 브라우저에서 넣은 글의 초안입니다. 고치고 승인할 수 있습니다." publicSpace={false} refreshKey={refreshKey} />
           ) : (
             <section className="space-block">
-              <h2>내 공간</h2>
+              <h2>내 작업 공간</h2>
               <p className="muted">
                 아직 넣은 글이 없습니다. <Link href="/">작업 화면</Link>에서 “이 글로 초안 만들기”를 누르면 여기에 쌓입니다.
               </p>
@@ -250,7 +250,7 @@ export function Inbox() {
           )}
           <Space
             title="본보기 공간 (읽기 전용)"
-            note="미리 들어 있는 건입니다. 열어서 볼 수 있고, “내 공간으로 가져와 고치기”를 누르면 고치고 승인할 수 있습니다."
+            note="미리 들어 있는 건입니다. 열어서 볼 수 있고, “내 작업 공간으로 가져와 고치기”를 누르면 고치고 승인할 수 있습니다."
             publicSpace
             refreshKey={refreshKey}
           />
