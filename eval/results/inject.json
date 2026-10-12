@@ -1,0 +1,1904 @@
+{
+  "seed": 20261012,
+  "perKind": 30,
+  "report": {
+    "zero_added": {
+      "num": 22,
+      "den": 22
+    },
+    "unit_swap": {
+      "num": 17,
+      "den": 17
+    },
+    "fake_evidence": {
+      "num": 30,
+      "den": 30
+    },
+    "cheaper_longer": {
+      "num": 5,
+      "den": 5
+    },
+    "monologue": {
+      "num": 20,
+      "den": 32
+    },
+    "glossary_swap": {
+      "num": 32,
+      "den": 32
+    },
+    "placeholder_removed": {
+      "num": 16,
+      "den": 16
+    },
+    "hangul_mixed": {
+      "num": 32,
+      "den": 32
+    }
+  },
+  "caughtByOther": {
+    "zero_added": 0,
+    "unit_swap": 0,
+    "fake_evidence": 0,
+    "cheaper_longer": 0,
+    "monologue": 0,
+    "glossary_swap": 0,
+    "placeholder_removed": 0,
+    "hangul_mixed": 0
+  },
+  "untouched": {
+    "docs": 31,
+    "cells": 216,
+    "flaggedCells": 16,
+    "texts": 32,
+    "failingTexts": []
+  },
+  "details": [
+    {
+      "kind": "zero_added",
+      "target": "dev-035/list_price_krw",
+      "change": "5000 → 50000",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "zero_added",
+      "target": "dev-010/price_krw",
+      "change": "2800000 → 28000000",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "zero_added",
+      "target": "dev-009/price_krw",
+      "change": "200000 → 2000000",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "zero_added",
+      "target": "dev-030/price_krw",
+      "change": "4700000 → 47000000",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "zero_added",
+      "target": "dev-031/list_price_krw",
+      "change": "3000 → 30000",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "zero_added",
+      "target": "dev-020/list_price_krw",
+      "change": "500000 → 5000000",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "zero_added",
+      "target": "dev-007/price_krw",
+      "change": "10300000 → 103000000",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "zero_added",
+      "target": "dev-034/price_krw",
+      "change": "800000 → 8000000",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "zero_added",
+      "target": "dev-014/price_krw",
+      "change": "8400000 → 84000000",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "zero_added",
+      "target": "dev-004/price_krw",
+      "change": "600000 → 6000000",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "zero_added",
+      "target": "dev-008/price_krw",
+      "change": "2000000 → 20000000",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "zero_added",
+      "target": "dev-019/price_krw",
+      "change": "6900000 → 69000000",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "zero_added",
+      "target": "dev-025/list_price_krw",
+      "change": "250000 → 2500000",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "zero_added",
+      "target": "dev-011/price_krw",
+      "change": "2100000 → 21000000",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "zero_added",
+      "target": "dev-026/price_krw",
+      "change": "3000 → 30000",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "zero_added",
+      "target": "dev-024/price_krw",
+      "change": "37700000 → 377000000",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "zero_added",
+      "target": "dev-022/price_krw",
+      "change": "2000000 → 20000000",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "zero_added",
+      "target": "dev-023/price_krw",
+      "change": "450000 → 4500000",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "zero_added",
+      "target": "dev-038/price_krw",
+      "change": "21000 → 210000",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "zero_added",
+      "target": "dev-039/list_price_krw",
+      "change": "10200000 → 102000000",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "zero_added",
+      "target": "dev-003/price_krw",
+      "change": "2000000 → 20000000",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "zero_added",
+      "target": "dev-012/price_krw",
+      "change": "100000 → 1000000",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "unit_swap",
+      "target": "dev-008/size_m",
+      "change": "1.08×1.92 → 0.00108×0.00192",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "unit_swap",
+      "target": "dev-001/size_m",
+      "change": "5×2.8 → 0.005×0.0028",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "unit_swap",
+      "target": "dev-010/size_m",
+      "change": "7.5×12 → 7500×12000",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "unit_swap",
+      "target": "dev-006/size_m",
+      "change": "20×11.25 → 20000×11250",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "unit_swap",
+      "target": "dev-019/size_m",
+      "change": "9.6×5.4 → 9600×5400",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "unit_swap",
+      "target": "dev-024/size_m",
+      "change": "16×9 → 0.016×0.009",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "unit_swap",
+      "target": "dev-026/size_mm",
+      "change": "55×85 → 55000×85000",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "unit_swap",
+      "target": "dev-011/size_m",
+      "change": "6.4×3.6 → 6400×3600",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "unit_swap",
+      "target": "dev-021/size_m",
+      "change": "6.4×3.6 → 0.0064×0.0036",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "unit_swap",
+      "target": "dev-022/size_m",
+      "change": "20×11.25 → 0.02×0.01125",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "unit_swap",
+      "target": "dev-032/size_m",
+      "change": "4×2.25 → 4000×2250",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "unit_swap",
+      "target": "dev-030/size_m",
+      "change": "12×4 → 0.012×0.004",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "unit_swap",
+      "target": "dev-028/size_mm",
+      "change": "90×60 → 90000×60000",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "unit_swap",
+      "target": "dev-003/size_m",
+      "change": "1.2×1.7 → 0.0012×0.0017",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "unit_swap",
+      "target": "dev-035/size_mm",
+      "change": "70×70 → 70000×70000",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "unit_swap",
+      "target": "dev-020/size_m",
+      "change": "4.8×2.7 → 0.0048×0.0027",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "unit_swap",
+      "target": "dev-004/size_m",
+      "change": "1.6×2.4 → 0.0016×0.0024",
+      "caught": true,
+      "codes": [
+        "VALUE_MISMATCH"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "fake_evidence",
+      "target": "dev-019/hours",
+      "change": "근거 구절을 원문에 없는 문장으로",
+      "caught": true,
+      "codes": [
+        "NO_EVIDENCE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "fake_evidence",
+      "target": "dev-039/period_options",
+      "change": "근거 구절을 원문에 없는 문장으로",
+      "caught": true,
+      "codes": [
+        "NO_EVIDENCE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "fake_evidence",
+      "target": "dev-008/period_options",
+      "change": "근거 구절을 원문에 없는 문장으로",
+      "caught": true,
+      "codes": [
+        "NO_EVIDENCE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "fake_evidence",
+      "target": "dev-035/min_order_qty",
+      "change": "근거 구절을 원문에 없는 문장으로",
+      "caught": true,
+      "codes": [
+        "NO_EVIDENCE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "fake_evidence",
+      "target": "dev-009/quantity_options",
+      "change": "근거 구절을 원문에 없는 문장으로",
+      "caught": true,
+      "codes": [
+        "NO_EVIDENCE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "fake_evidence",
+      "target": "dev-012/plays_per_day",
+      "change": "근거 구절을 원문에 없는 문장으로",
+      "caught": true,
+      "codes": [
+        "NO_EVIDENCE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "fake_evidence",
+      "target": "dev-007/refund_full_days",
+      "change": "근거 구절을 원문에 없는 문장으로",
+      "caught": true,
+      "codes": [
+        "NO_EVIDENCE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "fake_evidence",
+      "target": "dev-024/hours",
+      "change": "근거 구절을 원문에 없는 문장으로",
+      "caught": true,
+      "codes": [
+        "NO_EVIDENCE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "fake_evidence",
+      "target": "dev-022/size_m",
+      "change": "근거 구절을 원문에 없는 문장으로",
+      "caught": true,
+      "codes": [
+        "NO_EVIDENCE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "fake_evidence",
+      "target": "dev-024/name",
+      "change": "근거 구절을 원문에 없는 문장으로",
+      "caught": true,
+      "codes": [
+        "NO_EVIDENCE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "fake_evidence",
+      "target": "dev-021/resolution_px",
+      "change": "근거 구절을 원문에 없는 문장으로",
+      "caught": true,
+      "codes": [
+        "NO_EVIDENCE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "fake_evidence",
+      "target": "dev-026/min_order_qty",
+      "change": "근거 구절을 원문에 없는 문장으로",
+      "caught": true,
+      "codes": [
+        "NO_EVIDENCE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "fake_evidence",
+      "target": "dev-004/booking_deadline_days",
+      "change": "근거 구절을 원문에 없는 문장으로",
+      "caught": true,
+      "codes": [
+        "NO_EVIDENCE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "fake_evidence",
+      "target": "dev-007/booking_deadline_days",
+      "change": "근거 구절을 원문에 없는 문장으로",
+      "caught": true,
+      "codes": [
+        "NO_EVIDENCE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "fake_evidence",
+      "target": "dev-019/resolution_px",
+      "change": "근거 구절을 원문에 없는 문장으로",
+      "caught": true,
+      "codes": [
+        "NO_EVIDENCE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "fake_evidence",
+      "target": "dev-010/vat_included",
+      "change": "근거 구절을 원문에 없는 문장으로",
+      "caught": true,
+      "codes": [
+        "NO_EVIDENCE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "fake_evidence",
+      "target": "dev-014/file_format",
+      "change": "근거 구절을 원문에 없는 문장으로",
+      "caught": true,
+      "codes": [
+        "NO_EVIDENCE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "fake_evidence",
+      "target": "dev-006/size_m",
+      "change": "근거 구절을 원문에 없는 문장으로",
+      "caught": true,
+      "codes": [
+        "NO_EVIDENCE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "fake_evidence",
+      "target": "dev-022/hours",
+      "change": "근거 구절을 원문에 없는 문장으로",
+      "caught": true,
+      "codes": [
+        "NO_EVIDENCE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "fake_evidence",
+      "target": "dev-011/refund_full_days",
+      "change": "근거 구절을 원문에 없는 문장으로",
+      "caught": true,
+      "codes": [
+        "NO_EVIDENCE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "fake_evidence",
+      "target": "dev-022/period_options",
+      "change": "근거 구절을 원문에 없는 문장으로",
+      "caught": true,
+      "codes": [
+        "NO_EVIDENCE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "fake_evidence",
+      "target": "dev-020/hours",
+      "change": "근거 구절을 원문에 없는 문장으로",
+      "caught": true,
+      "codes": [
+        "NO_EVIDENCE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "fake_evidence",
+      "target": "dev-001/size_m",
+      "change": "근거 구절을 원문에 없는 문장으로",
+      "caught": true,
+      "codes": [
+        "NO_EVIDENCE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "fake_evidence",
+      "target": "dev-010/footfall_per_day",
+      "change": "근거 구절을 원문에 없는 문장으로",
+      "caught": true,
+      "codes": [
+        "NO_EVIDENCE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "fake_evidence",
+      "target": "dev-001/booking_deadline_days",
+      "change": "근거 구절을 원문에 없는 문장으로",
+      "caught": true,
+      "codes": [
+        "NO_EVIDENCE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "fake_evidence",
+      "target": "dev-030/plays_per_day",
+      "change": "근거 구절을 원문에 없는 문장으로",
+      "caught": true,
+      "codes": [
+        "NO_EVIDENCE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "fake_evidence",
+      "target": "dev-021/plays_per_day",
+      "change": "근거 구절을 원문에 없는 문장으로",
+      "caught": true,
+      "codes": [
+        "NO_EVIDENCE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "fake_evidence",
+      "target": "dev-034/vat_included",
+      "change": "근거 구절을 원문에 없는 문장으로",
+      "caught": true,
+      "codes": [
+        "NO_EVIDENCE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "fake_evidence",
+      "target": "dev-030/size_m",
+      "change": "근거 구절을 원문에 없는 문장으로",
+      "caught": true,
+      "codes": [
+        "NO_EVIDENCE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "fake_evidence",
+      "target": "dev-020/plays_per_day",
+      "change": "근거 구절을 원문에 없는 문장으로",
+      "caught": true,
+      "codes": [
+        "NO_EVIDENCE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "cheaper_longer",
+      "target": "dev-012/period_options",
+      "change": "30일 1,550,000원 → 90,000원 (1일은 100,000원)",
+      "caught": true,
+      "codes": [
+        "OUT_OF_RANGE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "cheaper_longer",
+      "target": "dev-014/period_options",
+      "change": "14일 16,000,000원 → 7,560,000원 (7일은 8,400,000원)",
+      "caught": true,
+      "codes": [
+        "OUT_OF_RANGE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "cheaper_longer",
+      "target": "dev-022/period_options",
+      "change": "28일 3,800,000원 → 1,800,000원 (14일은 2,000,000원)",
+      "caught": true,
+      "codes": [
+        "OUT_OF_RANGE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "cheaper_longer",
+      "target": "dev-010/period_options",
+      "change": "28일 5,300,000원 → 2,520,000원 (14일은 2,800,000원)",
+      "caught": true,
+      "codes": [
+        "OUT_OF_RANGE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "cheaper_longer",
+      "target": "dev-039/period_options",
+      "change": "90일 78,700,000원 → 6,120,000원 (7일은 6,800,000원)",
+      "caught": true,
+      "codes": [
+        "OUT_OF_RANGE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "monologue",
+      "target": "billboard-a/en/title",
+      "change": "뒤에 \"(Note: placeholder kept as requested.)\"",
+      "caught": false,
+      "codes": [],
+      "asExpected": false
+    },
+    {
+      "kind": "monologue",
+      "target": "billboard-a/en/summary",
+      "change": "뒤에 \"Let me know if you'd like changes.\"",
+      "caught": true,
+      "codes": [
+        "MONOLOGUE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "monologue",
+      "target": "billboard-a/zh-Hans/title",
+      "change": "앞에 \"译文：\"",
+      "caught": true,
+      "codes": [
+        "MONOLOGUE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "monologue",
+      "target": "billboard-a/zh-Hans/summary",
+      "change": "앞에 \"以下是翻译：\"",
+      "caught": true,
+      "codes": [
+        "MONOLOGUE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "monologue",
+      "target": "billboard-b/en/title",
+      "change": "뒤에 \"(Note: placeholder kept as requested.)\"",
+      "caught": false,
+      "codes": [],
+      "asExpected": false
+    },
+    {
+      "kind": "monologue",
+      "target": "billboard-b/en/summary",
+      "change": "뒤에 \"I hope this helps!\"",
+      "caught": true,
+      "codes": [
+        "MONOLOGUE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "monologue",
+      "target": "billboard-b/zh-Hans/title",
+      "change": "뒤에 \"（注：已保留占位符）\"",
+      "caught": false,
+      "codes": [],
+      "asExpected": false
+    },
+    {
+      "kind": "monologue",
+      "target": "billboard-b/zh-Hans/summary",
+      "change": "뒤에 \"如需修改请告诉我。\"",
+      "caught": false,
+      "codes": [],
+      "asExpected": false
+    },
+    {
+      "kind": "monologue",
+      "target": "subway/en/title",
+      "change": "뒤에 \"(Note: placeholder kept as requested.)\"",
+      "caught": false,
+      "codes": [],
+      "asExpected": false
+    },
+    {
+      "kind": "monologue",
+      "target": "subway/en/summary",
+      "change": "앞에 \"Here is the translation:\"",
+      "caught": true,
+      "codes": [
+        "MONOLOGUE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "monologue",
+      "target": "subway/zh-Hans/title",
+      "change": "뒤에 \"（注：已保留占位符）\"",
+      "caught": false,
+      "codes": [],
+      "asExpected": false
+    },
+    {
+      "kind": "monologue",
+      "target": "subway/zh-Hans/summary",
+      "change": "뒤에 \"如需修改请告诉我。\"",
+      "caught": false,
+      "codes": [],
+      "asExpected": false
+    },
+    {
+      "kind": "monologue",
+      "target": "bus/en/title",
+      "change": "앞에 \"Certainly!\"",
+      "caught": true,
+      "codes": [
+        "MONOLOGUE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "monologue",
+      "target": "bus/en/summary",
+      "change": "앞에 \"Here is the translation:\"",
+      "caught": true,
+      "codes": [
+        "MONOLOGUE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "monologue",
+      "target": "bus/zh-Hans/title",
+      "change": "뒤에 \"如需修改请告诉我。\"",
+      "caught": false,
+      "codes": [],
+      "asExpected": false
+    },
+    {
+      "kind": "monologue",
+      "target": "bus/zh-Hans/summary",
+      "change": "앞에 \"好的，\"",
+      "caught": true,
+      "codes": [
+        "MONOLOGUE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "monologue",
+      "target": "coffee/en/title",
+      "change": "뒤에 \"I hope this helps!\"",
+      "caught": true,
+      "codes": [
+        "MONOLOGUE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "monologue",
+      "target": "coffee/en/summary",
+      "change": "앞에 \"Here is the translation:\"",
+      "caught": true,
+      "codes": [
+        "MONOLOGUE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "monologue",
+      "target": "coffee/zh-Hans/title",
+      "change": "앞에 \"好的，\"",
+      "caught": true,
+      "codes": [
+        "MONOLOGUE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "monologue",
+      "target": "coffee/zh-Hans/summary",
+      "change": "앞에 \"好的，\"",
+      "caught": true,
+      "codes": [
+        "MONOLOGUE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "monologue",
+      "target": "lunch/en/title",
+      "change": "뒤에 \"I hope this helps!\"",
+      "caught": true,
+      "codes": [
+        "MONOLOGUE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "monologue",
+      "target": "lunch/en/summary",
+      "change": "뒤에 \"(Note: placeholder kept as requested.)\"",
+      "caught": false,
+      "codes": [],
+      "asExpected": false
+    },
+    {
+      "kind": "monologue",
+      "target": "lunch/zh-Hans/title",
+      "change": "앞에 \"译文：\"",
+      "caught": true,
+      "codes": [
+        "MONOLOGUE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "monologue",
+      "target": "lunch/zh-Hans/summary",
+      "change": "앞에 \"以下是翻译：\"",
+      "caught": true,
+      "codes": [
+        "MONOLOGUE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "monologue",
+      "target": "print/en/title",
+      "change": "뒤에 \"I hope this helps!\"",
+      "caught": true,
+      "codes": [
+        "MONOLOGUE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "monologue",
+      "target": "print/en/summary",
+      "change": "뒤에 \"(Note: placeholder kept as requested.)\"",
+      "caught": false,
+      "codes": [],
+      "asExpected": false
+    },
+    {
+      "kind": "monologue",
+      "target": "print/zh-Hans/title",
+      "change": "뒤에 \"如需修改请告诉我。\"",
+      "caught": false,
+      "codes": [],
+      "asExpected": false
+    },
+    {
+      "kind": "monologue",
+      "target": "print/zh-Hans/summary",
+      "change": "뒤에 \"如需修改请告诉我。\"",
+      "caught": false,
+      "codes": [],
+      "asExpected": false
+    },
+    {
+      "kind": "monologue",
+      "target": "goods/en/title",
+      "change": "앞에 \"Sure, here's the title:\"",
+      "caught": true,
+      "codes": [
+        "MONOLOGUE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "monologue",
+      "target": "goods/en/summary",
+      "change": "앞에 \"Sure, here's the title:\"",
+      "caught": true,
+      "codes": [
+        "MONOLOGUE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "monologue",
+      "target": "goods/zh-Hans/title",
+      "change": "앞에 \"译文：\"",
+      "caught": true,
+      "codes": [
+        "MONOLOGUE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "monologue",
+      "target": "goods/zh-Hans/summary",
+      "change": "앞에 \"译文：\"",
+      "caught": true,
+      "codes": [
+        "MONOLOGUE"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "glossary_swap",
+      "target": "billboard-a/en/title",
+      "change": "\"digital billboard\" → \"LED screen\"",
+      "caught": true,
+      "codes": [
+        "GLOSSARY_MISS"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "glossary_swap",
+      "target": "billboard-a/en/summary",
+      "change": "\"digital billboard\" → \"LED screen\"",
+      "caught": true,
+      "codes": [
+        "GLOSSARY_MISS"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "glossary_swap",
+      "target": "billboard-a/zh-Hans/title",
+      "change": "\"电子屏\" → \"大屏幕\"",
+      "caught": true,
+      "codes": [
+        "GLOSSARY_MISS"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "glossary_swap",
+      "target": "billboard-a/zh-Hans/summary",
+      "change": "\"电子屏\" → \"大屏幕\"",
+      "caught": true,
+      "codes": [
+        "GLOSSARY_MISS"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "glossary_swap",
+      "target": "billboard-b/en/title",
+      "change": "\"digital billboard\" → \"video wall\"",
+      "caught": true,
+      "codes": [
+        "GLOSSARY_MISS"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "glossary_swap",
+      "target": "billboard-b/en/summary",
+      "change": "\"digital billboard\" → \"video wall\"",
+      "caught": true,
+      "codes": [
+        "GLOSSARY_MISS"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "glossary_swap",
+      "target": "billboard-b/zh-Hans/title",
+      "change": "\"电子屏\" → \"显示墙\"",
+      "caught": true,
+      "codes": [
+        "GLOSSARY_MISS"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "glossary_swap",
+      "target": "billboard-b/zh-Hans/summary",
+      "change": "\"电子屏\" → \"显示墙\"",
+      "caught": true,
+      "codes": [
+        "GLOSSARY_MISS"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "glossary_swap",
+      "target": "subway/en/title",
+      "change": "\"subway ad\" → \"metro poster\"",
+      "caught": true,
+      "codes": [
+        "GLOSSARY_MISS"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "glossary_swap",
+      "target": "subway/en/summary",
+      "change": "\"subway ad\" → \"metro poster\"",
+      "caught": true,
+      "codes": [
+        "GLOSSARY_MISS"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "glossary_swap",
+      "target": "subway/zh-Hans/title",
+      "change": "\"地铁广告\" → \"地铁海报\"",
+      "caught": true,
+      "codes": [
+        "GLOSSARY_MISS"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "glossary_swap",
+      "target": "subway/zh-Hans/summary",
+      "change": "\"地铁广告\" → \"地铁海报\"",
+      "caught": true,
+      "codes": [
+        "GLOSSARY_MISS"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "glossary_swap",
+      "target": "bus/en/title",
+      "change": "\"bus ad\" → \"coach banner\"",
+      "caught": true,
+      "codes": [
+        "GLOSSARY_MISS"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "glossary_swap",
+      "target": "bus/en/summary",
+      "change": "\"bus ad\" → \"coach banner\"",
+      "caught": true,
+      "codes": [
+        "GLOSSARY_MISS"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "glossary_swap",
+      "target": "bus/zh-Hans/title",
+      "change": "\"公交广告\" → \"巴士海报\"",
+      "caught": true,
+      "codes": [
+        "GLOSSARY_MISS"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "glossary_swap",
+      "target": "bus/zh-Hans/summary",
+      "change": "\"公交广告\" → \"巴士海报\"",
+      "caught": true,
+      "codes": [
+        "GLOSSARY_MISS"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "glossary_swap",
+      "target": "coffee/en/title",
+      "change": "\"coffee truck\" → \"coffee van\"",
+      "caught": true,
+      "codes": [
+        "GLOSSARY_MISS"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "glossary_swap",
+      "target": "coffee/en/summary",
+      "change": "\"coffee truck\" → \"coffee van\"",
+      "caught": true,
+      "codes": [
+        "GLOSSARY_MISS"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "glossary_swap",
+      "target": "coffee/zh-Hans/title",
+      "change": "\"咖啡车\" → \"咖啡餐车\"",
+      "caught": true,
+      "codes": [
+        "GLOSSARY_MISS"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "glossary_swap",
+      "target": "coffee/zh-Hans/summary",
+      "change": "\"咖啡车\" → \"咖啡餐车\"",
+      "caught": true,
+      "codes": [
+        "GLOSSARY_MISS"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "glossary_swap",
+      "target": "lunch/en/title",
+      "change": "\"lunch box\" → \"bento\"",
+      "caught": true,
+      "codes": [
+        "GLOSSARY_MISS"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "glossary_swap",
+      "target": "lunch/en/summary",
+      "change": "\"lunch box\" → \"bento\"",
+      "caught": true,
+      "codes": [
+        "GLOSSARY_MISS"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "glossary_swap",
+      "target": "lunch/zh-Hans/title",
+      "change": "\"便当\" → \"盒饭\"",
+      "caught": true,
+      "codes": [
+        "GLOSSARY_MISS"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "glossary_swap",
+      "target": "lunch/zh-Hans/summary",
+      "change": "\"便当\" → \"盒饭\"",
+      "caught": true,
+      "codes": [
+        "GLOSSARY_MISS"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "glossary_swap",
+      "target": "print/en/title",
+      "change": "\"printed goods\" → \"paper items\"",
+      "caught": true,
+      "codes": [
+        "GLOSSARY_MISS"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "glossary_swap",
+      "target": "print/en/summary",
+      "change": "\"printed goods\" → \"paper items\"",
+      "caught": true,
+      "codes": [
+        "GLOSSARY_MISS"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "glossary_swap",
+      "target": "print/zh-Hans/title",
+      "change": "\"印刷品\" → \"纸制品\"",
+      "caught": true,
+      "codes": [
+        "GLOSSARY_MISS"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "glossary_swap",
+      "target": "print/zh-Hans/summary",
+      "change": "\"印刷品\" → \"纸制品\"",
+      "caught": true,
+      "codes": [
+        "GLOSSARY_MISS"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "glossary_swap",
+      "target": "goods/en/title",
+      "change": "\"merchandise\" → \"fan items\"",
+      "caught": true,
+      "codes": [
+        "GLOSSARY_MISS"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "glossary_swap",
+      "target": "goods/en/summary",
+      "change": "\"merchandise\" → \"fan items\"",
+      "caught": true,
+      "codes": [
+        "GLOSSARY_MISS"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "glossary_swap",
+      "target": "goods/zh-Hans/title",
+      "change": "\"周边\" → \"纪念品\"",
+      "caught": true,
+      "codes": [
+        "GLOSSARY_MISS"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "glossary_swap",
+      "target": "goods/zh-Hans/summary",
+      "change": "\"周边\" → \"纪念品\"",
+      "caught": true,
+      "codes": [
+        "GLOSSARY_MISS"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "placeholder_removed",
+      "target": "billboard-a/en/summary",
+      "change": "{price} 를 지움",
+      "caught": true,
+      "codes": [
+        "PLACEHOLDER_LOST"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "placeholder_removed",
+      "target": "billboard-a/zh-Hans/summary",
+      "change": "{price} 를 지움",
+      "caught": true,
+      "codes": [
+        "PLACEHOLDER_LOST"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "placeholder_removed",
+      "target": "billboard-b/en/summary",
+      "change": "{days} 를 숫자 7 로",
+      "caught": true,
+      "codes": [
+        "PLACEHOLDER_LOST",
+        "STRAY_NUMBER"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "placeholder_removed",
+      "target": "billboard-b/zh-Hans/summary",
+      "change": "{days} 를 지움",
+      "caught": true,
+      "codes": [
+        "PLACEHOLDER_LOST"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "placeholder_removed",
+      "target": "subway/en/summary",
+      "change": "{price} 를 지움",
+      "caught": true,
+      "codes": [
+        "PLACEHOLDER_LOST"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "placeholder_removed",
+      "target": "subway/zh-Hans/summary",
+      "change": "{price} 를 숫자 1,500,000 로",
+      "caught": true,
+      "codes": [
+        "PLACEHOLDER_LOST",
+        "STRAY_NUMBER"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "placeholder_removed",
+      "target": "bus/en/summary",
+      "change": "{days} 를 숫자 7 로",
+      "caught": true,
+      "codes": [
+        "PLACEHOLDER_LOST",
+        "STRAY_NUMBER"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "placeholder_removed",
+      "target": "bus/zh-Hans/summary",
+      "change": "{days} 를 지움",
+      "caught": true,
+      "codes": [
+        "PLACEHOLDER_LOST"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "placeholder_removed",
+      "target": "coffee/en/summary",
+      "change": "{qty} 를 지움",
+      "caught": true,
+      "codes": [
+        "PLACEHOLDER_LOST"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "placeholder_removed",
+      "target": "coffee/zh-Hans/summary",
+      "change": "{qty} 를 지움",
+      "caught": true,
+      "codes": [
+        "PLACEHOLDER_LOST"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "placeholder_removed",
+      "target": "lunch/en/summary",
+      "change": "{price} 를 숫자 1,500,000 로",
+      "caught": true,
+      "codes": [
+        "PLACEHOLDER_LOST",
+        "STRAY_NUMBER"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "placeholder_removed",
+      "target": "lunch/zh-Hans/summary",
+      "change": "{price} 를 지움",
+      "caught": true,
+      "codes": [
+        "PLACEHOLDER_LOST"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "placeholder_removed",
+      "target": "print/en/summary",
+      "change": "{qty} 를 숫자 100 로",
+      "caught": true,
+      "codes": [
+        "PLACEHOLDER_LOST",
+        "STRAY_NUMBER"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "placeholder_removed",
+      "target": "print/zh-Hans/summary",
+      "change": "{price} 를 숫자 1,500,000 로",
+      "caught": true,
+      "codes": [
+        "PLACEHOLDER_LOST",
+        "STRAY_NUMBER"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "placeholder_removed",
+      "target": "goods/en/summary",
+      "change": "{qty} 를 숫자 100 로",
+      "caught": true,
+      "codes": [
+        "PLACEHOLDER_LOST",
+        "STRAY_NUMBER"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "placeholder_removed",
+      "target": "goods/zh-Hans/summary",
+      "change": "{price} 를 지움",
+      "caught": true,
+      "codes": [
+        "PLACEHOLDER_LOST"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "hangul_mixed",
+      "target": "billboard-a/en/title",
+      "change": "가운데에 \"예약 가능\"",
+      "caught": true,
+      "codes": [
+        "HANGUL_IN_TEXT"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "hangul_mixed",
+      "target": "billboard-a/en/summary",
+      "change": "가운데에 \"예약 가능\"",
+      "caught": true,
+      "codes": [
+        "HANGUL_IN_TEXT"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "hangul_mixed",
+      "target": "billboard-a/zh-Hans/title",
+      "change": "가운데에 \"전광판\"",
+      "caught": true,
+      "codes": [
+        "HANGUL_IN_TEXT"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "hangul_mixed",
+      "target": "billboard-a/zh-Hans/summary",
+      "change": "가운데에 \"예약 가능\"",
+      "caught": true,
+      "codes": [
+        "HANGUL_IN_TEXT"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "hangul_mixed",
+      "target": "billboard-b/en/title",
+      "change": "가운데에 \"커피차\"",
+      "caught": true,
+      "codes": [
+        "HANGUL_IN_TEXT",
+        "GLOSSARY_MISS"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "hangul_mixed",
+      "target": "billboard-b/en/summary",
+      "change": "가운데에 \"문의\"",
+      "caught": true,
+      "codes": [
+        "HANGUL_IN_TEXT"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "hangul_mixed",
+      "target": "billboard-b/zh-Hans/title",
+      "change": "가운데에 \"문의\"",
+      "caught": true,
+      "codes": [
+        "HANGUL_IN_TEXT"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "hangul_mixed",
+      "target": "billboard-b/zh-Hans/summary",
+      "change": "가운데에 \"할인\"",
+      "caught": true,
+      "codes": [
+        "HANGUL_IN_TEXT"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "hangul_mixed",
+      "target": "subway/en/title",
+      "change": "가운데에 \"커피차\"",
+      "caught": true,
+      "codes": [
+        "HANGUL_IN_TEXT"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "hangul_mixed",
+      "target": "subway/en/summary",
+      "change": "가운데에 \"할인\"",
+      "caught": true,
+      "codes": [
+        "HANGUL_IN_TEXT"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "hangul_mixed",
+      "target": "subway/zh-Hans/title",
+      "change": "가운데에 \"예약 가능\"",
+      "caught": true,
+      "codes": [
+        "HANGUL_IN_TEXT"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "hangul_mixed",
+      "target": "subway/zh-Hans/summary",
+      "change": "가운데에 \"커피차\"",
+      "caught": true,
+      "codes": [
+        "HANGUL_IN_TEXT"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "hangul_mixed",
+      "target": "bus/en/title",
+      "change": "가운데에 \"커피차\"",
+      "caught": true,
+      "codes": [
+        "HANGUL_IN_TEXT"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "hangul_mixed",
+      "target": "bus/en/summary",
+      "change": "가운데에 \"예약 가능\"",
+      "caught": true,
+      "codes": [
+        "HANGUL_IN_TEXT"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "hangul_mixed",
+      "target": "bus/zh-Hans/title",
+      "change": "가운데에 \"할인\"",
+      "caught": true,
+      "codes": [
+        "HANGUL_IN_TEXT"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "hangul_mixed",
+      "target": "bus/zh-Hans/summary",
+      "change": "가운데에 \"문의\"",
+      "caught": true,
+      "codes": [
+        "HANGUL_IN_TEXT"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "hangul_mixed",
+      "target": "coffee/en/title",
+      "change": "가운데에 \"예약 가능\"",
+      "caught": true,
+      "codes": [
+        "HANGUL_IN_TEXT",
+        "GLOSSARY_MISS"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "hangul_mixed",
+      "target": "coffee/en/summary",
+      "change": "가운데에 \"할인\"",
+      "caught": true,
+      "codes": [
+        "HANGUL_IN_TEXT"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "hangul_mixed",
+      "target": "coffee/zh-Hans/title",
+      "change": "가운데에 \"문의\"",
+      "caught": true,
+      "codes": [
+        "HANGUL_IN_TEXT"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "hangul_mixed",
+      "target": "coffee/zh-Hans/summary",
+      "change": "가운데에 \"전광판\"",
+      "caught": true,
+      "codes": [
+        "HANGUL_IN_TEXT"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "hangul_mixed",
+      "target": "lunch/en/title",
+      "change": "가운데에 \"전광판\"",
+      "caught": true,
+      "codes": [
+        "HANGUL_IN_TEXT",
+        "GLOSSARY_MISS"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "hangul_mixed",
+      "target": "lunch/en/summary",
+      "change": "가운데에 \"커피차\"",
+      "caught": true,
+      "codes": [
+        "HANGUL_IN_TEXT"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "hangul_mixed",
+      "target": "lunch/zh-Hans/title",
+      "change": "가운데에 \"할인\"",
+      "caught": true,
+      "codes": [
+        "HANGUL_IN_TEXT",
+        "GLOSSARY_MISS"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "hangul_mixed",
+      "target": "lunch/zh-Hans/summary",
+      "change": "가운데에 \"문의\"",
+      "caught": true,
+      "codes": [
+        "HANGUL_IN_TEXT"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "hangul_mixed",
+      "target": "print/en/title",
+      "change": "가운데에 \"전광판\"",
+      "caught": true,
+      "codes": [
+        "HANGUL_IN_TEXT"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "hangul_mixed",
+      "target": "print/en/summary",
+      "change": "가운데에 \"할인\"",
+      "caught": true,
+      "codes": [
+        "HANGUL_IN_TEXT"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "hangul_mixed",
+      "target": "print/zh-Hans/title",
+      "change": "가운데에 \"문의\"",
+      "caught": true,
+      "codes": [
+        "HANGUL_IN_TEXT"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "hangul_mixed",
+      "target": "print/zh-Hans/summary",
+      "change": "가운데에 \"전광판\"",
+      "caught": true,
+      "codes": [
+        "HANGUL_IN_TEXT"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "hangul_mixed",
+      "target": "goods/en/title",
+      "change": "가운데에 \"커피차\"",
+      "caught": true,
+      "codes": [
+        "HANGUL_IN_TEXT"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "hangul_mixed",
+      "target": "goods/en/summary",
+      "change": "가운데에 \"커피차\"",
+      "caught": true,
+      "codes": [
+        "HANGUL_IN_TEXT"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "hangul_mixed",
+      "target": "goods/zh-Hans/title",
+      "change": "가운데에 \"할인\"",
+      "caught": true,
+      "codes": [
+        "HANGUL_IN_TEXT"
+      ],
+      "asExpected": true
+    },
+    {
+      "kind": "hangul_mixed",
+      "target": "goods/zh-Hans/summary",
+      "change": "가운데에 \"문의\"",
+      "caught": true,
+      "codes": [
+        "HANGUL_IN_TEXT"
+      ],
+      "asExpected": true
+    }
+  ]
+}
