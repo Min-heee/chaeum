@@ -1,0 +1,17 @@
+[
+  { "id": "ann-01", "artist": "새벽정원", "kind": "debut", "month": 1, "day": 5 },
+  { "id": "ann-02", "artist": "어진솔", "kind": "debut", "month": 2, "day": 11 },
+  { "id": "ann-03", "artist": "탁여울", "kind": "birthday", "month": 2, "day": 29 },
+  { "id": "ann-04", "artist": "유리고래", "kind": "debut", "month": 3, "day": 9 },
+  { "id": "ann-05", "artist": "빈하늬", "kind": "birthday", "month": 4, "day": 2 },
+  { "id": "ann-06", "artist": "열두시반", "kind": "debut", "month": 4, "day": 27 },
+  { "id": "ann-07", "artist": "어진솔", "kind": "birthday", "month": 5, "day": 21 },
+  { "id": "ann-08", "artist": "민트구름단", "kind": "debut", "month": 6, "day": 15 },
+  { "id": "ann-09", "artist": "봉다래", "kind": "birthday", "month": 7, "day": 8 },
+  { "id": "ann-10", "artist": "별빛도서관", "kind": "debut", "month": 8, "day": 1 },
+  { "id": "ann-11", "artist": "옥새봄", "kind": "birthday", "month": 8, "day": 26 },
+  { "id": "ann-12", "artist": "파란계단", "kind": "debut", "month": 9, "day": 19 },
+  { "id": "ann-13", "artist": "제갈미르", "kind": "birthday", "month": 10, "day": 24 },
+  { "id": "ann-14", "artist": "네온라일락", "kind": "debut", "month": 11, "day": 17 },
+  { "id": "ann-15", "artist": "오로라핀", "kind": "debut", "month": 12, "day": 22 }
+]

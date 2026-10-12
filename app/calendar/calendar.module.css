@@ -1,0 +1,74 @@
+/* 달력 화면에서만 쓰는 것. 색은 전역 스타일(app/globals.css)의 변수를 그대로 쓴다. */
+.controls {
+  display: grid;
+  gap: 10px;
+  /* fieldset 은 기본으로 안의 것보다 좁아지지 않는다. 좁은 화면에서 옆으로 넘치지 않게 푼다. */
+  min-width: 0;
+  margin: 12px 0 4px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+}
+
+.line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.line select {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* 전역 스타일이 쪽 안의 입력 칸에 주는 안쪽 여백을 고르기 단추에는 주지 않는다. */
+.line input[type='radio'] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+}
+
+/* 다시 세는 동안 앞의 표를 흐리게 둔다. */
+.stale {
+  opacity: 0.55;
+}
+
+.counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 8px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.todo {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.todo li + li {
+  margin-top: 4px;
+}
+
+.todo .lateText {
+  color: var(--danger);
+}
+
+.todo .closingText {
+  color: var(--flag-fg);
+  font-weight: 600;
+}
+
+.rules {
+  margin: 6px 0;
+  padding-left: 20px;
+}
+
+.rules li {
+  margin: 3px 0;
+}
