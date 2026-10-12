@@ -1,6 +1,6 @@
 // 사유 코드의 약속. 확신 점수 대신 "왜 사람이 봐야 하는지"를 코드로 남긴다.
 
-/** 초안과 칸에 붙는 사유 코드 12개. */
+/** 초안과 칸에 붙는 사유 코드 13개. */
 export const REASON_CODES = [
   'NO_EVIDENCE',
   'VALUE_MISMATCH',
@@ -14,6 +14,7 @@ export const REASON_CODES = [
   'NOT_A_PRODUCT',
   'LLM_SKIPPED',
   'INSTRUCTION_LIKE',
+  'TRANSCRIBED',
 ] as const;
 export type ReasonCode = (typeof REASON_CODES)[number];
 
@@ -59,14 +60,14 @@ export const REASONS: Record<ReasonCode, ReasonDef> = {
   },
   UNIT_CONVERTED: {
     label: '단위 바꿈',
-    description: '단위를 바꿔 적었습니다(예: 월 → 하루). 틀린 것은 아니지만 확인해 주세요.',
+    description: '단위를 바꾸거나(예: 월 → 하루) 빠진 단위(만원)를 짐작해 적었습니다. 원문과 견주어 주세요.',
     scope: 'field',
     blocking: true,
     source: 'normalize',
   },
   OUT_OF_RANGE: {
     label: '범위 밖',
-    description: '값이 말이 안 됩니다(0 이하, 판매가가 정가보다 큼, 기간이 길수록 총액이 작아짐, 운영 24시간 초과).',
+    description: '값이 말이 안 됩니다(0 이하, 판매가가 정가보다 큼, 기간이 길수록 총액이 작아짐, 운영 24시간 초과, 상품 이름이 한 글자).',
     scope: 'field',
     blocking: true,
     source: 'checks/range',
@@ -108,6 +109,7 @@ export const REASONS: Record<ReasonCode, ReasonDef> = {
   },
   LLM_SKIPPED: {
     label: '규칙만으로 뽑음',
+    // 왜 AI 를 거치지 않았는지는 초안의 llm_skip_cause 에 따로 남는다(LLM_SKIP_CAUSES).
     description: '규칙만으로 뽑았습니다. AI를 거치지 않았습니다.',
     scope: 'draft',
     blocking: true,
@@ -119,6 +121,13 @@ export const REASONS: Record<ReasonCode, ReasonDef> = {
     scope: 'draft',
     blocking: true,
     source: 'checks/structure',
+  },
+  TRANSCRIBED: {
+    label: '원본과 대조 필요',
+    description: '그림·PDF에서 옮긴 글입니다. 옮기다 틀렸을 수 있으니 원본과 대조해 주세요.',
+    scope: 'draft',
+    blocking: true,
+    source: 'pipeline',
   },
 };
 
@@ -134,6 +143,32 @@ export function isBlocking(code: ReasonCode): boolean {
 /** 막는 사유가 하나라도 있는가. 표시(노란 표시)의 정의이기도 하다. */
 export function hasBlocking(codes: readonly ReasonCode[]): boolean {
   return codes.some(isBlocking);
+}
+
+// ── 규칙만 길로 내려간 까닭 ─────────────────────────────────
+
+/**
+ * LLM_SKIPPED 의 원인(drafts.llm_skip_cause). 화면이 "왜 AI 를 거치지 않았는지"를 이 말로 적는다.
+ * - no_key: 키가 없다(또는 키가 거절됐다)       - cache_miss: 녹화만 쓰는 방식인데 이 글의 녹화가 없다
+ * - off: 실제 호출이 꺼져 있다(하루 상한 0)     - too_long: 글이 실제 호출 길이 상한을 넘는다
+ * - daily_cap: 오늘 실제 호출 상한이 다 찼다    - refusal: 모델이 거절했다
+ * - error: 호출이 실패했다(잘린 답, 형식 오류, 요청 거절, 되풀이한 잠깐의 오류)
+ */
+export const LLM_SKIP_CAUSES = ['no_key', 'cache_miss', 'off', 'too_long', 'daily_cap', 'refusal', 'error'] as const;
+export type LlmSkipCause = (typeof LLM_SKIP_CAUSES)[number];
+
+export const LLM_SKIP_LABELS: Record<LlmSkipCause, string> = {
+  no_key: 'API 키가 없습니다.',
+  cache_miss: '미리 받아 둔 응답이 없는 글입니다.',
+  off: '이 서버는 실제 호출이 꺼져 있습니다.',
+  too_long: '글이 길어 실제 호출을 하지 않았습니다.',
+  daily_cap: '오늘 실제 호출 상한이 다 찼습니다.',
+  refusal: '모델이 답을 거절했습니다.',
+  error: '호출이 실패했습니다.',
+};
+
+export function isLlmSkipCause(value: string): value is LlmSkipCause {
+  return (LLM_SKIP_CAUSES as readonly string[]).includes(value);
 }
 
 // ── 글 검사 ────────────────────────────────────────────────

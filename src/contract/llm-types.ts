@@ -1,10 +1,31 @@
 // LLM 공급자 자리의 약속. 구현 셋(실제 호출 / 녹화 재생 / 시험용)이 같은 자리에 끼워진다.
-import type { z } from 'zod';
+import { z } from 'zod';
 import type { ContentDraft, ContentInput } from './content';
+import type { LlmAttachment } from './attachments';
 import type { Extraction } from './fields';
 
-export const LLM_TASKS = ['extract', 'content'] as const;
+/** transcribe: 그림·PDF 를 글로 옮김. extract: 칸 뽑기. content: 다른 언어 글 만들기. */
+export const LLM_TASKS = ['transcribe', 'extract', 'content'] as const;
 export type LlmTask = (typeof LLM_TASKS)[number];
+
+// 첨부(그림·PDF)의 약속은 attachments.ts 에 있다. 브라우저 코드도 읽는 것이라 따로 뒀다.
+export {
+  ATTACHMENT_KINDS,
+  ATTACHMENT_MEDIA_TYPES,
+  attachmentKindOf,
+  isMediaTypeOf,
+  type AttachmentKind,
+  type AttachmentMediaType,
+  type LlmAttachment,
+} from './attachments';
+
+/**
+ * 글로 옮긴 결과.
+ * - text: 파일에 보이는 글자를 보이는 그대로. 표는 줄마다 한 줄로. 덧붙이거나 고치지 않는다.
+ * - readable: 글자를 읽을 수 없는 파일(사진뿐인 그림, 깨진 스캔)이면 false. 이때 text 는 빈 글.
+ */
+export const TranscriptionSchema = z.object({ text: z.string(), readable: z.boolean() });
+export type Transcription = z.infer<typeof TranscriptionSchema>;
 
 export const LLM_PROVIDER_NAMES = ['anthropic', 'replay', 'fake'] as const;
 export type LlmProviderName = (typeof LLM_PROVIDER_NAMES)[number];
@@ -22,6 +43,12 @@ export interface LlmRequest<T> {
   /** 답을 다시 검사하는 스키마. */
   schema: z.ZodType<T>;
   maxTokens: number;
+  /**
+   * (선택) 붙이는 파일. transcribe 에서만 쓴다. 지금은 한 요청에 하나다.
+   * 장부 키에는 파일마다 { kind, mediaType, sha256(파일 바이트) } 가 꼭 들어가야 한다.
+   * 안 그러면 다른 그림이 같은 키가 되어 남의 녹화 답이 나온다. base64 글 자체는 키에도 장부에도 넣지 않는다.
+   */
+  attachments?: LlmAttachment[];
 }
 
 export interface LlmUsage {
@@ -88,7 +115,10 @@ export interface LlmCallRecord {
   provider: LlmProviderName;
   model: string;
   promptVersion: string;
-  /** sha256(task + model + promptVersion + 스키마 버전 + 시스템 글·보내는 스키마의 해시 + 생각 깊이 + 정리한 입력) */
+  /**
+   * sha256(task + model + promptVersion + 스키마 버전 + 시스템 글·보내는 스키마의 해시 + 생각 깊이 + 정리한 입력).
+   * 첨부가 있으면 "정리한 입력"에 첨부마다의 종류·형식·파일 해시가 함께 들어간다.
+   */
   cacheKey: string;
   /** 검사를 통과한 답 */
   response: unknown;
@@ -137,8 +167,10 @@ export interface ModelPrice {
 /** src/llm/index.ts 가 이 꼴대로 내보낸다. */
 export interface LlmApi {
   createProvider(options: CreateProviderOptions): LlmProvider;
-  /** 장부의 키. 같은 요청이면 같은 키, 프롬프트·모델·스키마가 바뀌면 다른 키. */
+  /** 장부의 키. 같은 요청이면 같은 키, 프롬프트·모델·스키마·첨부 파일이 바뀌면 다른 키. */
   cacheKeyFor(req: LlmRequest<unknown>, model: string): string;
+  /** 글로 옮기기 요청을 만든다. 파일은 attachments 로, 파일 이름은 넣지 않는다(이름이 달라도 같은 키). */
+  buildTranscribeRequest(attachment: LlmAttachment): LlmRequest<Transcription>;
   /** 뽑기 요청을 만든다. 원문은 input 안의 값으로 들어간다. */
   buildExtractRequest(cleanText: string): LlmRequest<Extraction>;
   /** 글 만들기 요청을 만든다. retryHint 는 지난 답에서 걸린 검사를 알려 줄 때만. */

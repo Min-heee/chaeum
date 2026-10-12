@@ -231,7 +231,19 @@ export interface EvalRun {
   startedAt: string;
 }
 
-/** 두 실행을 같은 문서끼리 견준 것. 문서가 "전부 맞음"이 됐는가를 기준으로 센다. */
+/** 견준 두 실행에서 판정이 달라진 칸 하나. 무엇이 나아지고 나빠졌는지 건별로 읽을 때 쓴다. */
+export interface CellChange {
+  goldDocId: string;
+  field: FieldKey | ClassField;
+  base: Verdict;
+  other: Verdict;
+}
+
+/**
+ * 두 실행을 같은 문서끼리 견준 것. 문서가 "전부 맞음"이 됐는가를 기준으로 센다.
+ * 같은 묶음, 같은 정답 버전, 같은 방식의 실행끼리만 견준다(다르면 견주지 않고 오류).
+ * 양쪽에 다 있는 문서만 센다. 한쪽에만 있는 문서는 onlyIn… 에 따로 적는다.
+ */
 export interface RunComparison {
   baseRunId: number;
   otherRunId: number;
@@ -239,8 +251,76 @@ export interface RunComparison {
   improved: string[];
   /** base 에서 전부 맞았고 other 에서 틀린 문서 */
   regressed: string[];
-  /** 둘 다 같은 문서 수 */
+  /** 둘 다 같은 문서 수(둘 다 전부 맞음 + 둘 다 틀림) */
   unchanged: number;
+  onlyInBase: string[];
+  onlyInOther: string[];
+  /** 판정이 달라진 칸들. 문서 번호, 칸 순서로 적는다. API 응답에는 싣지 않아도 된다(기록 파일용). */
+  cellChanges?: CellChange[];
+}
+
+/** 문서 하나가 전부 맞았는가: 종류·갈래 줄을 포함해 틀린 판정(ERROR_VERDICTS)이 하나도 없다. */
+export function isDocAllCorrect(cells: readonly Pick<EvalCell, 'verdict'>[]): boolean {
+  return cells.every((cell) => !ERROR_VERDICTS.includes(cell.verdict));
+}
+
+// ── 실행 기록 ──────────────────────────────────────────────
+
+/**
+ * 돌리기 전의 어림(--dry-run). 키 없이 낸다.
+ * 비용은 어림이다. 건당 토큰은 지금까지의 장부 평균으로, 장부가 비었으면 정해 둔 어림값으로 낸다(basis 에 적는다).
+ */
+export interface EvalEstimate {
+  split: GoldSplit;
+  /** 채점할 문서 수(사람이 확인한 것만) */
+  docs: number;
+  /** 장부에 답이 있어 부르지 않아도 되는 문서 수 */
+  cached: number;
+  /** 실제로 불러야 하는 문서 수 */
+  toCall: number;
+  estCostUsd: number;
+  basis: 'ledger_average' | 'default_guess';
+}
+
+/**
+ * 평가를 한 번 돌린 기록(eval/results/ 의 JSON 파일 하나). DB 의 eval_runs 세 줄과 같은 내용이다.
+ * 한 번 돌리면 방식 셋(rules / llm_only / llm_code)이 같은 호출에서 나온다.
+ * 실제 자료 묶음(real)의 기록에는 원문도 값도 싣지 않는다(지표와 판정만).
+ */
+export interface EvalRunRecord {
+  split: GoldSplit;
+  goldVersion: number;
+  model: string | null;
+  promptVersion: string | null;
+  gitCommit: string;
+  startedAt: string;
+  /** 녹화본만으로 돌렸는가(eval:replay) */
+  replayOnly: boolean;
+  /** 상한(--max-usd)에 걸려 중간에 멈췄는가. 멈췄으면 끝난 데까지만 들어 있다. */
+  stoppedByBudget: boolean;
+  /** 방식별 실행 번호와 지표 */
+  runs: Record<EvalMethod, { runId: number; metrics: EvalMetrics }>;
+  /** 실제로 쓴 돈(녹화본에서 읽은 것은 0) */
+  costUsd: number;
+}
+
+/**
+ * 회귀 문지기의 기준(eval/baseline.json). 연습 세트를 녹화본으로 다시 채점한 값이다.
+ * eval:replay 의 "전부 맞은 문서 수"(llm_code 방식)가 docsAllCorrect 아래로 내려가면 verify 가 실패한다.
+ * 프롬프트·모델·정답 버전이 기준과 다르면 견주지 않고 "다시 녹화 필요"로 실패한다.
+ * 녹화본이 없는 문서가 있어도 실패한다(조용히 빼고 채점하지 않는다).
+ */
+export interface EvalBaseline {
+  split: 'dev';
+  method: 'llm_code';
+  model: string;
+  promptVersion: string;
+  goldVersion: number;
+  docs: number;
+  docsAllCorrect: number;
+  /** 이 기준을 적은 커밋과 날짜 */
+  gitCommit: string;
+  recordedOn: string;
 }
 
 // ── 주입 시험 ──────────────────────────────────────────────

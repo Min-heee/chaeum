@@ -89,8 +89,8 @@ describe('뽑기 결과 스키마', () => {
 });
 
 describe('사유 코드', () => {
-  it('사유 12개, 글 검사 실패 코드 6개가 모두 설명을 가진다', () => {
-    expect(REASON_CODES).toHaveLength(12);
+  it('사유 13개, 글 검사 실패 코드 6개가 모두 설명을 가진다', () => {
+    expect(REASON_CODES).toHaveLength(13);
     expect(Object.keys(REASONS).sort()).toEqual([...REASON_CODES].sort());
     expect(CONTENT_FAIL_CODES).toHaveLength(6);
     expect(new Set(CONTENT_FAIL_CODES.map((c) => CONTENT_FAILS[c].check)).size).toBe(5);

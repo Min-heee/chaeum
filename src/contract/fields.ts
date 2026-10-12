@@ -236,6 +236,63 @@ export function parseFieldValue(field: FieldKey, value: unknown): { ok: true; va
   return parsed.success ? { ok: true, value: parsed.data as FieldValue } : { ok: false };
 }
 
+/** 상품 이름의 최소 글자 수. 따지기(OUT_OF_RANGE)와 상품 등록 조건이 같은 값을 쓴다. */
+export const PRODUCT_NAME_MIN_CHARS = 2;
+
+// ── 사람이 고쳐 넣는 값 ────────────────────────────────────
+
+/**
+ * 사람이 고쳐 넣는 값의 크기 상한. 방문자가 큰 값을 되풀이해 넣어 DB 를 채우지 못하게 한다.
+ * (모델이 뽑은 값에는 걸지 않는다. 그쪽은 원문 길이 상한과 답의 토큰 상한이 묶는다.)
+ */
+export const EDIT_LIMITS = {
+  /** 글자 칸(상품 이름, 위치, 출장 지역, 재질)의 글자 수 */
+  textMaxChars: 200,
+  /** 갈래의 글자 수 */
+  subtypeMaxChars: 60,
+  /** 목록 칸(기간·수량 옵션, 파일 형식)의 항목 수 */
+  listMaxItems: 30,
+  /** 파일 형식 하나의 글자 수 */
+  formatMaxChars: 20,
+} as const;
+
+/**
+ * 짧은 글자 값을 정리한다. 제어 글자(NUL, 탭, 줄바꿈 등)는 빈칸으로, 짝이 없는 대리 글자는 물음표 꼴 글자로 바꾸고
+ * 이어진 빈칸은 하나로, 앞뒤 빈칸은 뗀다. DB 가 받지 못하는 글자와 CSV 에서 수식으로 읽힐 수 있는 앞머리 탭이 여기서 사라진다.
+ */
+export function cleanShortText(input: string): string {
+  return input
+    .replace(/[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/g, '\ufffd')
+    .replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+export type EditValueResult = { ok: true; value: FieldValue | null } | { ok: false; problem: 'shape' | 'too_long' };
+
+/**
+ * 사람이 고쳐 넣은 값 하나를 본다. 꼴(parseFieldValue)에 더해 크기 상한(EDIT_LIMITS)을 보고, 글자는 정리해 돌려준다.
+ * null(없음)은 언제나 통과. 정리하고 나니 빈 글자면 꼴이 틀린 것이다.
+ */
+export function parseEditValue(field: FieldKey, value: unknown): EditValueResult {
+  if (value === null || value === undefined) return { ok: true, value: null };
+  const kind = fieldDef(field).kind;
+  let input = value;
+  if (kind === 'text' && typeof value === 'string') {
+    input = cleanShortText(value);
+    if ([...(input as string)].length > EDIT_LIMITS.textMaxChars) return { ok: false, problem: 'too_long' };
+  }
+  if (Array.isArray(value)) {
+    if (value.length > EDIT_LIMITS.listMaxItems) return { ok: false, problem: 'too_long' };
+    if (kind === 'formats') {
+      input = value.map((v) => (typeof v === 'string' ? cleanShortText(v) : v));
+      if ((input as unknown[]).some((v) => typeof v === 'string' && [...v].length > EDIT_LIMITS.formatMaxChars)) return { ok: false, problem: 'too_long' };
+    }
+  }
+  const parsed = parseFieldValue(field, input);
+  return parsed.ok ? parsed : { ok: false, problem: 'shape' };
+}
+
 // ── 뽑기 결과 ──────────────────────────────────────────────
 
 /** 뽑기 방식. 모델이 뽑았나, 규칙(정규식)만으로 뽑았나. */
