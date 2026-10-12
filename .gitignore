@@ -18,3 +18,10 @@ next-env.d.ts
 .vercel/
 .DS_Store
 npm-debug.log*
+
+# 파이썬 수집기(collector/)의 가상 환경과 흔적. 받아 둔 원자료(.cache)는 저장소에 넣지 않는다.
+collector/.venv/
+collector/.cache/
+collector/.pytest_cache/
+__pycache__/
+*.pyc

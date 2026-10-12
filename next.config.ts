@@ -22,8 +22,12 @@ const nextConfig: NextConfig = {
   // 양식 맞춤 파일은 실행 중에 폴더에서 읽는다. 배포 묶음에 이 폴더를 함께 싣는다.
   outputFileTracingIncludes: {
     '/api/export.csv': ['./data/export-templates/*.json'],
+    '/api/export.xlsx': ['./data/export-templates/*.json'],
+    '/api/audits': ['./data/export-templates/*.json'],
     '/products': ['./data/export-templates/*.json'],
   },
+  // collector/ 는 파이썬 수집기다. 배포 묶음에 싣지 않는다(가상 환경과 받아 둔 원자료가 딸려 가지 않게).
+  outputFileTracingExcludes: { '*': ['./collector/**'] },
   async headers() {
     return [{ source: '/:path*', headers: [...SECURITY_HEADERS] }];
   },

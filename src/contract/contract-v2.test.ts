@@ -39,13 +39,14 @@ import {
   type LlmRouteInput,
 } from './pipeline-api';
 import { isBlocking, LLM_SKIP_CAUSES, LLM_SKIP_LABELS, REASONS } from './reasons';
+import { QUOTE_TASKS } from './tools/quote';
 
 const bytes = (...head: number[]) => new Uint8Array([...head, ...new Array<number>(32).fill(0)]);
 const ascii = (text: string) => new Uint8Array([...text].map((ch) => ch.charCodeAt(0)));
 
 describe('그림·PDF 의 약속', () => {
-  it('원문 종류는 글 + 첨부 종류 둘이다', () => {
-    expect(SOURCE_KINDS).toEqual(['text', ...ATTACHMENT_KINDS]);
+  it('원문 종류는 글 + 첨부 종류 둘 + 가져온 줄이다', () => {
+    expect(SOURCE_KINDS).toEqual(['text', ...ATTACHMENT_KINDS, 'import']);
   });
 
   it('받는 형식은 그림 셋과 PDF 뿐이다', () => {
@@ -108,8 +109,9 @@ describe('그림·PDF 의 약속', () => {
 });
 
 describe('단계와 작업 줄', () => {
-  it('단계 셋은 LLM 일 셋과 같고, 글로 옮기기만 줄을 타지 않는다', () => {
-    expect([...PIPELINE_STEPS].sort()).toEqual([...LLM_TASKS].sort());
+  it('단계 셋은 LLM 일의 앞 셋과 같고, 글로 옮기기만 줄을 타지 않는다', () => {
+    expect([...PIPELINE_STEPS]).toEqual(LLM_TASKS.slice(0, 3));
+    expect(LLM_TASKS.slice(3)).toEqual([...QUOTE_TASKS]);
     expect(STEP_JOB_KIND.transcribe).toBeNull();
     expect(PIPELINE_STEPS.map((s) => STEP_JOB_KIND[s]).filter(Boolean)).toEqual([...JOB_KINDS]);
   });

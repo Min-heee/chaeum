@@ -295,8 +295,11 @@ export function parseEditValue(field: FieldKey, value: unknown): EditValueResult
 
 // ── 뽑기 결과 ──────────────────────────────────────────────
 
-/** 뽑기 방식. 모델이 뽑았나, 규칙(정규식)만으로 뽑았나. */
-export const EXTRACTED_BY = ['llm', 'rules'] as const;
+/**
+ * 뽑기 방식. 모델이 뽑았나, 규칙(정규식)만으로 뽑았나, 모으기 도구가 정리해 온 줄에서 가져왔나.
+ * import: 글에서 뽑은 것이 아니다. 줄의 값을 원문 표현(raw)으로 삼아 코드가 맞추고 따졌다. 모델이 읽은 값은 없다(규칙만 길과 같다).
+ */
+export const EXTRACTED_BY = ['llm', 'rules', 'import'] as const;
 export type ExtractedBy = (typeof EXTRACTED_BY)[number];
 
 /**

@@ -4,8 +4,12 @@ import type { ContentDraft, ContentInput } from './content';
 import type { LlmAttachment } from './attachments';
 import type { Extraction } from './fields';
 
-/** transcribe: 그림·PDF 를 글로 옮김. extract: 칸 뽑기. content: 다른 언어 글 만들기. */
-export const LLM_TASKS = ['transcribe', 'extract', 'content'] as const;
+/**
+ * transcribe: 그림·PDF 를 글로 옮김. extract: 칸 뽑기. content: 다른 언어 글 만들기.
+ * quote_extract: 문의 글에서 견적 조건 뽑기. quote_reply: 견적 답장 초안 쓰기(둘의 꼴은 tools/quote.ts).
+ * 앞의 셋은 파이프라인의 단계이고, 뒤의 둘은 견적 도구가 요청 안에서 바로 부른다(작업 줄을 타지 않는다).
+ */
+export const LLM_TASKS = ['transcribe', 'extract', 'content', 'quote_extract', 'quote_reply'] as const;
 export type LlmTask = (typeof LLM_TASKS)[number];
 
 // 첨부(그림·PDF)의 약속은 attachments.ts 에 있다. 브라우저 코드도 읽는 것이라 따로 뒀다.

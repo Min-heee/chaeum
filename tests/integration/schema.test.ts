@@ -4,9 +4,10 @@ import { DRAFT_STATUSES } from '@/contract/transitions';
 import { closePool, getPool } from '@/server/db';
 import { migrate } from '../../scripts/migrate';
 
+// 본체 14개 + 딸린 도구 4개(용어 사전, 견적, 모으기의 묶음과 줄).
 const TABLES = [
-  'daily_counters', 'draft_events', 'draft_fields', 'drafts', 'eval_results', 'eval_runs', 'gold_docs',
-  'gold_reviews', 'jobs', 'llm_calls', 'product_texts', 'products', 'source_docs', 'workspaces',
+  'collected_items', 'daily_counters', 'draft_events', 'draft_fields', 'drafts', 'eval_results', 'eval_runs', 'glossary_terms', 'gold_docs',
+  'gold_reviews', 'import_batches', 'jobs', 'llm_calls', 'product_texts', 'products', 'quotes', 'source_docs', 'workspaces',
 ];
 
 afterAll(async () => {
@@ -14,7 +15,7 @@ afterAll(async () => {
 });
 
 describe('DB 꼴', () => {
-  it('표는 14개이고 적용 기록 표가 따로 하나 있다', async () => {
+  it('표는 18개이고 적용 기록 표가 따로 하나 있다', async () => {
     const { rows } = await getPool().query<{ table_name: string }>(
       `SELECT table_name FROM information_schema.tables
         WHERE table_schema = 'public' AND table_type = 'BASE TABLE' ORDER BY table_name`,

@@ -17,10 +17,12 @@
     "check:bundle": "tsx scripts/check-bundle.ts",
     "verify": "npm run typecheck && npm run lint && npm run test && npm run test:db && npm run build && npm run check:bundle && npm run eval:replay",
     "verify:build": "npm run typecheck && npm run lint && npm run test && npm run build && npm run check:bundle",
+    "verify:collector": "if [ -x collector/.venv/bin/python ]; then collector/.venv/bin/python -m pytest collector -q; else echo '[verify:collector] 가상 환경 없음 — collector/README.md 참고. 파이썬 시험을 돌리지 않고 건너뜀(통과도 실패도 아님)'; fi",
     "db:migrate": "tsx --env-file-if-exists=.env.local scripts/migrate.ts",
     "db:migrate:test": "tsx --env-file-if-exists=.env.local scripts/migrate.ts --target test",
     "db:seed": "tsx --env-file-if-exists=.env.local scripts/seed.ts",
     "record": "tsx --env-file-if-exists=.env.local scripts/record.ts",
+    "record:quotes": "tsx --env-file-if-exists=.env.local scripts/record-quotes.ts",
     "worker": "tsx --env-file-if-exists=.env.local scripts/worker.ts",
     "eval": "tsx --env-file-if-exists=.env.local eval/run.ts",
     "eval:inject": "tsx --env-file-if-exists=.env.local eval/inject.ts",
@@ -39,6 +41,8 @@
     "pg": "^8.23.1",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
+    "read-excel-file": "^9.3.12",
+    "write-excel-file": "^4.1.1",
     "zod": "^4.6.6"
   },
   "devDependencies": {

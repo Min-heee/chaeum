@@ -1,5 +1,6 @@
 // API·저장·작업 줄·화면이 함께 쓰는 값. 숫자와 이름을 한곳에 둔다.
-// 뒤쪽에는 경로 18개의 요청·응답 꼴이 있다. 화면과 API 시험은 그 꼴만 보고 붙는다.
+// 뒤쪽에는 본체 경로 18개의 요청·응답 꼴이 있다. 화면과 API 시험은 그 꼴만 보고 붙는다.
+// 딸린 도구의 경로(19번부터)와 그 꼴·상한은 tools/ 아래에 도구별 파일로 있다(tools/index.ts 에 표).
 // 브라우저 코드도 이 파일을 읽는다. llm-types.ts(환경 변수 이름이 들어 있다)는 여기서 값으로 가져오지 않는다.
 import { z } from 'zod';
 import { LANGS, TEXT_FIELDS, TEXT_SOURCES, TEXT_STATUSES } from './content';
@@ -57,8 +58,12 @@ export function kstDay(now: Date): string {
 
 // ── 원문 종류 ──────────────────────────────────────────────
 
-/** 원문이 무엇으로 들어왔나(source_docs.source_kind). text: 붙여 넣은 글. image·pdf: 올린 파일을 모델이 옮긴 글. */
-export const SOURCE_KINDS = ['text', 'image', 'pdf'] as const;
+/**
+ * 원문이 무엇으로 들어왔나(source_docs.source_kind).
+ * text: 붙여 넣은 글. image·pdf: 올린 파일을 모델이 옮긴 글.
+ * import: 모으기 도구가 정리해 온 줄 하나를 "이름표: 값" 글로 적은 것(tools/collect.ts). 파일도 모델도 거치지 않았다.
+ */
+export const SOURCE_KINDS = ['text', 'image', 'pdf', 'import'] as const;
 export type SourceKind = (typeof SOURCE_KINDS)[number];
 
 // ── 작업 줄 ────────────────────────────────────────────────
@@ -113,11 +118,16 @@ export type SystemEventReason = keyof typeof SYSTEM_EVENT_REASONS;
  * - UNREADABLE_FILE: 모델이 글자를 읽지 못한 파일이다.
  * - LLM_UNAVAILABLE: 글로 옮길 모델을 부를 수 없다(skipCause 가 함께 간다). 그림은 규칙만 길이 없어 접수하지 않는다.
  *   오늘 실제 호출 상한이 찬 경우(daily_cap)만은 LIMIT_EXCEEDED(429)로 낸다.
+ * 딸린 도구에서 더한 것 하나:
+ * - ALREADY_EXISTS: 같은 것이 이미 있어 새로 만들지 못한다(용어 사전의 같은 공간·같은 한국어 낱말).
+ *   낡은 version 의 VERSION_CONFLICT 와 달리 current 가 없다. 다시 읽어 올 것이 아니라 입력을 바꿔야 한다.
+ * 딸린 도구는 그 밖에는 위의 코드를 그대로 쓴다(시안 파일의 형식·크기 415·413, 조건 뽑기 모델을 못 부름 503 등).
  */
 export const API_ERRORS = {
   BAD_INPUT: 400,
   NOT_FOUND: 404,
   VERSION_CONFLICT: 409,
+  ALREADY_EXISTS: 409,
   BAD_TRANSITION: 422,
   PRODUCT_INVALID: 422,
   LIMIT_EXCEEDED: 429,

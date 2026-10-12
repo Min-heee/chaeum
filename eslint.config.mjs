@@ -8,11 +8,13 @@ const noClockOrDice = [
 ];
 
 const config = [
-  { ignores: ['.next/**', 'node_modules/**', 'coverage/**', 'next-env.d.ts', 'eval/results/**', 'data/**', '.gold-work/**'] },
+  // collector/ 는 파이썬 수집기다. 이쪽 도구(타입 검사, 린트, 시험, 빌드)는 그 폴더를 보지 않는다.
+  { ignores: ['.next/**', 'node_modules/**', 'coverage/**', 'next-env.d.ts', 'eval/results/**', 'data/**', '.gold-work/**', 'collector/**'] },
   ...nextVitals,
   ...nextTs,
   {
-    files: ['src/core/**/*.ts', 'src/contract/**/*.ts', 'src/server/queue.ts'],
+    // src/tools 는 딸린 도구의 판단 코드다. 오늘 날짜도 인자로 받는다.
+    files: ['src/core/**/*.ts', 'src/contract/**/*.ts', 'src/tools/**/*.ts', 'src/server/queue.ts'],
     ignores: ['**/*.test.ts'],
     rules: {
       'no-restricted-properties': ['error', ...noClockOrDice],
@@ -22,7 +24,7 @@ const config = [
   },
   {
     // 판단 코드는 DB 와 네트워크를 모른다.
-    files: ['src/core/**/*.ts', 'src/contract/**/*.ts'],
+    files: ['src/core/**/*.ts', 'src/contract/**/*.ts', 'src/tools/**/*.ts'],
     rules: {
       'no-restricted-imports': [
         'error',

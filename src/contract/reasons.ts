@@ -216,7 +216,7 @@ export const CONTENT_FAILS: Record<ContentFailCode, { label: string; description
   },
   GLOSSARY_MISS: {
     label: '용어 표기 다름',
-    description: '용어집에 정한 표기가 글에 없습니다.',
+    description: '용어 사전에 정한 표기가 글에 없습니다.',
     check: 'glossary',
   },
 };

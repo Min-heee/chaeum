@@ -12,7 +12,7 @@ import type { LlmSkipCause } from './reasons';
 // ── 단계 ───────────────────────────────────────────────────
 
 /**
- * LLM 을 쓰는 단계 셋. 이름은 LLM_TASKS 와 같다.
+ * LLM 을 쓰는 단계 셋. 이름은 LLM_TASKS 의 앞 셋과 같다(뒤의 둘은 견적 도구의 일이라 단계가 아니다).
  * - transcribe: 그림·PDF → 글. 올리기 요청 안에서 바로 돈다(작업 줄에 넣지 않는다).
  *     파일을 저장하지 않기로 했으므로, 파일 바이트가 살아 있는 그 요청 안에서 끝내야 한다.
  *     끝나면 옮긴 글이 붙여 넣은 글과 같은 길(접수 → extract 작업)을 탄다.
@@ -319,7 +319,8 @@ export interface ExtractOutcome {
    * route 는 그 사유를 넣어 다시 낸 갈래다.
    */
   evaluation: DraftEvaluation;
-  extractedBy: ExtractedBy;
+  /** 이 단계는 글에서 뽑는다. 'import'(모으기 도구가 가져온 줄)는 이 단계를 거치지 않는다. */
+  extractedBy: Exclude<ExtractedBy, 'import'>;
   /** 규칙만 길로 갔을 때의 원인. LLM 으로 뽑았으면 null. */
   skipCause: LlmSkipCause | null;
   /** LLM 으로 뽑았을 때의 호출 기록. 규칙만이면 null. */
