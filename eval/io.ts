@@ -10,6 +10,11 @@ import { readReviewsFile } from '@/gold/sync';
 import type { ReviewLine } from './runner';
 
 export const RECORDINGS_DIR = path.join('data', 'recordings');
+/**
+ * --fresh --keep-answers 로 받은 답을 실행마다 한 파일씩 두는 곳.
+ * 녹화 폴더의 아래 폴더라서 장부(JsonlCallStore 는 폴더 바로 아래의 *.jsonl 만 읽는다)에 섞이지 않는다.
+ */
+export const RUN_ANSWERS_DIR = path.join(RECORDINGS_DIR, 'runs');
 export const RESULTS_DIR = path.join('eval', 'results');
 export const BASELINE_FILE = path.join('eval', 'baseline.json');
 

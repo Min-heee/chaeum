@@ -6,7 +6,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { GoldDoc, GoldSplit } from '@/contract/eval-types';
 import type { Extraction } from '@/contract/fields';
 import type { LlmCallStore, LlmProvider, LlmRequest, LlmResult } from '@/contract/llm-types';
-import { cacheKeyFor, costUsd } from '@/llm';
+import { cacheKeyFor, costUsd, JsonlCallStore } from '@/llm';
+import { parseRecordingLines } from '@/llm/stores';
 import { buildExtractRequestV1 } from '@/llm/prompts/extract.v1';
 import { closePool, getPool } from '@/server/db';
 import { compareRuns } from './compare';
@@ -186,6 +187,54 @@ describe('평가 실행을 DB 와 파일에 남기기', () => {
     expect(asked).toHaveLength(3);
     expect(later.file.info.fresh).toBeUndefined();
     expect(later.file.runs.llm_code.metrics.docsAllCorrect).toEqual({ num: 2, den: 3 });
+  });
+
+  it('fresh 에 답 남길 곳을 주면 답을 거기에만 적는다. 장부에는 적지 않고, 다음 실행이 그 답을 읽지 않는다', async () => {
+    const db = getPool();
+    const ledgerRows = async () => (await db.query(`SELECT count(*)::int AS n FROM llm_calls WHERE eval_run_id IN (SELECT id FROM eval_runs WHERE git_commit = $1)`, [COMMIT])).rows[0].n as number;
+    const before = await ledgerRows();
+    const asked: string[] = [];
+    const ledgerFile: unknown[] = [];
+    const extraWriter: LlmCallStore = { find: async () => null, save: async (r) => void ledgerFile.push(r) };
+    const answersDir = path.join(dir, 'runs');
+    const kept = new JsonlCallStore(answersDir, 'one-run.jsonl');
+    const { file, paths } = await executeRun(
+      params('dev', {
+        makeLive: makeLive(77000, asked),
+        fresh: true,
+        freshAnswers: { store: kept, file: 'runs/one-run.jsonl' },
+        extraWriter,
+        startedAt: new Date('2026-10-12T02:50:00Z'),
+      }),
+    );
+    expect(asked).toHaveLength(3);
+    expect(file.info).toMatchObject({ fresh: true, answersFile: 'runs/one-run.jsonl' });
+    expect(readFileSync(paths.summary, 'utf8')).toContain('runs/one-run.jsonl');
+    // 장부(DB, 녹화 파일)에는 한 줄도 늘지 않았다.
+    expect(await ledgerRows()).toBe(before);
+    expect(ledgerFile).toEqual([]);
+    // 남긴 파일에는 문서마다 한 줄, 받은 답 그대로.
+    const lines = parseRecordingLines(readFileSync(path.join(answersDir, 'one-run.jsonl'), 'utf8'));
+    expect(lines).toHaveLength(3);
+    expect(lines.map((l) => (l.response as Extraction).fields.find((f) => f.field === 'price_krw')?.value)).toEqual([15000, 77000, 15000]);
+    // 그 뒤의 평소 실행은 이 답(77000)이 아니라 먼저 남긴 녹화본(99000)을 읽는다. 부르지도 않는다.
+    const later = await executeRun(params('dev', { makeLive: makeLive(15000, asked), startedAt: new Date('2026-10-12T02:55:00Z') }));
+    expect(asked).toHaveLength(3);
+    expect(later.file.info.answersFile).toBeUndefined();
+    expect(later.file.cells.llm_only.find((c) => c.goldDocId === 'dev-902' && c.field === 'price_krw')?.actual).toBe(99000);
+  });
+
+  it('fresh 가 아니면 답 남길 곳을 줘도 쓰지 않는다(답은 평소처럼 장부로 간다)', async () => {
+    const written: unknown[] = [];
+    const { file } = await executeRun(
+      params('dev', {
+        makeLive: makeLive(15000, []),
+        freshAnswers: { store: { find: async () => null, save: async (r) => void written.push(r) }, file: 'runs/never.jsonl' },
+        startedAt: new Date('2026-10-12T02:58:00Z'),
+      }),
+    );
+    expect(written).toEqual([]);
+    expect(file.info.answersFile).toBeUndefined();
   });
 
   it('확인 전 문서를 넣고 돌리면 실행 기록에 남는다', async () => {

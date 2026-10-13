@@ -18,6 +18,7 @@ npm run eval -- --split dev --limit 3          # 3건만
 npm run eval -- --split dev --max-usd 0.3      # 넘을 것 같으면 멈추고 끝난 데까지 저장
 npm run eval -- --split dev --prompts v1,current   # 프롬프트 판을 건별로 견주기
 npm run eval -- --split dev --prompts v2 --fresh  # 장부를 읽지도 쓰지도 않고 모두 다시 부른다(같은 판을 두 번 재 볼 때. 돈이 든다)
+npm run eval -- --split dev --prompts v2 --fresh --keep-answers  # 위와 같되 받은 답을 실행별 파일(data/recordings/runs)에 따로 남긴다
 npm run eval:inject                            # 주입 시험. 모델 호출 0번
 npm run eval:replay                            # 녹화본으로 연습 세트 다시 채점. npm run verify 의 마지막 단계
 npx tsx --env-file-if-exists=.env.local eval/compare.ts <앞 실행 번호> <뒤 실행 번호>   # 두 실행의 건별 나아짐·나빠짐
@@ -26,7 +27,7 @@ npx tsx --env-file-if-exists=.env.local eval/compare.ts <앞 실행 번호> <뒤
 - 기본으로 도는 것은 연습 세트뿐이다. 안 여는 묶음(`test`, `real`)은 `--i-know-this-opens-the-sealed-set` 과 `--sealed <경로>` 를 함께 줘야 열리고, 돌릴 때마다 `eval_runs`에 남는다.
 - 사람이 확인하지 않은 문서는 채점에서 빠진다. 뺀 건수가 함께 찍힌다. `--include-unreviewed` 로 넣으면 실행 기록에 "확인 전 포함"이 남는다.
 - 한 번 돌리면 문서마다 뽑기를 한 번 부르고, 그 한 번에서 세 방식(`rules` / `llm_only` / `llm_code`)을 채점한다. `eval_runs` 3줄과 `eval_results`, 그리고 `eval/results/` 의 기록(JSON)과 요약(틀린 건 목록 포함)이 남는다.
-- 이미 받은 답은 장부에서 읽는다. 같은 문서를 다시 돌려도 돈이 들지 않는다. `--fresh`를 주면 장부를 읽지도 쓰지도 않고 모두 다시 부른다.
+- 이미 받은 답은 장부에서 읽는다. 같은 문서를 다시 돌려도 돈이 들지 않는다. `--fresh`를 주면 장부를 읽지도 쓰지도 않고 모두 다시 부른다. 거기에 `--keep-answers`를 더하면 받은 답을 `data/recordings/runs/` 아래 실행별 파일(기록 파일과 같은 머리 이름)에 남긴다. 장부가 아니라서 다음 실행과 회귀 문지기는 이 답을 읽지 않는다. 원문 표현과 읽은 값을 나중에 들여다볼 때 쓴다.
 - 프롬프트 판 이름: `current`는 앱이 쓰는 판이다(지금 `extract-v1`). `v2`, `v3`, `v4`, `v5`는 연습 세트에서 재 보고 버린 판이라 견줄 때만 쓴다. 판마다 장부의 키가 달라 답이 섞이지 않는다.
 - 답을 못 받은 문서는 빼지 않는다. LLM 두 방식에서 빈 답으로 채점하고 몇 건인지 적는다.
 

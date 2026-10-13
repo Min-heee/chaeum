@@ -31,6 +31,8 @@ export interface RunInfo {
   callFailures: number;
   /** --fresh: 장부를 읽지도 쓰지도 않고 모든 문서를 다시 불렀는가. 옛 기록에는 이 줄이 없다. */
   fresh?: boolean;
+  /** --fresh --keep-answers: 받은 답을 따로 남긴 파일(저장소 기준 경로). 장부가 아니다. 남기지 않았으면 이 줄이 없다. */
+  answersFile?: string;
 }
 
 /**
