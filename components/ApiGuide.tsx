@@ -95,7 +95,7 @@ export function ApiGuide() {
     { title: '살아 있는지', note: 'DB 연결, 줄 길이, 오늘 남은 실제 호출 수.', example: { method: 'GET', path: '/api/health', noWorkspace: true } },
   ];
 
-  // 딸린 도구의 경로(19~32번). 약속은 src/contract/tools 에 있다.
+  // 딸린 도구의 경로(19~33번). 약속은 src/contract/tools 에 있다.
   const tools: { title: string; note?: string; example: Example }[] = [
     { title: '점검: 등록된 상품 전체', note: '구조 규칙과 글 검사를 한 번에 돌립니다. 저장하지 않습니다. 헤더를 빼면 본보기 공간을 살핍니다. ?format=csv 를 붙이면 CSV 로 받습니다.', example: { method: 'POST', path: '/api/audits', body: { source: 'workspace' } } },
     { title: '점검: 양식 꼴 CSV·XLSX 파일', note: '내려받은 파일을 그대로 올려 볼 수 있습니다(1MB, 500줄까지).', example: { method: 'POST', path: '/api/audits', fileName: 'products.csv' } },
@@ -129,6 +129,11 @@ export function ApiGuide() {
     { title: '모으기: 모은 줄 목록', note: 'sourceId, flag, drafted(yes·no), q 로 거릅니다.', example: { method: 'GET', path: '/api/collected?drafted=no' } },
     { title: '모으기: 줄을 초안으로', note: 'AI 를 부르지 않습니다. 가격이 없는 자료라 "필수 칸 빔"으로 확인 필요에 갑니다.', example: { method: 'POST', path: '/api/collected/<줄 번호>/draft' } },
     { title: '엑셀 파일(XLSX)로 내려받기', note: '시트 셋: 상품, 옵션, 안내.', example: { method: 'GET', path: '/api/export.xlsx?template=default', output: 'products.xlsx' } },
+    {
+      title: '비교: 같은 잣대로 나란히 놓기',
+      note: 'type·subtype·region 으로 거르고 sort 로 차례를 매깁니다. ids=5,7 처럼 2~4개를 주면 나란히 놓은 표가 함께 옵니다. 저장하지 않습니다. 헤더를 빼면 본보기 공간의 상품을 견줍니다.',
+      example: { method: 'GET', path: '/api/compare?type=ad&sort=per_day_krw' },
+    },
   ];
 
   return (
@@ -192,7 +197,7 @@ export function ApiGuide() {
 
       <section aria-label="딸린 도구의 경로">
         <h2>딸린 도구의 경로</h2>
-        <p className="muted small">점검·용어 사전·견적·시안 검사·달력·모으기와 엑셀 내려받기입니다. 읽기만 하는 경로는 헤더를 빼면 본보기 공간을 봅니다.</p>
+        <p className="muted small">점검·용어 사전·견적·시안 검사·달력·모으기·비교와 엑셀 내려받기입니다. 읽기만 하는 경로는 헤더를 빼면 본보기 공간을 봅니다.</p>
         {mounted ? (
           <ul className="cards">
             {tools.map((r) => (

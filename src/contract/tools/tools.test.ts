@@ -34,10 +34,10 @@ import {
 import { XLSX_OPTION_COLUMNS, XLSX_OPTION_SOURCES, XLSX_SHEETS, xlsxFileName, XlsxExportQuerySchema } from './xlsx';
 
 describe('도구 묶음', () => {
-  it('메뉴에는 도구 여섯이 정한 순서로 있다', () => {
-    expect(TOOLS.map((t) => t.label)).toEqual(['점검', '모으기', '용어 사전', '견적', '시안 검사', '달력']);
+  it('메뉴에는 도구 일곱이 정한 순서로 있다', () => {
+    expect(TOOLS.map((t) => t.label)).toEqual(['점검', '모으기', '용어 사전', '견적', '시안 검사', '달력', '비교']);
     expect(TOOLS.map((t) => t.key)).toEqual([...TOOL_KEYS]);
-    expect(new Set(TOOLS.map((t) => t.href)).size).toBe(6);
+    expect(new Set(TOOLS.map((t) => t.href)).size).toBe(7);
     for (const tool of TOOLS) expect(tool.href).toBe(`/${tool.key}`);
   });
 

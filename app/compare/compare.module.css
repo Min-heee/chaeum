@@ -1,0 +1,156 @@
+/* 비교 화면에서만 쓰는 것. 색은 전역 스타일(app/globals.css)의 변수를 그대로 쓴다. */
+.why {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.why li + li {
+  margin-top: 4px;
+}
+
+.controls {
+  display: grid;
+  gap: 10px;
+  /* fieldset 은 기본으로 안의 것보다 좁아지지 않는다. 좁은 화면에서 옆으로 넘치지 않게 푼다. */
+  min-width: 0;
+  margin: 12px 0 4px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+}
+
+.line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.line select,
+.line input[type='search'] {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* 다시 읽는 동안 앞의 표를 흐리게 둔다. */
+.stale {
+  opacity: 0.55;
+}
+
+/* 잣대 칸의 머리: 눌러서 차례를 바꾼다. 단추지만 표 머리처럼 보이게 둔다. */
+.sort {
+  appearance: none;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  margin: 0;
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+
+.sort[aria-pressed='true'] {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.pickCell {
+  width: 32px;
+  min-width: 32px !important;
+}
+
+.pickCell input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  padding: 0;
+}
+
+/* 값 아래 작은 글씨(어디서 계산했는지, 없음의 까닭). 줄이 바뀌어도 값과 겹치지 않는다. */
+.value {
+  display: block;
+  white-space: nowrap;
+}
+
+.note {
+  display: block;
+  margin-top: 2px;
+  max-width: 260px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.none {
+  color: var(--muted);
+}
+
+.groupRow th {
+  background: var(--bg);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 8px 0;
+}
+
+/* 나란히 놓은 표: 값이 서로 다른 줄이 눈에 띄게 한다. */
+.diff th,
+.diff td {
+  background: var(--accent-soft);
+}
+
+.diff th {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 6px;
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.best {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: var(--ok);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.rules {
+  margin: 6px 0;
+  padding-left: 20px;
+}
+
+.rules li {
+  margin: 3px 0;
+}

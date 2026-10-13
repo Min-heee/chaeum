@@ -194,7 +194,7 @@ export function Products({ templates }: { templates: TemplateInfo[] }) {
         <section aria-label="본보기 공간">
           <h2>본보기 공간 (읽기 전용)</h2>
           <p className="muted small">
-            사이트를 처음 깔 때 보기 글의 초안 가운데 {demo.length}건을 미리 승인해 넣어 둔 상품입니다(사람이 눌러 승인한 것이 아닙니다). 도구(점검·견적·시안 검사·달력)가 이 상품으로 돌아갑니다. 내려받기는
+            사이트를 처음 깔 때 보기 글의 초안 가운데 {demo.length}건을 미리 승인해 넣어 둔 상품입니다(사람이 눌러 승인한 것이 아닙니다). 도구(점검·견적·시안 검사·달력·비교)가 이 상품으로 돌아갑니다. 내려받기는
             내 작업 공간의 상품만 됩니다.
           </p>
           <ul className="cards">

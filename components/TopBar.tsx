@@ -1,6 +1,6 @@
 'use client';
 
-// 맨 위 띠: 이 사이트가 무엇으로 도는지 한 줄, 화면 이동(본체 다섯 + 딸린 도구 여섯), 보는 사람 전환, 작업 공간 번호.
+// 맨 위 띠: 이 사이트가 무엇으로 도는지 한 줄, 화면 이동(본체 다섯 + 딸린 도구 일곱), 보는 사람 전환, 작업 공간 번호.
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
