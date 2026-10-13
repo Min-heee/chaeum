@@ -4,17 +4,10 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { FIELDS_BY_TYPE } from '@/contract/fields';
 import { GoldDocSchema, type GoldDoc } from '@/contract/eval-types';
+import { canon } from './canon';
 
-/** 값 안의 열쇠를 가나다순으로 줄 세운다. DB(jsonb)를 다녀오면 열쇠 순서가 바뀌므로, 견주거나 적기 전에 맞춘다. */
-export function canon(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(canon);
-  if (value && typeof value === 'object') {
-    const out: Record<string, unknown> = {};
-    for (const k of Object.keys(value).sort()) out[k] = canon((value as Record<string, unknown>)[k]);
-    return out;
-  }
-  return value;
-}
+// canon 은 브라우저에서도 쓰려고 따로 뒀다(canon.ts). 여기서는 그대로 다시 내보낸다.
+export { canon };
 
 /** 줄마다 같은 순서로 적는다. 같은 정답이면 같은 글자가 나와야 해시가 뜻이 있다. */
 export function docToLine(doc: GoldDoc): string {

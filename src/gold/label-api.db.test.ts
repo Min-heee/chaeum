@@ -16,7 +16,7 @@ import { POST as postUndo } from '../../app/label/api/undo/route';
 import { migrate } from '../../scripts/migrate';
 import { assemble } from './assemble';
 import { generateSpecs } from './generate';
-import { loadDocs } from './store';
+import { loadDocs, reviewSeconds } from './store';
 
 config({ path: '.env.local', quiet: true });
 const url = process.env.TEST_DATABASE_URL;
@@ -171,8 +171,10 @@ describe.skipIf(!usable)('확인 화면의 API', { timeout: 20_000, shuffle: fal
     for (const h of hints) for (const t of h.tokens) expect(doc.content).toContain(t);
     // 조각만 내려간다. 정답 값이나 글 쓰는 이에게 준 말은 싣지 않는다.
     expect([...new Set(hints.flatMap((h) => Object.keys(h)))].every((k) => ['field', 'tokens', 'unit', 'declareUnit'].includes(k))).toBe(true);
-    // 첫 확인에 걸린 초만(다시 보기의 8초는 빠진다)
-    expect(body.seconds).toEqual([37, 12]);
+    // 걸린 초는 연습·안 여는 세트의 첫 확인 것만 온다(남은 시간 어림에 손글 쓰는 시간이 섞이지 않게).
+    // 이 시험의 문서는 손글 번호를 빌려 쓴 것이라 줄에는 안 실린다. 묶음을 손으로 넘기면 첫 확인의 초만 보인다(다시 보기의 8초는 빠진다).
+    expect(body.seconds).toEqual([]);
+    expect(await reviewSeconds(getPool(), 1, ['hand'])).toEqual([37, 12]);
   });
 
   it('표기 지시 파일이 없거나 깨졌으면 강조 없이 예전처럼 돈다', async () => {
@@ -247,8 +249,10 @@ describe.skipIf(!usable)('확인 화면의 API', { timeout: 20_000, shuffle: fal
     // 목표 밖 문서를 따로 확인하면 목표에 들어오고, 건수는 그대로다.
     const outside = devDocs.find((d) => !ids(first).includes(d.id)) as GoldDoc;
     const made = (await (await post({ docId: outside.id, pass: 1, seconds: 3 })).json()) as { reviewId: string };
-    const second = await ask();
+    const second = (await ask()) as Awaited<ReturnType<typeof ask>> & { seconds: number[] };
     expect(second).toMatchObject({ total: 3, done: 1 });
+    // 연습 묶음에서 걸린 초는 줄과 함께 온다.
+    expect(second.seconds).toEqual([3]);
     expect(second.docs).toHaveLength(2);
     expect(ids(second).every((id) => ids(first).includes(id))).toBe(true);
 

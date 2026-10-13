@@ -140,16 +140,19 @@ describe.skipIf(!usable)('정답 세트 DB', { shuffle: false }, () => {
       const seen = await client.query('SELECT 1 FROM gold_reviews WHERE gold_doc_id = $1 AND pass = 1', [d.id]);
       if (seen.rowCount === 0) await recordReview(client, { docId: d.id, pass: 1, seconds: 1 });
     }
-    const a = await recheckQueue(client, 5, 4);
-    const b = await recheckQueue(client, 5, 4);
+    // 이 시험의 문서는 손글 번호를 쓴다. 묶음을 손으로 넘긴다(기본은 연습과 안 여는 세트뿐이다).
+    const a = await recheckQueue(client, 5, 4, ['hand']);
+    const b = await recheckQueue(client, 5, 4, ['hand']);
     expect(a.docs.map((d) => d.id)).toEqual(b.docs.map((d) => d.id));
     expect(a).toMatchObject({ total: 4, done: 0 });
     expect(a.docs.map((d) => d.id)).not.toContain(docs[11]?.id);
-    const other = await recheckQueue(client, 6, 4);
+    const other = await recheckQueue(client, 6, 4, ['hand']);
+    // 기본 줄에는 손글·실제 자료가 끼지 않는다. 그 묶음은 저장할 때 첫 확인 기록이 저절로 생겨, 섞이면 같은 씨앗이 다른 문서를 고른다.
+    expect((await recheckQueue(client, 5, 1000)).docs.filter((d) => d.split === 'hand' || d.split === 'real')).toEqual([]);
     expect(other.docs.map((d) => d.id)).not.toEqual(a.docs.map((d) => d.id));
 
     await recordReview(client, { docId: a.docs[0]?.id as string, pass: 2, seconds: 20 });
-    const after = await recheckQueue(client, 5, 4);
+    const after = await recheckQueue(client, 5, 4, ['hand']);
     expect(after).toMatchObject({ total: 4, done: 1 });
     expect(after.docs.map((d) => d.id)).toEqual(a.docs.slice(1).map((d) => d.id));
     expect((await summarize(client)).recheck).toMatchObject({ reviewed: 1, same: 1 });
@@ -237,7 +240,11 @@ describe.skipIf(!usable)('정답 세트 DB', { shuffle: false }, () => {
     await recordReview(client, { docId: docs[1]?.id as string, pass: 1 });
     await recordReview(client, { docId: docs[2]?.id as string, pass: 1, seconds: 20.4 });
     await recordReview(client, { docId: docs[0]?.id as string, pass: 2, seconds: 8 });
-    expect(await reviewSeconds(client, 1)).toEqual([75, 20]);
-    expect(await reviewSeconds(client, 2)).toEqual([8]);
+    expect(await reviewSeconds(client, 1, ['hand'])).toEqual([75, 20]);
+    expect(await reviewSeconds(client, 2, ['hand'])).toEqual([8]);
+    // 기본은 연습과 안 여는 세트의 것만이다(손글을 쓰는 데 걸린 초가 남은 시간 어림에 섞이지 않는다).
+    expect(await reviewSeconds(client, 1)).toEqual([]);
+    await client.query("UPDATE gold_docs SET split = 'dev' WHERE id = $1", [docs[2]?.id]);
+    expect(await reviewSeconds(client, 1)).toEqual([20]);
   });
 });

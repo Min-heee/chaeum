@@ -3,8 +3,11 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { SPLIT_LABELS, type GoldSplit } from '@/contract/eval-types';
 import { TYPE_LABELS, type DocType } from '@/contract/fields';
+import { HAND_TARGET, listHand } from '@/gold/hand';
 import { readHintFile } from '@/gold/hints';
 import { LABEL_BATCH, RECHECK_COUNT, labelEnabled, labelTarget, listStatus, syncForLabel } from '@/gold/label';
+import { tallyLine } from '@/gold/origins';
+import { realProgress, type RealProgress } from '@/gold/real';
 import { summarize } from '@/gold/store';
 import { getPool } from '@/server/db';
 import styles from './label.module.css';
@@ -34,6 +37,15 @@ export default async function LabelHome() {
     const mine = status.filter((d) => d.split === split && inTarget(split, d.id));
     return { total: mine.length, done: mine.filter((d) => d.verdict !== null).length };
   };
+
+  // 얼린 뒤에 만드는 두 묶음의 진행. 넣은 글의 표(이행 0006)가 아직 없으면 그렇다고 알린다.
+  let real: RealProgress | null = null;
+  try {
+    real = await realProgress(pool);
+  } catch (err) {
+    if ((err as { code?: string }).code !== '42P01') throw err;
+  }
+  const handCount = (await listHand(pool)).length;
 
   return (
     <main className={styles.home}>
@@ -88,6 +100,53 @@ export default async function LabelHome() {
               <td colSpan={8}>DB 에 정답 문서가 없다. 정답 파일을 만든 뒤 다시 연다.</td>
             </tr>
           ) : null}
+        </tbody>
+      </table>
+
+      <h2>얼린 뒤에 만드는 묶음</h2>
+      <p className={styles.muted}>파이프라인을 얼린 뒤에 사람이 만드는 두 묶음이다. 아래 표의 건수는 지금까지 만든 것 / 모으기로 한 것이다.</p>
+      <table className={styles.table}>
+        <thead>
+          <tr>
+            <th>묶음</th>
+            <th>만든 것 / 목표</th>
+            <th>어떻게 만드나</th>
+            <th />
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>{SPLIT_LABELS.real}</td>
+            <td>
+              <strong>{real ? `${real.saved} / ${real.target}` : '-'}</strong>
+              {real ? <span className={styles.muted}> (넘김 {real.skipped} · 초안만 {real.open} · 실제 호출 {real.calls}번)</span> : null}
+            </td>
+            <td>
+              공개된 글을 붙여 넣으면 얼린 파이프라인이 초안을 채우고, 사람이 칸마다 확정한다. 정답이 모델 쪽으로 기울 수 있어 정확도 대신 사람이 손댄 수를 센다.
+              {real ? <div className={styles.muted}>{tallyLine(real.tally)}</div> : <div className={styles.error}>표가 아직 없다. npm run db:migrate 를 먼저 돌린다.</div>}
+            </td>
+            <td>
+              {real ? (
+                <Link className={styles.button} href="/label/real">
+                  넣기
+                </Link>
+              ) : null}
+            </td>
+          </tr>
+          <tr>
+            <td>{SPLIT_LABELS.hand}</td>
+            <td>
+              <strong>
+                {handCount} / {HAND_TARGET}
+              </strong>
+            </td>
+            <td>원문도 정답도 사람이 직접 쓴다. 모델을 부르지 않는다.</td>
+            <td>
+              <Link className={styles.button} href="/label/hand">
+                쓰기
+              </Link>
+            </td>
+          </tr>
         </tbody>
       </table>
 

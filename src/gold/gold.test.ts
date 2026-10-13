@@ -11,7 +11,7 @@ import { alikePairs, checkDoc, cleanIndexes, lengthStats, shapeOf } from './chec
 import { canon, docsToJsonl, parseJsonl, sha256 } from './files';
 import { PLAN, generateSpecs } from './generate';
 import { labelEnabled } from './label';
-import { sealedTestFile } from './paths';
+import { OutsidePathError, realGoldFile, realIntakeFile, sealedTestFile } from './paths';
 import { readDays, readFootfall, readHours, readMoney, recalc } from './recalc';
 import { makeRng } from './rng';
 import { DEFAULT_SEED, type GoldSpec, type SurfaceHint } from './spec';
@@ -341,6 +341,23 @@ describe('그 밖', () => {
     expect(sealedTestFile(env('/tmp/x/other.jsonl'))).toBe('/tmp/x/other.jsonl');
     expect(sealedTestFile(env('~/somewhere'))).toBe(path.join(os.homedir(), 'somewhere', 'test.jsonl'));
     expect(sealedTestFile(env())).toBe(path.join(os.homedir(), 'chaeum-sealed', 'test.jsonl'));
+  });
+
+  it('저장소 밖에 둘 파일의 자리가 상대 경로이거나 저장소 안이면 거부한다(안 여는 세트, 실제 자료의 원문과 넣은 기록)', () => {
+    const env = (v: string) => ({ SEALED_GOLD_PATH: v }) as unknown as NodeJS.ProcessEnv;
+    const root = path.join(path.sep, 'work', 'repo');
+    for (const file of [sealedTestFile, realGoldFile, realIntakeFile]) {
+      for (const bad of ['sealed', './data/gold', 'data/gold/test.jsonl', '../repo/data', root, path.join(root, 'data', 'gold'), path.join(root, 'data', 'gold', 'test.jsonl'), `${root}${path.sep}x${path.sep}..${path.sep}data`]) {
+        expect(() => file(env(bad), root), bad).toThrow(OutsidePathError);
+      }
+    }
+    // 저장소 밖의 절대 경로와 홈 아래는 된다. 이름만 비슷한 옆 폴더도 저장소 밖이다.
+    expect(realGoldFile(env(path.join(path.sep, 'work', 'sealed')), root)).toBe(path.join(path.sep, 'work', 'sealed', 'real.jsonl'));
+    expect(realIntakeFile(env(path.join(path.sep, 'work', 'repo-sealed', 'test.jsonl')), root)).toBe(path.join(path.sep, 'work', 'repo-sealed', 'real-intake.jsonl'));
+    expect(realGoldFile(env('~/somewhere'), root)).toBe(path.join(os.homedir(), 'somewhere', 'real.jsonl'));
+    expect(realGoldFile({} as unknown as NodeJS.ProcessEnv, root)).toBe(path.join(os.homedir(), 'chaeum-sealed', 'real.jsonl'));
+    // 홈이 저장소 안일 수는 없지만, 기본 자리도 같은 검사를 거친다.
+    expect(() => realGoldFile({} as unknown as NodeJS.ProcessEnv, os.homedir())).toThrow(OutsidePathError);
   });
 
   it('난수는 씨앗이 같으면 같은 차례를 낸다', () => {

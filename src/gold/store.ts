@@ -102,6 +102,9 @@ export async function getDoc(db: Db, id: string): Promise<GoldDoc | null> {
 
 // ── 확인 줄 ────────────────────────────────────────────────
 
+/** 확인 화면(첫 확인 → 하루 뒤 다시 보기)이 다루는 묶음. 생성기가 만든 정답을 사람이 확인하는 두 묶음이다. */
+export const CHECKED_SPLITS: readonly GoldSplit[] = ['dev', 'test'];
+
 export interface Queue {
   docs: GoldDoc[];
   /** 이 줄의 전체 건수와 끝낸 건수 */
@@ -134,12 +137,17 @@ export async function firstPassQueue(db: Db, split: GoldSplit, limit: number, on
 /**
  * 다시 보기: 첫 확인에서 버리지 않은 문서 가운데 씨앗으로 count 건을 고른다.
  * 씨앗이 같으면 같은 문서가 나온다. 이미 다시 본 것은 줄에서 빠진다.
+ * 연습과 안 여는 세트만 고른다. 실제 자료·손글은 저장할 때 첫 확인 기록이 저절로 생기는데(real.ts, hand.ts),
+ * 그것까지 섞으면 한 건을 넣을 때마다 같은 씨앗이 다른 문서를 고르게 된다.
  */
-export async function recheckQueue(db: Db, seed: number, count: number): Promise<Queue> {
+export async function recheckQueue(db: Db, seed: number, count: number, splits: readonly GoldSplit[] = CHECKED_SPLITS): Promise<Queue> {
   const eligible = await db.query(
     `SELECT gold_doc_id FROM (
-       SELECT DISTINCT ON (gold_doc_id) gold_doc_id, verdict FROM gold_reviews WHERE pass = 1 ORDER BY gold_doc_id, id DESC
+       SELECT DISTINCT ON (r.gold_doc_id) r.gold_doc_id, r.verdict
+         FROM gold_reviews r JOIN gold_docs d ON d.id = r.gold_doc_id
+        WHERE r.pass = 1 AND d.split = ANY($1::text[]) ORDER BY r.gold_doc_id, r.id DESC
      ) latest WHERE verdict <> 'dropped' ORDER BY gold_doc_id`,
+    [splits],
   );
   const ids = (eligible.rows as { gold_doc_id: string }[]).map((r) => r.gold_doc_id);
   const picks = makeRng(seed).shuffle(ids).slice(0, count);
@@ -280,9 +288,16 @@ export async function undoReview(db: Db, input: UndoInput): Promise<UndoOutcome>
   return { verdict: last.verdict, restored };
 }
 
-/** 지금까지 건마다 걸린 초(그 차례의 확인만, 적힌 순서대로). 남은 시간을 어림할 때 쓴다. */
-export async function reviewSeconds(db: Db, pass: 1 | 2): Promise<number[]> {
-  const { rows } = await db.query('SELECT seconds FROM gold_reviews WHERE pass = $1 AND seconds IS NOT NULL ORDER BY id', [pass]);
+/**
+ * 지금까지 건마다 걸린 초(그 차례의 확인만, 적힌 순서대로). 남은 시간을 어림할 때 쓴다.
+ * 연습과 안 여는 세트의 것만 준다. 손글을 쓰는 데 걸린 초(몇 분)나 실제 자료를 확정한 초가 섞이면 어림이 틀어진다.
+ */
+export async function reviewSeconds(db: Db, pass: 1 | 2, splits: readonly GoldSplit[] = CHECKED_SPLITS): Promise<number[]> {
+  const { rows } = await db.query(
+    `SELECT r.seconds FROM gold_reviews r JOIN gold_docs d ON d.id = r.gold_doc_id
+      WHERE r.pass = $1 AND r.seconds IS NOT NULL AND d.split = ANY($2::text[]) ORDER BY r.id`,
+    [pass, splits],
+  );
   return (rows as { seconds: number }[]).map((r) => r.seconds);
 }
 
