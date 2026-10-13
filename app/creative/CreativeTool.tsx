@@ -5,8 +5,9 @@
 //   · 4MB 이하: 파일을 서버로 보내고 서버가 다시 읽어 견준다(POST /api/creative-checks, multipart).
 //   · 4MB 초과: 파일을 보내지 않고 읽은 값만 보낸다(같은 경로, JSON). 서버는 파일을 보지 못한다.
 // 견주는 판단은 어느 길이든 서버가 한다. AI를 쓰지 않고, 파일도 결과도 저장하지 않는다.
+// 화면은 위에서 아래로 한 줄기다: 1 지면 고르기 → 2 시안 파일 고르기 → 규격과 견주기 → 검사 결과.
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState, type DragEvent } from 'react';
 import { WORKSPACE_HEADER, type ProductBody, type ProductListResponse } from '@/contract/api';
 import {
   CREATIVE_CHECK_LABELS,
@@ -20,18 +21,26 @@ import {
   type CreativeOutcome,
 } from '@/contract/tools/creative';
 import { CREATIVE_PROBLEM_MESSAGES, RANGE_READ_LIMITS, readCreativeFile, type CreativeFileRead, type ReadRange } from '@/tools/creative';
-import { CopyButton, Notice } from '../../components/bits';
+import { Badge, CopyButton, Loading, Notice, PageHead, type Tone } from '../../components/bits';
 import { call, failureMessage, productHref, useMounted, useOrigin, useWorkspace } from '../../components/client';
+import { useStackBelow } from '../../components/ListParts';
+import { setToolSpace, useToolSpace, type ToolSpace } from '../../components/space';
 import { fieldLabel, formatValue } from '../../components/format';
+import styles from './creative.module.css';
 
-type Space = 'mine' | 'public';
+type Space = ToolSpace;
+
+/** 항목별 결과 표가 가로로 밀리지 않고 들어가는 너비. 이보다 좁은 자리에서는 줄마다 한 덩이로 쌓는다. */
+const STACK_BELOW = 640;
 
 const MB = 1024 * 1024;
 const FILE_MAX_MB = CREATIVE_LIMITS.fileMaxBytes / MB;
 const WHOLE_MAX_MB = RANGE_READ_LIMITS.wholeFileMaxBytes / MB;
 const DECLARED_MAX_GB = CREATIVE_LIMITS.declaredMaxBytes / (1024 * MB);
 
-const OUTCOME_CLASS: Record<CreativeOutcome, string> = { match: 'status status-APPROVED', mismatch: 'status status-FAILED', no_spec: 'status' };
+/** 항목 결과의 색. 맞음은 초록, 안 맞음은 빨강, 견줄 규격 없음은 노랑(견주지 못했으니 사람이 봐야 한다). 글자는 약속의 이름표 그대로다. */
+const OUTCOME_TONE: Record<CreativeOutcome, Tone> = { match: 'ok', mismatch: 'danger', no_spec: 'warn' };
+const OUTCOME_ORDER: readonly CreativeOutcome[] = ['mismatch', 'no_spec', 'match'];
 
 function bytesText(bytes: number): string {
   if (bytes >= MB) return `${(bytes / MB).toFixed(1)}MB`;
@@ -51,8 +60,8 @@ function factsText(facts: CreativeFacts): string {
 /** 고른 지면의 규격 칸 셋. 본체가 채운 값을 그대로 보여 준다. */
 export function SlotSpec({ slot }: { slot: ProductBody }) {
   return (
-    <div className="table-wrap" tabIndex={0}>
-      <table>
+    <div className="table-wrap" tabIndex={0} role="region" aria-label="고른 지면의 규격 표">
+      <table className={styles.spec}>
         <caption className="sr-only">고른 지면의 규격</caption>
         <thead>
           <tr>
@@ -80,60 +89,95 @@ export function SlotSpec({ slot }: { slot: ProductBody }) {
   );
 }
 
-/** 항목별 결과. 서버의 응답을 그대로 보여 준다(여기서 다시 견주지 않는다). */
+/** 결과 제목 옆에 두는 수: 안 맞음 · 견줄 규격 없음 · 맞음이 몇 개인가. 0개인 것은 적지 않는다. */
+export function ResultTally({ result }: { result: CreativeCheckResponse }) {
+  return (
+    <>
+      {OUTCOME_ORDER.map((outcome) => {
+        const count = result.items.filter((i) => i.outcome === outcome).length;
+        return count > 0 ? (
+          <Badge key={outcome} tone={OUTCOME_TONE[outcome]}>
+            {CREATIVE_OUTCOME_LABELS[outcome]} {count}개
+          </Badge>
+        ) : null;
+      })}
+    </>
+  );
+}
+
+/** 항목별 결과. 서버의 응답을 그대로 보여 준다(여기서 다시 견주지 않는다). 제목과 판은 부르는 쪽이 그린다. */
 export function Result({ result }: { result: CreativeCheckResponse }) {
   const mismatches = result.items.filter((i) => i.outcome === 'mismatch').length;
   const unchecked = result.items.filter((i) => i.outcome === 'no_spec').length;
+  const stackRef = useStackBelow(STACK_BELOW);
   return (
-    <section className="export" aria-label="검사 결과" aria-live="polite">
-      <h2>검사 결과</h2>
+    <>
       {result.verdict === 'pass' ? (
-        <p className="ok-line">
-          견준 항목은 모두 규격에 맞습니다.
+        <Notice kind="ok">
+          <strong>견준 항목은 모두 규격에 맞습니다.</strong>
           {unchecked > 0 ? ` 규격 칸이 빈 항목 ${unchecked}개는 견주지 못했습니다.` : ''}
-        </p>
+        </Notice>
       ) : result.verdict === 'fail' ? (
-        <Notice kind="warn">
+        <div className="box box-error">
           <strong>규격에 안 맞는 항목이 {mismatches}개 있습니다.</strong> 아래 &ldquo;고칠 점&rdquo;을 보고 다시 내보내 주세요.
-        </Notice>
+        </div>
       ) : (
-        <Notice>
+        <div className="box box-warn">
           이 지면에는 견줄 규격이 하나도 적혀 있지 않습니다. 그래서 맞다고도 틀리다고도 하지 않습니다. 아래는 파일에서 읽은 값입니다.
-        </Notice>
+        </div>
       )}
 
-      <div className="table-wrap" tabIndex={0}>
-        <table>
+      {/* 좁은 자리에서는 줄마다 한 덩이로 쌓인다(전역 .table-wrap.stack). 그때도 표로 읽히게 역할을 적어 둔다. */}
+      <div ref={stackRef} className="table-wrap stack" tabIndex={0} role="region" aria-label="항목별 결과 표">
+        <table role="table">
           <caption className="sr-only">항목별 결과</caption>
-          <thead>
-            <tr>
-              <th scope="col">항목</th>
-              <th scope="col">결과</th>
-              <th scope="col">지면 규격</th>
-              <th scope="col">이 파일</th>
-              <th scope="col">고칠 점</th>
+          <thead role="rowgroup">
+            <tr role="row">
+              <th scope="col" role="columnheader">
+                항목
+              </th>
+              <th scope="col" role="columnheader" className="tight">
+                결과
+              </th>
+              <th scope="col" role="columnheader">
+                지면 규격
+              </th>
+              <th scope="col" role="columnheader">
+                이 파일
+              </th>
+              <th scope="col" role="columnheader">
+                고칠 점
+              </th>
             </tr>
           </thead>
-          <tbody>
+          <tbody role="rowgroup">
             {result.items.map((item) => (
-              <tr key={item.key}>
-                <th scope="row">{CREATIVE_CHECK_LABELS[item.key]}</th>
-                <td>
-                  <span className={OUTCOME_CLASS[item.outcome]}>{CREATIVE_OUTCOME_LABELS[item.outcome]}</span>
+              <tr key={item.key} role="row">
+                <th scope="row" role="rowheader">
+                  {CREATIVE_CHECK_LABELS[item.key]}
+                </th>
+                <td role="cell" className="tight stack-end">
+                  <Badge tone={OUTCOME_TONE[item.outcome]}>{CREATIVE_OUTCOME_LABELS[item.outcome]}</Badge>
                 </td>
-                <td>{item.expected ?? <span className="muted">없음</span>}</td>
-                <td>{item.actual ?? <span className="muted">읽지 못함</span>}</td>
-                <td>{item.fix ?? <span className="muted">—</span>}</td>
+                <td role="cell" data-label="지면 규격">
+                  {item.expected ?? <span className="muted">없음</span>}
+                </td>
+                <td role="cell" data-label="이 파일">
+                  {item.actual ?? <span className="muted">읽지 못함</span>}
+                </td>
+                <td role="cell" data-label="고칠 점" className={styles.fix}>
+                  {item.fix ?? <span className="muted">—</span>}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
-      <p className="muted small">
+      <p className={`muted small ${styles.facts}`}>
         지면 #{result.product.id} {result.product.name} · 파일 {result.file.name ?? '(이름 없음)'} · {factsText(result.file)}
       </p>
-      <p className="muted small">
+      <p className={`muted small ${styles.facts}`}>
         {result.readBy === 'server' ? (
           <>서버가 파일 머리를 직접 읽어 견줬습니다. 파일도 이 결과도 저장하지 않았습니다.</>
         ) : (
@@ -144,7 +188,7 @@ export function Result({ result }: { result: CreativeCheckResponse }) {
         )}{' '}
         글자·그림의 내용(문구, 초상)은 살피지 않았습니다.
       </p>
-    </section>
+    </>
   );
 }
 
@@ -152,9 +196,8 @@ export function CreativeTool() {
   const mounted = useMounted();
   const workspace = useWorkspace();
   const origin = useOrigin();
-  const [space, setSpace] = useState<Space>('mine');
-  // 내 작업 공간이 아직 없으면 볼 수 있는 것은 본보기 공간뿐이다.
-  const chosen: Space = workspace ? space : 'public';
+  // 어느 공간의 지면으로 볼지. 고른 적이 없으면 내 작업 공간에 상품이 있을 때 내 작업 공간, 아니면 본보기 공간이다(다른 도구와 같은 규칙).
+  const chosen = useToolSpace();
 
   const [loaded, setLoaded] = useState<{ space: Space; slots: ProductBody[] } | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -164,10 +207,15 @@ export function CreativeTool() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<CreativeCheckResponse | null>(null);
+  const [over, setOver] = useState(false);
   const turn = useRef(0);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const resultPanel = useRef<HTMLElement>(null);
+  const fileId = useId();
+  const fileHintId = useId();
 
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted || chosen === null) return;
     let alive = true;
     call<ProductListResponse>('GET', '/api/products', { publicSpace: chosen === 'public' })
       .then((list) => {
@@ -250,6 +298,40 @@ export function CreativeTool() {
     }
   };
 
+  // 결과(또는 견주지 못한 까닭)가 나오면 그 판이 보이게 한다. 이미 보이면 움직이지 않는다.
+  useEffect(() => {
+    if (result === null && error === null) return;
+    const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    resultPanel.current?.scrollIntoView({ block: 'nearest', behavior: calm ? 'auto' : 'smooth' });
+  }, [result, error]);
+
+  // 파일을 상자에 끌어다 놓았을 때. 고르기 칸에도 같은 파일을 넣어 이름이 보이게 한다.
+  const hasFiles = (e: DragEvent<HTMLDivElement>) => Array.from(e.dataTransfer.types).includes('Files');
+  const dragOver = (e: DragEvent<HTMLDivElement>) => {
+    if (!hasFiles(e)) return;
+    e.preventDefault();
+    setOver(true);
+  };
+  const dragLeave = (e: DragEvent<HTMLDivElement>) => {
+    if (e.relatedTarget instanceof Node && e.currentTarget.contains(e.relatedTarget)) return;
+    setOver(false);
+  };
+  const drop = (e: DragEvent<HTMLDivElement>) => {
+    if (!hasFiles(e)) return;
+    e.preventDefault();
+    setOver(false);
+    const file = e.dataTransfer.files[0] ?? null;
+    if (!file) return;
+    try {
+      const one = new DataTransfer();
+      one.items.add(file);
+      if (fileInput.current) fileInput.current.files = one.files;
+    } catch {
+      // 고르기 칸에 넣지 못하는 브라우저에서도 읽기는 한다(칸에 이름만 안 보인다).
+    }
+    void choose(file);
+  };
+
   const read = picked?.read ?? null;
   const tooBigForServer = picked !== null && picked.file.size > CREATIVE_LIMITS.fileMaxBytes;
   const header = chosen === 'mine' && workspace ? ` -H "${WORKSPACE_HEADER}: ${workspace}"` : '';
@@ -261,58 +343,57 @@ export function CreativeTool() {
 
   return (
     <main className="page">
-      <h1>시안 검사</h1>
-      <p className="muted">
-        광고 시안 파일이 고른 지면의 규격에 맞는지 봅니다. <strong>AI를 쓰지 않습니다.</strong> 파일 머리 몇 바이트에서 형식·가로·세로·길이를 읽어, 그 지면을 등록할
-        때 채워 둔 규격 칸과 견줍니다. 파일도 결과도 저장하지 않습니다. 여기서 &ldquo;시안&rdquo;은 등록 칸에서 &ldquo;소재&rdquo;라고 부르는 것과 같은
-        것입니다(광고로 내보낼 그림·영상 파일).
-      </p>
-
-      <section aria-label="지면 고르기">
-        <h2>1. 지면 고르기</h2>
-        <div className="who" role="group" aria-label="어느 공간의 지면으로 볼지">
-          <button
-            type="button"
-            className="seg"
-            aria-pressed={chosen === 'mine'}
-            disabled={!mounted || !workspace}
-            onClick={() => {
-              setSpace('mine');
-              forget();
-            }}
-          >
-            내 작업 공간
-          </button>
-          <button
-            type="button"
-            className="seg"
-            aria-pressed={chosen === 'public'}
-            onClick={() => {
-              setSpace('public');
-              forget();
-            }}
-          >
-            본보기 공간
-          </button>
-        </div>
-        {mounted && !workspace ? <p className="muted small">아직 내 작업 공간이 없어 본보기 공간의 지면만 볼 수 있습니다.</p> : null}
-
-        {loadError ? <Notice kind="error">{loadError}</Notice> : null}
-        {slots === null && !loadError ? (
-          <p className="muted">지면을 읽어 오는 중…</p>
-        ) : slots && slots.length === 0 ? (
-          <Notice>
-            {chosen === 'public'
-              ? '본보기 공간에 승인된 광고 지면이 아직 없습니다.'
-              : '이 공간에 승인한 광고 지면이 아직 없습니다. 위에서 본보기 공간으로 바꿔 볼 수 있습니다.'}{' '}
-            견줄 지면이 있어야 검사할 수 있습니다. <Link href="/">작업 화면</Link>에서 광고 지면 소개 글을 넣고 <Link href="/inbox">검수함</Link>에서 승인하면 내
-            작업 공간에 지면이 생깁니다. 케이터링·굿즈 상품은 시안 규격 칸이 없어 여기에 나오지 않습니다.
-          </Notice>
-        ) : slot && slots ? (
+      <PageHead
+        title="시안 검사"
+        lead={
           <>
-            <div className="actions">
-              <label>
-                지면{' '}
+            광고 시안 파일이 고른 지면의 규격에 맞는지 봅니다. <strong>AI를 쓰지 않습니다.</strong> 파일도 결과도 저장하지 않습니다.
+          </>
+        }
+        about={
+          <p>
+            광고 시안 파일이 고른 지면의 규격에 맞는지 봅니다. <strong>AI를 쓰지 않습니다.</strong> 파일 머리 몇 바이트에서 형식·가로·세로·길이를 읽어, 그 지면을
+            등록할 때 채워 둔 규격 칸과 견줍니다. 파일도 결과도 저장하지 않습니다. 여기서 &ldquo;시안&rdquo;은 등록 칸에서 &ldquo;소재&rdquo;라고 부르는 것과 같은
+            것입니다(광고로 내보낼 그림·영상 파일).
+          </p>
+        }
+      />
+
+      <section className={`panel ${styles.step}`} aria-label="지면 고르기">
+        <h2>1. 지면 고르기</h2>
+        <div className={styles.pickRow}>
+          <div className={styles.pickSpace}>
+            <span className="label">공간</span>
+            <div className="who" role="group" aria-label="어느 공간의 지면으로 볼지">
+              <button
+                type="button"
+                className="seg"
+                aria-pressed={chosen === 'mine'}
+                disabled={!mounted || !workspace}
+                onClick={() => {
+                  setToolSpace('mine');
+                  forget();
+                }}
+              >
+                내 작업 공간
+              </button>
+              <button
+                type="button"
+                className="seg"
+                aria-pressed={chosen === 'public'}
+                onClick={() => {
+                  setToolSpace('public');
+                  forget();
+                }}
+              >
+                본보기 공간
+              </button>
+            </div>
+          </div>
+          {slot && slots && slots.length > 0 ? (
+            <>
+              <label className={`stack ${styles.pickSlot}`}>
+                지면
                 <select
                   value={slot.id}
                   onChange={(e) => {
@@ -327,12 +408,31 @@ export function CreativeTool() {
                   ))}
                 </select>
               </label>
-              <Link href={productHref(slot.id, chosen === 'public')} className="small">
+              <Link href={productHref(slot.id, chosen === 'public')} className={styles.pickLink}>
                 이 지면의 상품 화면
               </Link>
-            </div>
+            </>
+          ) : null}
+        </div>
+        {mounted && !workspace ? <p className="hint">아직 내 작업 공간이 없어 본보기 공간의 지면만 볼 수 있습니다.</p> : null}
+
+        {loadError ? <Notice kind="error">{loadError}</Notice> : null}
+        {slots === null && !loadError ? (
+          <p>
+            <Loading label="지면을 읽어 오는 중…" lines={0} />
+          </p>
+        ) : slots && slots.length === 0 ? (
+          <Notice>
+            {chosen === 'public'
+              ? '본보기 공간에 승인된 광고 지면이 아직 없습니다.'
+              : '이 공간에 승인한 광고 지면이 아직 없습니다. 위에서 본보기 공간으로 바꿔 볼 수 있습니다.'}{' '}
+            견줄 지면이 있어야 검사할 수 있습니다. <Link href="/">작업 화면</Link>에서 광고 지면 소개 글을 넣고 <Link href="/inbox">검수함</Link>에서 승인하면 내
+            작업 공간에 지면이 생깁니다. 케이터링·굿즈 상품은 시안 규격 칸이 없어 여기에 나오지 않습니다.
+          </Notice>
+        ) : slot && slots ? (
+          <>
             <SlotSpec slot={slot} />
-            <p className="muted small">
+            <p className="hint">
               규격은 이 지면을 등록할 때 채운 칸을 그대로 읽습니다. 여기서 다시 뽑거나 고치지 않습니다. 칸이 비어 있으면 그 항목은 &ldquo;견줄 규격 없음&rdquo;으로
               남습니다.
             </p>
@@ -340,25 +440,38 @@ export function CreativeTool() {
         ) : null}
       </section>
 
-      <section aria-label="시안 파일 고르기">
+      <section className={`panel ${styles.step}`} aria-label="시안 파일 고르기">
         <h2>2. 시안 파일 고르기</h2>
-        <p className="muted small">
-          JPG·PNG·WEBP 그림과 MP4 영상을 봅니다. 형식은 파일 이름이 아니라 내용으로 정합니다. 고르면 이 브라우저가 먼저 파일 머리를 읽습니다. {FILE_MAX_MB}MB
-          이하 파일은 &ldquo;규격과 견주기&rdquo;를 누를 때 서버로 보내 서버가 다시 읽습니다. 그보다 큰 파일은 서버로 보내지 않고 읽은 값만 보냅니다.
-        </p>
-        <label>
-          <span className="sr-only">시안 파일</span>
+        <div className={styles.drop} data-over={over} onDragOver={dragOver} onDragLeave={dragLeave} onDrop={drop}>
+          <label htmlFor={fileId} className={styles.dropTitle}>
+            시안 파일
+          </label>
+          <p className={styles.dropHint} id={fileHintId}>
+            JPG·PNG·WEBP 그림이나 MP4 영상 하나. 이 상자에 끌어다 놓거나 아래 칸에서 고릅니다.
+          </p>
           <input
+            ref={fileInput}
+            id={fileId}
+            className={styles.file}
             type="file"
+            aria-describedby={fileHintId}
             accept=".jpg,.jpeg,.png,.webp,.mp4,image/jpeg,image/png,image/webp,video/mp4"
             onChange={(e) => void choose(e.target.files?.[0] ?? null)}
           />
-        </label>
+        </div>
+        <p className="hint">
+          JPG·PNG·WEBP 그림과 MP4 영상을 봅니다. 형식은 파일 이름이 아니라 내용으로 정합니다. 고르면 이 브라우저가 먼저 파일 머리를 읽습니다. {FILE_MAX_MB}MB
+          이하 파일은 &ldquo;규격과 견주기&rdquo;를 누를 때 서버로 보내 서버가 다시 읽습니다. 그보다 큰 파일은 서버로 보내지 않고 읽은 값만 보냅니다.
+        </p>
         <div aria-live="polite">
-          {reading ? <p className="muted">파일 머리를 읽는 중…</p> : null}
+          {reading ? (
+            <p>
+              <Loading label="파일 머리를 읽는 중…" lines={0} />
+            </p>
+          ) : null}
           {!reading && picked && read?.ok ? (
             <>
-              <p>
+              <p className={styles.read}>
                 <strong>이 브라우저가 읽은 값:</strong> {factsText(read.facts)}
               </p>
               {read.rotation !== 0 ? (
@@ -398,15 +511,27 @@ export function CreativeTool() {
         </div>
       </section>
 
-      <div className="actions">
+      <div className={styles.run}>
         <button type="button" className="btn primary" disabled={busy || reading || !slot || !read?.ok || overDeclared} onClick={run}>
           {busy ? '견주는 중…' : '규격과 견주기'}
         </button>
         {!slot ? <span className="muted small">먼저 지면을 골라 주세요.</span> : !picked ? <span className="muted small">시안 파일을 골라 주세요.</span> : null}
       </div>
 
-      {error ? <Notice kind="error">{error}</Notice> : null}
-      {result ? <Result result={result} /> : null}
+      <section ref={resultPanel} className={`panel ${styles.step}`} aria-label="검사 결과" aria-live="polite">
+        <div className={styles.resultHead}>
+          <h2>검사 결과</h2>
+          {result ? <ResultTally result={result} /> : null}
+        </div>
+        {error ? <Notice kind="error">{error}</Notice> : null}
+        {result ? (
+          <Result result={result} />
+        ) : error ? null : (
+          <p className="muted">
+            아직 견준 결과가 없습니다. 지면과 시안 파일을 고르고 &ldquo;규격과 견주기&rdquo;를 누르면 항목별 결과가 여기에 나옵니다.
+          </p>
+        )}
+      </section>
 
       <details className="help">
         <summary>이 검사가 보는 것과 보지 않는 것</summary>

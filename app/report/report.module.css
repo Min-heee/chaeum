@@ -1,0 +1,158 @@
+/* 성적표에서만 쓰는 것. 색·글자·간격은 전역 스타일(app/globals.css)의 변수를 그대로 쓴다.
+   숫자는 꾸미지 않는다(색으로 좋고 나쁨을 칠하지 않는다). 자리만 맞춘다. */
+
+/* 묶음으로 바로 가기 */
+.jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  margin: var(--s3) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.jump a {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px var(--s2);
+  min-height: var(--control-h);
+  padding: var(--s1) var(--s3);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--panel);
+  color: var(--fg);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  text-decoration: none;
+}
+.jump a:hover {
+  border-color: var(--line-strong);
+  background: var(--bg-soft);
+}
+
+/* 묶음 하나. 위쪽 머리(좁은 화면)에 가려지지 않게 닿는 자리를 내린다. */
+.block {
+  margin-top: var(--s5);
+  padding-top: var(--s4);
+  border-top: 1px solid var(--line);
+  scroll-margin-top: calc(var(--head-h) + var(--s3));
+}
+.block h2 {
+  margin-top: 0;
+}
+
+/* 방식별 비교표: 첫 칸은 지표 이름, 나머지는 방식마다 한 칸(오른쪽 정렬, 자릿수 맞춤). */
+.metrics table th.val,
+.metrics table td.val {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  min-width: 168px;
+}
+.metrics table thead th.val {
+  width: 23%;
+}
+/* 좁은 화면에서 옆으로 밀어도 지표 이름은 남는다. */
+.metrics table th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  box-shadow: inset -1px 0 0 var(--line);
+}
+/* 줄에 올렸을 때의 바탕은 전역 표 규칙이 칠한다(이 규칙이 그것을 이기지 않게 가볍게 적는다). */
+.metrics tbody th:first-child {
+  background: var(--panel);
+}
+
+/* 비율: "211/408 · 51.7%". 글자는 그대로 두고 백분율 자리만 같은 너비로 잡아 세로로 견주기 쉽게 한다. */
+.ratio {
+  white-space: nowrap;
+}
+.pct {
+  display: inline-block;
+  min-width: 7.5ch;
+  text-align: right;
+  white-space: pre;
+}
+/* 값 아래의 단서(확인 여부, 합계, 녹화할 때 잰 값) */
+.note {
+  display: block;
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+.noteFlag {
+  display: block;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--flag-fg);
+}
+/* 값이 없다는 말(기록 없음, 이 방식에는 없음, 호출 없음) */
+.none {
+  color: var(--muted);
+}
+
+/* 잰 실행 표 */
+.runs table td {
+  white-space: nowrap;
+}
+
+/* 틀린 건: 단추는 한 줄에 나란히, 펼친 내용은 그 아래 줄에 하나씩. */
+.wrongs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2);
+  margin: var(--s3) 0 0;
+}
+.wrongItem {
+  display: contents;
+}
+.wrongPanel {
+  order: 1;
+  flex: 1 1 100%;
+  min-width: 0;
+  margin-top: var(--s1);
+  padding: var(--s3) var(--s4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--panel);
+}
+.wrongPanel h3 {
+  margin: 0;
+}
+.wrongPanel > :last-child {
+  margin-bottom: 0;
+}
+/* 문서 한 건의 머리 줄 */
+.wrongTable tbody + tbody > tr:first-child > th {
+  border-top: 1px solid var(--line);
+}
+.wrongTable .doc > th {
+  background: var(--bg);
+}
+.wrongTable .doc :global(.badge),
+.wrongTable .doc :global(.flag) {
+  margin-left: var(--s2);
+}
+.wrongTable tbody tr.doc:hover > th {
+  background: var(--bg);
+}
+.wrongTable tbody th[scope='row'] {
+  font-weight: 400;
+  color: var(--fg-soft);
+}
+
+/* 가장 자주 고친 칸 */
+.narrow {
+  max-width: 480px;
+}
+
+@media (max-width: 640px) {
+  .metrics table th:first-child {
+    min-width: 136px;
+    max-width: 160px;
+  }
+  .metrics table th.val,
+  .metrics table td.val {
+    min-width: 152px;
+  }
+}

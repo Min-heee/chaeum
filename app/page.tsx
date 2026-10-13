@@ -1,9 +1,12 @@
 // 첫 화면 = 작업 화면. 보기 글을 서버에서 읽어 넘기므로 열자마자 왼쪽에 글이 들어 있다.
+import type { Metadata } from 'next';
 import type { SampleListResponse } from '@/contract/api';
 import { sampleList } from '@/server/service';
 import { Workbench } from '../components/Workbench';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = { title: '작업 화면 · 채움' };
 
 export default async function HomePage() {
   let samples: SampleListResponse['items'] = [];

@@ -17,6 +17,8 @@ export const SECURITY_HEADERS = [
 const nextConfig: NextConfig = {
   // 무엇으로 만들었는지 응답 헤더로 알리지 않는다.
   poweredByHeader: false,
+  // 개발할 때 왼쪽 아래에 뜨는 표시를 끈다(옆 메뉴 아래의 글자를 가린다). 오류는 그대로 화면에 뜬다.
+  devIndicators: false,
   // pg 는 서버에서만 쓴다. 묶지 않고 그대로 불러온다.
   serverExternalPackages: ['pg'],
   // 양식 맞춤 파일은 실행 중에 폴더에서 읽는다. 배포 묶음에 이 폴더를 함께 싣는다.

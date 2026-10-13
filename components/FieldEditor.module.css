@@ -1,0 +1,36 @@
+/* 칸 하나를 고치는 입력에만 쓰는 스타일. 라벨은 입력 위에 둔다. */
+.editor {
+  gap: var(--s2);
+  margin-top: var(--s2);
+}
+.editor :global(.stack) {
+  margin: 0;
+}
+.editor :global(.pair) {
+  align-items: flex-end;
+}
+.editor :global(.actions) {
+  margin: 0;
+}
+/* 옵션 한 줄: 일수(수량) · 값 · 빼기. 좁아도 한 줄에 서게 입력이 줄어든다. */
+.editor .option {
+  flex-wrap: nowrap;
+  width: 100%;
+  max-width: 360px;
+  gap: var(--s2);
+}
+.editor .option :global(.stack) {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.editor .option input:not([type]) {
+  width: 100%;
+}
+.editor .option :global(.btn) {
+  flex: none;
+}
+/* 체크 상자는 입력 높이에 맞춰 가운데에 */
+.editor .check {
+  min-height: var(--control-h);
+  font-size: var(--fs-sm);
+}

@@ -1,34 +1,50 @@
-/* 달력 화면에서만 쓰는 것. 색은 전역 스타일(app/globals.css)의 변수를 그대로 쓴다. */
+/* 달력 화면에서만 쓰는 것. 색·간격은 전역 스타일(app/globals.css)의 변수를 그대로 쓴다. */
+
+/* 고르는 판: 왼쪽에 이름, 오른쪽에 입력. 줄마다 선으로 가른다. */
 .controls {
-  display: grid;
-  gap: 10px;
   /* fieldset 은 기본으로 안의 것보다 좁아지지 않는다. 좁은 화면에서 옆으로 넘치지 않게 푼다. */
   min-width: 0;
-  margin: 12px 0 4px;
-  padding: 12px;
+  margin: var(--s3) 0;
+  padding: 0 var(--s4);
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: var(--r-lg);
   background: var(--panel);
 }
 
-.line {
+.row {
+  display: grid;
+  grid-template-columns: 184px minmax(0, 1fr);
+  align-items: start;
+  gap: var(--s1) var(--s4);
+  padding: var(--s3) 0;
+}
+.row + .row {
+  border-top: 1px solid var(--line);
+}
+/* 이름은 첫 입력 줄과 높이를 맞춘다(아래에 도움 글이 붙어도 어긋나지 않게). */
+.row .rowLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--control-h);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg-soft);
+}
+.rowBody {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 12px;
+  gap: var(--s2) var(--s3);
+  min-width: 0;
 }
-
-.line select {
+.rowBody select {
   min-width: 0;
   max-width: 100%;
 }
-
-/* 전역 스타일이 쪽 안의 입력 칸에 주는 안쪽 여백을 고르기 단추에는 주지 않는다. */
-.line input[type='radio'] {
-  width: 16px;
-  height: 16px;
+.rowBody .rowNote {
+  flex-basis: 100%;
   margin: 0;
-  padding: 0;
 }
 
 /* 다시 세는 동안 앞의 표를 흐리게 둔다. */
@@ -36,13 +52,35 @@
   opacity: 0.55;
 }
 
-.counts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 14px;
-  margin: 8px 0;
-  padding: 0;
-  list-style: none;
+/* 결과 */
+.result {
+  margin-top: var(--s5);
+}
+.result h2 {
+  margin-top: 0;
+}
+.summary {
+  margin: var(--s2) 0 0;
+}
+
+/* 지면별 표 */
+.items .product {
+  min-width: 200px;
+}
+.items .what {
+  min-width: 300px;
+}
+/* 곧 마감인 줄: 왼쪽에 노란 선. 색만으로 알리지 않는다(상태 표와 굵은 "○일 남음" 글자가 함께 있다). */
+.items tbody tr.closing > th:first-child {
+  box-shadow: inset 3px 0 0 var(--flag-line);
+}
+.closingText {
+  color: var(--flag-fg);
+  font-weight: 700;
+}
+.lateText {
+  color: var(--danger);
+  font-weight: 600;
 }
 
 .todo {
@@ -50,25 +88,43 @@
   padding: 0;
   list-style: none;
 }
-
 .todo li + li {
-  margin-top: 4px;
+  margin-top: var(--s1);
 }
 
-.todo .lateText {
-  color: var(--danger);
+/* 세는 방법 */
+:global(.panel).rulesPanel {
+  margin-top: var(--s5);
 }
-
-.todo .closingText {
-  color: var(--flag-fg);
-  font-weight: 600;
-}
-
 .rules {
-  margin: 6px 0;
+  margin: var(--s2) 0 0;
   padding-left: 20px;
+  font-size: var(--fs-sm);
+  color: var(--fg-soft);
+  max-width: 96ch;
+}
+.rules li {
+  margin: var(--s1) 0;
 }
 
-.rules li {
-  margin: 3px 0;
+/* 쌓였을 때(전역 .table-wrap.stack[data-stacked]): 곧 마감의 노란 선은 줄 전체의 왼쪽에 둔다. */
+:global(.table-wrap.stack[data-stacked]) .items tbody tr.closing {
+  box-shadow: inset 3px 0 0 var(--flag-line);
+}
+:global(.table-wrap.stack[data-stacked]) .items tbody tr.closing > th:first-child {
+  box-shadow: none;
+}
+
+/* 좁은 화면: 이름이 위, 입력이 아래 */
+@media (max-width: 640px) {
+  .row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .row .rowLabel {
+    min-height: 0;
+  }
+  .rowBody select,
+  .rowBody input[type='date'] {
+    flex: 1 1 100%;
+  }
 }

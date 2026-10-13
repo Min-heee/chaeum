@@ -1,0 +1,141 @@
+/* 용어 사전 화면에서만 쓰는 것. 색·글자·간격은 전역 스타일(app/globals.css)의 변수를 그대로 쓴다. */
+
+/* 찾기 입력 */
+.search {
+  width: 240px;
+}
+
+/* 구역(내 작업 공간의 용어 · 공용 용어) */
+.section {
+  margin-top: var(--s5);
+  padding-top: var(--s4);
+  border-top: 1px solid var(--line);
+  /* 내 줄 표를 표로 둘지 덩어리로 세울지는 이 구역의 너비로 정한다(아래 @container). */
+  container-type: inline-size;
+}
+.section h2 {
+  margin-top: 0;
+}
+
+/* 더하는 양식 */
+.add :global(.panel-title) {
+  margin-top: 0;
+}
+.add :global(.actions) {
+  margin-bottom: 0;
+}
+.added {
+  margin: var(--s2) 0 0;
+}
+
+/* 내 줄 표: 칸 안에서 바로 고친다. */
+.own table td input {
+  width: 100%;
+  min-width: 120px;
+}
+.own table .state,
+.own table .acts {
+  width: 1%;
+  min-width: 0;
+}
+.own table .state {
+  white-space: nowrap;
+}
+.rowActions {
+  display: flex;
+  gap: var(--s2);
+}
+.rowActions :global(.btn) {
+  white-space: nowrap;
+}
+.rowHint {
+  display: block;
+  margin-top: var(--s1);
+  min-width: 132px;
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+/* 표 아래의 알아 둘 것 */
+.notes {
+  margin: var(--s3) 0 0;
+  padding-left: 20px;
+  max-width: 88ch;
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+.notes li + li {
+  margin-top: var(--s1);
+}
+
+/* 공용 줄 표: 내 승인 줄에 가려진 줄의 단서 */
+.overridden {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+/* 표가 들어갈 자리가 좁으면 내 줄 하나가 한 덩어리로 선다(낱말 / 표기·메모 / 상태 / 할 일). 옆으로 밀 것이 없다.
+   자리 너비는 구역(.section)을 잰다. 자리가 남으면 입력이 나란히 선다. */
+@container (max-width: 850px) {
+  .own.own table,
+  .own.own table tbody,
+  .own.own table th,
+  .own.own table td {
+    display: block;
+  }
+  .own.own table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .own.own table tbody tr {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+    gap: var(--s2) var(--s3);
+    padding: var(--s3);
+    border-bottom: 1px solid var(--line);
+  }
+  /* 거르기에 걸린 줄은 그대로 숨긴다. */
+  .own.own table tbody tr[hidden] {
+    display: none;
+  }
+  .own.own table tbody tr:last-child {
+    border-bottom: 0;
+  }
+  .own.own table tbody th,
+  .own.own table tbody td {
+    width: auto;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    white-space: normal;
+  }
+  .own.own table tbody th,
+  .own.own table .acts {
+    grid-column: 1 / -1;
+  }
+  .own.own table td input {
+    min-width: 0;
+  }
+  /* 표 머리가 안 보이므로 칸 이름을 칸 위에 적는다. */
+  .own.own table tbody td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 2px;
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    color: var(--fg-soft);
+  }
+  .own.own table tbody tr:hover > th,
+  .own.own table tbody tr:hover > td {
+    background: transparent;
+  }
+  .rowHint {
+    min-width: 0;
+  }
+}

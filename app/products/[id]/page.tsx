@@ -3,7 +3,11 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { ProductDetail } from '../../../components/ProductDetail';
 
-export const metadata: Metadata = { title: '상품 · 채움' };
+/** 탭 제목에 상품 번호를 넣는다. 상품 이름은 읽어 온 뒤 화면이 덧붙인다. */
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  return { title: /^[1-9][0-9]{0,14}$/.test(id) ? `상품 #${id} · 채움` : '상품 · 채움' };
+}
 
 export default async function ProductPage({
   params,

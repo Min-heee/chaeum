@@ -1,0 +1,108 @@
+/* 시안 검사 화면에서만 쓰는 것. 색·간격은 전역 스타일(app/globals.css)의 변수를 그대로 쓴다. */
+
+/* 차례가 보이는 판: 1 지면 → 2 시안 파일 → 검사 결과 */
+.step {
+  margin: var(--s3) 0;
+}
+.step h2 {
+  margin-bottom: var(--s3);
+}
+
+/* 1. 공간과 지면을 한 줄에. 좁으면 위아래로 선다. */
+.pickRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--s3) var(--s4);
+}
+.pickSpace {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  min-width: 0;
+}
+.pickRow .pickSlot {
+  flex: 1 1 280px;
+  min-width: 0;
+  margin: 0;
+}
+.pickSlot select {
+  width: 100%;
+}
+/* 규격 표는 세 칸뿐이라 좁은 화면에서도 밀리지 않게 칸의 최소 너비를 푼다. */
+table.spec tbody th,
+table.spec tbody td {
+  min-width: 0;
+}
+.pickLink {
+  font-size: var(--fs-sm);
+  line-height: var(--control-h);
+  white-space: nowrap;
+}
+
+/* 2. 시안 파일을 넣는 상자. 끌어다 놓아도 되고 눌러서 골라도 된다. */
+.drop {
+  display: grid;
+  gap: var(--s2);
+  padding: var(--s4);
+  border: 1px dashed var(--line-input);
+  border-radius: var(--r-lg);
+  background: var(--bg);
+}
+.drop[data-over='true'] {
+  border-color: var(--accent);
+  border-style: solid;
+  background: var(--accent-soft);
+}
+.dropTitle {
+  font-weight: 600;
+}
+.dropHint {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+/* 상자가 이미 점선이라 안의 입력 칸은 실선으로 둔다. */
+.drop input.file[type='file'] {
+  border-style: solid;
+  border-color: var(--line-strong);
+  background: var(--panel);
+}
+
+/* 이 브라우저가 읽은 값 */
+.read {
+  margin: var(--s3) 0 var(--s2);
+  padding: var(--s2) var(--s3);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--bg);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 견주기 버튼 줄 */
+.run {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2) var(--s3);
+  margin: var(--s4) 0;
+}
+
+/* 검사 결과 */
+.resultHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2) var(--s3);
+  margin-bottom: var(--s2);
+}
+.resultHead h2 {
+  margin: 0;
+}
+.fix {
+  min-width: 220px;
+}
+.facts {
+  margin: var(--s1) 0;
+  max-width: 96ch;
+}

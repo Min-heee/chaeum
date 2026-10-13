@@ -1,0 +1,318 @@
+/* 검수함·상품 목록이 함께 쓰는 꼴. 바탕은 전역(.tabs .stats .table-wrap)이고 여기에는 모자란 것만 둔다. */
+
+/* ── 공간 탭 ───────────────────────────────────────────── */
+/* 전역 .tabs 와 같은 무게로 겹치지 않게 태그를 붙여 적는다(아래 div.statFilter, section.exportPanel 도 같다). */
+div.spaceTabs {
+  margin-top: 0;
+}
+.tabCount {
+  font-weight: 400;
+}
+/* 탭 바로 아래의 한 줄 설명 */
+.spaceNote {
+  margin: 0 0 var(--s3);
+  max-width: 88ch;
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+
+/* ── 눌러서 거르는 요약 숫자 ───────────────────────────── */
+/* 꼴은 전역 .stat 그대로다. 버튼이 되면서 생기는 기본 꼴만 지우고, 고른 칸에 파란 밑줄을 붙인다. */
+div.statFilter {
+  margin-bottom: 0;
+}
+.statBtn {
+  appearance: none;
+  border: 0;
+  border-radius: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: inset 0 -3px 0 transparent;
+}
+.statBtn > span {
+  display: block;
+}
+.statBtn:hover:not(:disabled):not([aria-pressed='true']) {
+  background: var(--bg-soft);
+}
+.statBtn[aria-pressed='true'] {
+  background: var(--accent-soft);
+  box-shadow: inset 0 -3px 0 var(--accent);
+}
+.statBtn[aria-pressed='true'] :global(.stat-label) {
+  color: var(--accent-hover);
+  font-weight: 600;
+}
+.statBtn:focus-visible {
+  outline-offset: -2px;
+}
+.statBtn:disabled {
+  cursor: not-allowed;
+}
+.statBtn:disabled :global(.stat-value) {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+/* ── 내려받기 도구 막대(상품) ──────────────────────────── */
+section.exportPanel {
+  margin-top: 0;
+  padding: var(--s3) var(--s4);
+}
+.exportPanel :global(.toolbar) {
+  margin: 0;
+}
+.exportPanel > p {
+  margin: var(--s2) 0 0;
+}
+/* 방금 내려받은 것: 한 줄로 알리고, 내용은 접어 둔다. */
+.exportDone {
+  margin-top: var(--s2);
+}
+.exportDone p {
+  margin: 0;
+}
+.exportDone :global(.help) {
+  margin-bottom: 0;
+}
+
+/* ── 표 위의 한 줄: 지금 보는 묶음 + 거르기 ────────────── */
+.listHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s2) var(--s4);
+  margin: var(--s4) 0 var(--s2);
+}
+.listHead h3 {
+  margin: 0;
+}
+.listHead p {
+  margin: 0;
+}
+/* 묶음 이름과 한 줄 설명이 한 줄에 선다(좁으면 줄이 바뀐다). */
+.listTitle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px var(--s3);
+  min-width: 0;
+}
+.listFilter {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+  font-size: var(--fs-sm);
+  color: var(--fg-soft);
+}
+.listFilter select {
+  min-width: 0;
+}
+.listFoot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2) var(--s3);
+  margin: var(--s2) 0;
+}
+
+/* ── 줄 전체가 눌리는 표 ───────────────────────────────── */
+table.list {
+  margin: 0;
+}
+table.list td,
+table.list th {
+  vertical-align: middle;
+}
+table.list tr.rowLink {
+  cursor: pointer;
+}
+table.list tbody tr.rowLink:hover > td {
+  background: var(--accent-soft);
+}
+table.list td.id {
+  color: var(--muted);
+}
+table.list td.name {
+  min-width: 240px;
+}
+.title {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--fg);
+  text-decoration: none;
+}
+table.list tr.rowLink:hover .title,
+.title:hover,
+.title:focus-visible {
+  color: var(--accent);
+  text-decoration: underline;
+}
+.title + :global(.status) {
+  margin-left: var(--s1);
+}
+/* 원문 앞머리 한 줄 */
+.sub {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-top: 1px;
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  font-variant-numeric: normal;
+}
+table.list td.chipsCell {
+  min-width: 150px;
+}
+table.list td.chipsCell :global(.chips) {
+  margin-top: 0;
+}
+table.list td.meta {
+  min-width: 0;
+  white-space: nowrap;
+  color: var(--fg-soft);
+}
+/* 칸 안의 둘째 줄(뽑은 방법) */
+.metaSub {
+  display: block;
+  color: var(--muted);
+  font-size: var(--fs-xs);
+}
+/* 묶음 머리 줄(사유 이름 + 건수 + 한 줄 설명) */
+table.list tr.groupRow > th {
+  min-width: 0;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  background: var(--bg);
+  font-weight: 400;
+  color: var(--fg-soft);
+}
+table.list tr.groupRow:hover > th {
+  background: var(--bg);
+}
+table.list tr.groupRow :global(.muted) {
+  display: inline;
+}
+table.list tr.groupRow :global(.count) {
+  margin: 0 var(--s2) 0 2px;
+  color: var(--fg-soft);
+  font-weight: 600;
+}
+
+/* 싸개가 표보다 좁아지면(ListParts.tsx 의 useStackBelow 가 data-stacked 를 붙인다) 표가 가로로 밀리지 않게
+   한 건을 한 덩이(이름 줄 + 까닭 + 작은 글씨 한 줄)로 쌓는다.
+   꼴만 바꾸므로 화면 읽기 도구가 여전히 표로 읽도록 마크업에 role 을 적어 두었다. */
+[data-stacked] table.list,
+[data-stacked] table.list tbody {
+  display: block;
+}
+[data-stacked] table.list thead {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+[data-stacked] table.list tr {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  /* 작은 글씨들은 가운뎃점 없이 틈으로만 가른다(줄이 바뀌어도 점이 줄 머리에 남지 않는다). */
+  gap: 2px 10px;
+  padding: 10px var(--s3);
+  border-bottom: 1px solid var(--line);
+}
+[data-stacked] table.list tbody:last-child > tr:last-child {
+  border-bottom: 0;
+}
+[data-stacked] table.list th,
+[data-stacked] table.list td {
+  display: block;
+  width: auto;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  white-space: normal;
+  text-align: left;
+}
+[data-stacked] table.list tbody tr.rowLink:hover > td {
+  background: none;
+}
+[data-stacked] table.list tbody tr.rowLink:hover {
+  background: var(--accent-soft);
+}
+[data-stacked] table.list tbody td.id {
+  flex: none;
+  width: auto;
+}
+[data-stacked] table.list tbody td.name {
+  flex: 1 1 calc(100% - 64px);
+  min-width: 0;
+}
+[data-stacked] table.list td.chipsCell {
+  flex: 0 0 100%;
+  min-width: 0;
+  margin: 2px 0;
+}
+[data-stacked] table.list td.chipsCell:empty {
+  display: none;
+}
+[data-stacked] table.list tbody td.meta {
+  flex: none;
+  width: auto;
+  max-width: 100%;
+  text-align: left;
+  color: var(--muted);
+  font-size: var(--fs-xs);
+}
+[data-stacked] table.list .metaSub {
+  display: inline;
+}
+[data-stacked] table.list .metaSub::before {
+  content: '· ';
+}
+/* 머리 줄이 안 보일 때만 붙는 꼬리말(예: "에 승인") */
+[data-stacked] table.list td.meta[data-suffix]::after {
+  content: attr(data-suffix);
+}
+[data-stacked] table.list tr.groupRow {
+  display: block;
+  padding: 6px var(--s3);
+  background: var(--bg);
+}
+[data-stacked] table.list tr.groupRow > th {
+  padding: 0;
+}
+
+/* 요약 숫자가 일곱이면(검수함: 대기 + 상태 여섯) 한 줄에 일곱. 자리가 모자라면 3 + 4 두 줄로 맞춘다(하나만 떨어져 깨지지 않게). */
+.statFilter[data-count='7'] {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+@media (max-width: 760px) {
+  .statFilter[data-count='7'] {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+  .statFilter[data-count='7'] > :nth-child(-n + 3) {
+    grid-column: span 4;
+  }
+  .statFilter[data-count='7'] > :nth-child(n + 4) {
+    grid-column: span 3;
+  }
+  /* 좁은 화면에서는 칸을 낮춰 첫 화면에 일감이 더 보이게 한다. */
+  .statFilter .statBtn {
+    flex: 1 1 30%;
+    padding: 6px var(--s2);
+  }
+  .statFilter .statBtn :global(.stat-value) {
+    font-size: var(--fs-lg);
+  }
+}

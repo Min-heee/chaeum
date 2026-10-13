@@ -1,9 +1,10 @@
 'use client';
 
 // 모으기 화면. 받은 묶음(출처, 이용 조건, 줄 수)과 모은 줄을 보여 주고, 고른 줄을 초안으로 보낸다.
-// 내 작업 공간의 것과 읽기 전용 본보기 공간의 것을 나눠 보여 준다. 수집기(파이썬)는 이 사이트에서 돌지 않는다.
+// 내 작업 공간의 것과 읽기 전용 본보기 공간의 것을 탭으로 나눠 보여 준다. 수집기(파이썬)는 이 사이트에서 돌지 않는다.
+// 위에서 아래로: 공간 고르기 → 요약 숫자 → 받은 묶음 → 거르기 → 모은 줄 표(고르기) → 초안으로 보내기.
 import Link from 'next/link';
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useId, useState, type FormEvent } from 'react';
 import {
   COLLECT_FLAG_LABELS,
   COLLECT_FLAGS,
@@ -14,9 +15,11 @@ import {
   type CollectFlag,
   type ImportListResponse,
 } from '@/contract/tools/collect';
-import { CopyButton, Notice } from '../../components/bits';
-import { ApiFailure, call, failureMessage, useMounted, useWorkspace } from '../../components/client';
+import { Badge, CopyButton, EmptyState, Loading, Notice, PageHead, Stats, type StatItem } from '../../components/bits';
+import { ApiFailure, call, failureMessage, setQuery, useMounted, useQuery, useWorkspace } from '../../components/client';
 import { comma, formatTime } from '../../components/format';
+import { SpacePanel, SpaceTabs, type SpaceKey } from '../../components/ListParts';
+import styles from './collect.module.css';
 
 interface Filters {
   sourceId: string;
@@ -44,18 +47,33 @@ const placeOf = (item: CollectedItem): string =>
 const sizeOf = (item: CollectedItem): string =>
   item.widthM !== null && item.heightM !== null ? `${item.widthM}×${item.heightM}m` : item.widthM !== null ? `가로 ${item.widthM}m` : item.heightM !== null ? `세로 ${item.heightM}m` : '(크기 없음)';
 
+/** 요약 숫자와 받은 묶음 표. 숫자는 서버가 센 그대로다. */
 function Batches({ data }: { data: ImportListResponse }) {
   const t = data.totals;
+  const stats: StatItem[] = [
+    { label: '지금 있는 줄', value: comma(t.items) },
+    { label: '초안이 된 줄', value: comma(t.drafted) },
+    { label: '출처', value: `${comma(t.sources)}곳` },
+    { label: '서버가 받은 줄', value: comma(t.received) },
+    { label: '새 줄', value: comma(t.new) },
+    { label: '중복', value: comma(t.duplicate) },
+    t.unreadable > 0 ? { label: '못 읽은 줄', value: comma(t.unreadable), tone: 'warn' } : { label: '못 읽은 줄', value: comma(t.unreadable) },
+  ];
   return (
     <>
-      <p className="small">
-        출처 {comma(t.sources)}곳 · 서버가 받은 줄 {comma(t.received)} · 새 줄 {comma(t.new)} · 중복 {comma(t.duplicate)} · 못 읽은 줄 {comma(t.unreadable)} · 지금 있는 줄{' '}
-        {comma(t.items)} · 초안이 된 줄 {comma(t.drafted)}
-        {t.collectorUnreadable + t.collectorDuplicates > 0
-          ? ` · 수집기가 보내기 전에 뺀 줄: 못 읽음 ${comma(t.collectorUnreadable)}, 파일 안 중복 ${comma(t.collectorDuplicates)}`
-          : ''}
-      </p>
-      <div className="table-wrap" tabIndex={0}>
+      <div className={styles.totals}>
+        <Stats items={stats} />
+      </div>
+      {t.collectorUnreadable + t.collectorDuplicates > 0 ? (
+        <p className="muted small">
+          수집기가 보내기 전에 뺀 줄: 못 읽음 {comma(t.collectorUnreadable)}, 파일 안 중복 {comma(t.collectorDuplicates)}
+        </p>
+      ) : null}
+
+      <h2>
+        받은 묶음 <span className="count">{comma(data.batches.length)}개</span>
+      </h2>
+      <div className="table-wrap" tabIndex={0} role="region" aria-label="받은 묶음 표">
         <table>
           <caption className="sr-only">받은 묶음</caption>
           <thead>
@@ -63,10 +81,18 @@ function Batches({ data }: { data: ImportListResponse }) {
               <th scope="col">출처</th>
               <th scope="col">이용 조건</th>
               <th scope="col">자료를 받은 때</th>
-              <th scope="col">받은 줄</th>
-              <th scope="col">새 줄</th>
-              <th scope="col">중복</th>
-              <th scope="col">못 읽은 줄</th>
+              <th scope="col" className="num">
+                받은 줄
+              </th>
+              <th scope="col" className="num">
+                새 줄
+              </th>
+              <th scope="col" className="num">
+                중복
+              </th>
+              <th scope="col" className="num">
+                못 읽은 줄
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -83,13 +109,13 @@ function Batches({ data }: { data: ImportListResponse }) {
                   {formatTime(b.source.fetchedAt)}
                   <div className="muted small">서버 도착 {formatTime(b.receivedAt)}</div>
                 </td>
-                <td>{comma(b.received)}</td>
-                <td>{comma(b.new)}</td>
-                <td>
+                <td className="num">{comma(b.received)}</td>
+                <td className="num">{comma(b.new)}</td>
+                <td className="num">
                   {comma(b.duplicate)}
                   {b.collectorDuplicates > 0 ? <div className="muted small">수집기가 뺀 것 {comma(b.collectorDuplicates)}</div> : null}
                 </td>
-                <td>
+                <td className="num">
                   {comma(b.unreadable)}
                   {b.collectorUnreadable > 0 ? <div className="muted small">수집기가 못 읽은 것 {comma(b.collectorUnreadable)}</div> : null}
                 </td>
@@ -102,53 +128,94 @@ function Batches({ data }: { data: ImportListResponse }) {
   );
 }
 
-function ItemRow({ item, publicSpace, checked, onToggle }: { item: CollectedItem; publicSpace: boolean; checked: boolean; onToggle: () => void }) {
+function ItemRow({
+  item,
+  publicSpace,
+  checked,
+  onToggle,
+  columns,
+}: {
+  item: CollectedItem;
+  publicSpace: boolean;
+  checked: boolean;
+  onToggle: () => void;
+  /** 표의 칸 수. 원래 줄을 펼친 줄이 표 너비를 다 쓴다. */
+  columns: number;
+}) {
+  const [open, setOpen] = useState(false);
+  const rawId = useId();
   const title = item.name ?? '(이름 없음)';
   return (
-    <tr>
-      {publicSpace ? null : (
-        <td>
-          {item.draftId === null ? <input type="checkbox" checked={checked} onChange={onToggle} aria-label={`${title} 고르기`} /> : null}
-        </td>
-      )}
-      <th scope="row">
-        {title}
-        <span className="muted small">
-          {item.sourceId} · {item.line}번째 줄
-        </span>
-        <details className="small">
-          <summary>원래 줄 보기</summary>
-          <pre className="code">{JSON.stringify(item.raw, null, 2)}</pre>
-        </details>
-      </th>
-      <td>{placeOf(item)}</td>
-      <td>
-        {item.mediaType ?? item.kind ?? '(매체 종류 없음)'}
-        {item.operator ? <div className="muted small">{item.operator}</div> : null}
-      </td>
-      <td>
-        {sizeOf(item)}
-        {item.quantity !== null ? <div className="muted small">수량 {comma(item.quantity)}</div> : null}
-      </td>
-      <td>
-        {item.flags.length === 0 ? (
-          <span className="muted small">없음</span>
-        ) : (
-          <span className="chips">
-            {item.flags.map((flag) => (
-              <span key={flag} className="flag">
-                {COLLECT_FLAG_LABELS[flag]}
-              </span>
-            ))}
-          </span>
+    <>
+      <tr className={checked ? 'is-picked' : undefined}>
+        {publicSpace ? null : (
+          <td className={`tight ${styles.pickCell}`}>
+            {/* 칸 전체가 누르는 자리다(네모만 누르지 않아도 된다). */}
+            {item.draftId === null ? (
+              <label>
+                <input type="checkbox" checked={checked} onChange={onToggle} aria-label={`${title} 고르기`} />
+              </label>
+            ) : null}
+          </td>
         )}
-      </td>
-      <td>{item.draftId === null ? <span className="muted small">아직</span> : <Link href={`/drafts/${item.draftId}${publicSpace ? '?pub=1' : ''}`}>초안 #{item.draftId}</Link>}</td>
-    </tr>
+        <th scope="row" className={styles.name}>
+          {title}
+          <span className={`muted small ${styles.sub}`}>
+            <span>
+              {item.sourceId} · {item.line}번째 줄
+            </span>
+            <button type="button" className={styles.rawToggle} aria-expanded={open} aria-controls={open ? rawId : undefined} onClick={() => setOpen(!open)}>
+              원래 줄 보기
+            </button>
+          </span>
+        </th>
+        <td className={styles.place}>{placeOf(item)}</td>
+        <td>
+          {item.mediaType ?? item.kind ?? '(매체 종류 없음)'}
+          {item.operator ? <div className="muted small">{item.operator}</div> : null}
+        </td>
+        <td>{sizeOf(item)}</td>
+        <td className="num">{item.quantity !== null ? comma(item.quantity) : <span className="muted">없음</span>}</td>
+        <td className={styles.flags}>
+          {item.flags.length === 0 ? (
+            <span className="muted small">없음</span>
+          ) : (
+            <span className="chips">
+              {item.flags.map((flag) => (
+                <span key={flag} className="flag">
+                  {COLLECT_FLAG_LABELS[flag]}
+                </span>
+              ))}
+            </span>
+          )}
+        </td>
+        <td className="tight">
+          {item.draftId === null ? <span className="muted small">아직</span> : <Link href={`/drafts/${item.draftId}${publicSpace ? '?pub=1' : ''}`}>초안 #{item.draftId}</Link>}
+        </td>
+      </tr>
+      {open ? (
+        <tr className={styles.rawRow} id={rawId}>
+          <td colSpan={columns}>
+            <pre className="code" tabIndex={0} aria-label={`${title} 원래 줄`}>
+              {JSON.stringify(item.raw, null, 2)}
+            </pre>
+          </td>
+        </tr>
+      ) : null}
+    </>
   );
 }
 
-function Space({ publicSpace }: { publicSpace: boolean }) {
+function Space({
+  publicSpace,
+  onShowSample,
+  onKnown,
+}: {
+  publicSpace: boolean;
+  onShowSample?: () => void;
+  /** 이 공간에 받은 묶음이 있는지 알게 되면 부른다(비었으면 true). 읽지 못했을 때는 false 로 부른다. */
+  onKnown?: (empty: boolean) => void;
+}) {
   const [batches, setBatches] = useState<ImportListResponse | null>(null);
   const [list, setList] = useState<CollectedListResponse | null>(null);
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
@@ -163,15 +230,19 @@ function Space({ publicSpace }: { publicSpace: boolean }) {
     let alive = true;
     call<ImportListResponse>('GET', '/api/imports', { publicSpace })
       .then((data) => {
-        if (alive) setBatches(data);
+        if (!alive) return;
+        setBatches(data);
+        onKnown?.(data.batches.length === 0);
       })
       .catch((err: unknown) => {
-        if (alive) setError(failureMessage(err));
+        if (!alive) return;
+        setError(failureMessage(err));
+        onKnown?.(false);
       });
     return () => {
       alive = false;
     };
-  }, [publicSpace, tick]);
+  }, [publicSpace, tick, onKnown]);
 
   useEffect(() => {
     let alive = true;
@@ -209,6 +280,10 @@ function Space({ publicSpace }: { publicSpace: boolean }) {
     e.preventDefault();
     change({ q: qDraft.trim().slice(0, 60) });
   };
+  const clearFilters = () => {
+    setQDraft('');
+    change(NO_FILTERS);
+  };
   const toggle = (id: number) => {
     const next = new Set(picked);
     if (next.has(id)) next.delete(id);
@@ -244,29 +319,41 @@ function Space({ publicSpace }: { publicSpace: boolean }) {
     setTick((n) => n + 1);
   };
 
-  if (!batches || !list) return error ? <Notice kind="error">{error}</Notice> : <p className="muted">읽어 오는 중…</p>;
+  if (!batches || !list) return error ? <Notice kind="error">{error}</Notice> : <Loading />;
 
   const stored = batches.totals.items;
   if (batches.batches.length === 0) {
-    return (
-      <p className="muted">
-        {publicSpace
-          ? '수집기는 로컬에서 돕니다. 본보기 공간에는 실어 둔 줄이 없습니다.'
-          : '이 공간에는 아직 받은 줄이 없습니다. 아래 "수집기에서 보내는 법"대로 이 공간 번호로 보내면 여기에 보입니다.'}
-      </p>
+    return publicSpace ? (
+      <EmptyState>수집기는 로컬에서 돕니다. 본보기 공간에는 실어 둔 줄이 없습니다.</EmptyState>
+    ) : (
+      <EmptyState
+        title="이 공간에는 아직 받은 줄이 없습니다."
+        action={
+          onShowSample ? (
+            <button type="button" className="btn" onClick={onShowSample}>
+              본보기 공간 보기
+            </button>
+          ) : null
+        }
+      >
+        아래 &quot;수집기에서 보내는 법&quot;대로 이 공간 번호로 보내면 여기에 보입니다.
+      </EmptyState>
     );
   }
 
   const sources = [...new Map(batches.batches.map((b) => [b.source.id, b.source.name])).entries()];
+  const filtered = filters.sourceId !== '' || filters.flag !== '' || filters.drafted !== '' || filters.q !== '';
+  const columns = publicSpace ? 7 : 8;
   return (
     <>
-      {publicSpace ? <p className="muted">수집기는 로컬에서 돕니다. 여기에는 본보기로 실은 {comma(stored)}줄만 있습니다. 읽기 전용이라 초안으로 보낼 수 없습니다.</p> : null}
+      {publicSpace ? (
+        <Notice>수집기는 로컬에서 돕니다. 여기에는 본보기로 실은 {comma(stored)}줄만 있습니다. 읽기 전용이라 초안으로 보낼 수 없습니다.</Notice>
+      ) : null}
       {error ? <Notice kind="error">{error}</Notice> : null}
-      <h3>받은 묶음 {comma(batches.batches.length)}개</h3>
       <Batches data={batches} />
 
-      <h3>모은 줄</h3>
-      <form className="actions" onSubmit={search}>
+      <h2>모은 줄</h2>
+      <form className={`toolbar ${styles.filters}`} role="search" aria-label="모은 줄 거르기" onSubmit={search}>
         <label>
           출처{' '}
           <select value={filters.sourceId} onChange={(e) => change({ sourceId: e.target.value })}>
@@ -303,56 +390,32 @@ function Space({ publicSpace }: { publicSpace: boolean }) {
         <button type="submit" className="btn">
           찾기
         </button>
-      </form>
-      <p className="muted small">
-        걸러 낸 줄 {comma(list.total)}건 가운데 {comma(list.items.length)}건을 보고 있습니다. 한 번에 {COLLECT_LIMITS.pageSize}건씩 읽습니다.
-      </p>
-
-      {list.items.length === 0 ? (
-        <p className="muted">이 조건에 맞는 줄이 없습니다.</p>
-      ) : (
-        <div className="table-wrap" tabIndex={0}>
-          <table>
-            <caption className="sr-only">모은 줄</caption>
-            <thead>
-              <tr>
-                {publicSpace ? null : <th scope="col">고르기</th>}
-                <th scope="col">이름</th>
-                <th scope="col">위치</th>
-                <th scope="col">매체 종류</th>
-                <th scope="col">크기</th>
-                <th scope="col">표시</th>
-                <th scope="col">초안</th>
-              </tr>
-            </thead>
-            <tbody>
-              {list.items.map((item) => (
-                <ItemRow key={item.id} item={item} publicSpace={publicSpace} checked={picked.has(item.id)} onToggle={() => toggle(item.id)} />
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      <div className="actions">
-        {list.nextCursor !== null ? (
-          <button type="button" className="btn" disabled={busy} onClick={more}>
-            더 보기
+        {filtered ? (
+          <button type="button" className="btn ghost" onClick={clearFilters}>
+            조건 지우기
           </button>
         ) : null}
-        {publicSpace ? null : (
-          <>
+      </form>
+
+      <div className={publicSpace ? styles.bulk : `${styles.bulk} ${styles.bulkSticky}`}>
+        <p className={`muted small ${styles.bulkCount}`} role="status">
+          걸러 낸 줄 {comma(list.total)}건 가운데 {comma(list.items.length)}건을 보고 있습니다. 한 번에 {COLLECT_LIMITS.pageSize}건씩 읽습니다.
+        </p>
+        {publicSpace ? (
+          <Badge>읽기 전용</Badge>
+        ) : (
+          <div className={styles.bulkActions}>
             <button type="button" className="btn" disabled={busy || pickable.length === 0} onClick={() => setPicked(new Set(picked.size === pickable.length ? [] : pickable))}>
               {picked.size > 0 && picked.size === pickable.length ? '고른 것 풀기' : '보이는 줄 전부 고르기'}
             </button>
-            <button type="button" className="btn primary" disabled={busy || picked.size === 0} onClick={send}>
+            <button type="button" className={`btn primary ${styles.btnGrow}`} disabled={busy || picked.size === 0} onClick={send}>
               {busy ? '보내는 중…' : `고른 줄 ${comma(picked.size)}건 초안으로 보내기`}
             </button>
-          </>
+          </div>
         )}
       </div>
       {publicSpace ? null : (
-        <p className="muted small">
+        <p className={`muted small ${styles.sendNote}`}>
           초안으로 보낼 때 AI를 부르지 않습니다. 줄의 이름·위치·크기를 본체의 맞추기와 따지기에 그대로 넣습니다. 이 자료에는 가격·운영 시간·유동인구가 없어서
           초안은 &quot;필수 칸 빔&quot; 표시가 붙은 채 검수함의 &quot;확인 필요&quot;로 갑니다. 사람이 값을 채워야 승인할 수 있습니다.
         </p>
@@ -364,6 +427,59 @@ function Space({ publicSpace }: { publicSpace: boolean }) {
           {sent.failed > 0 ? ` 만들지 못한 줄 ${comma(sent.failed)}건${sent.why ? `: ${sent.why}` : '.'}` : ''} <Link href="/inbox">검수함에서 보기</Link>
         </Notice>
       ) : null}
+
+      {list.items.length === 0 ? (
+        <EmptyState
+          action={
+            filtered ? (
+              <button type="button" className="btn" onClick={clearFilters}>
+                조건 지우기
+              </button>
+            ) : null
+          }
+        >
+          이 조건에 맞는 줄이 없습니다.
+        </EmptyState>
+      ) : (
+        <div className="table-wrap" tabIndex={0} role="region" aria-label="모은 줄 표">
+          <table className={styles.items}>
+            <caption className="sr-only">모은 줄</caption>
+            <thead>
+              <tr>
+                {publicSpace ? null : (
+                  <th scope="col" className="tight">
+                    고르기
+                  </th>
+                )}
+                <th scope="col">이름</th>
+                <th scope="col">위치</th>
+                <th scope="col">매체 종류</th>
+                <th scope="col">크기</th>
+                <th scope="col" className="num">
+                  수량
+                </th>
+                <th scope="col">표시</th>
+                <th scope="col" className="tight">
+                  초안
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {list.items.map((item) => (
+                <ItemRow key={item.id} item={item} publicSpace={publicSpace} checked={picked.has(item.id)} onToggle={() => toggle(item.id)} columns={columns} />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {list.nextCursor !== null ? (
+        <div className="actions">
+          <button type="button" className="btn" disabled={busy} onClick={more}>
+            더 보기
+          </button>
+        </div>
+      ) : null}
     </>
   );
 }
@@ -371,29 +487,53 @@ function Space({ publicSpace }: { publicSpace: boolean }) {
 export function Collect() {
   const mounted = useMounted();
   const workspace = useWorkspace();
-  return (
-    <main className="page">
-      <h1>모으기</h1>
-      <p className="muted">
-        여러 기관이 제각각 낸 전광판·옥외광고 설치 현황 자료를 로컬의 수집기(파이썬)가 받아 한 꼴로 정리해 이 서버로 보냅니다. 서버는 줄의 꼴을 다시 보고, 같은 자리·같은
-        규격의 줄을 한 건으로 합쳐 모아 둡니다. 이 화면은 그렇게 모인 줄을 보여 주고, 고른 줄을 초안으로 보냅니다.
-      </p>
-      <p className="muted small">
-        판매 상품이 아니라 설치 현황 자료입니다. 가격이 없고, 지어내지 않습니다. 이 화면은 AI를 쓰지 않습니다. 수집기는 이 사이트에서 돌지 않으며, 이 사이트가 다른 사이트를
-        긁어 오지도 않습니다.
-      </p>
+  // 고른 공간은 주소(?space=…)에 둔다. 고르지 않았으면 내 작업 공간에 받은 줄이 있을 때는 그것을, 공간이 없거나 비었으면 본보기 공간을 먼저 보여 준다.
+  // 내 공간이 비었는지는 읽어 봐야 안다. 알기 전에는 어느 쪽도 고르지 않고 읽는 중이라고 보여 준다(탭이 깜박이며 바뀌지 않게).
+  const pickedParam = new URLSearchParams(useQuery()).get('space');
+  const tab: SpaceKey | null = pickedParam === 'mine' || pickedParam === 'demo' ? pickedParam : null;
+  const setTab = (next: SpaceKey) => setQuery({ space: next });
+  const [mineEmpty, setMineEmpty] = useState<boolean | null>(null);
+  const first: SpaceKey | null = !workspace ? 'demo' : mineEmpty === null ? null : mineEmpty ? 'demo' : 'mine';
+  const chosen: SpaceKey | null = mounted ? (tab ?? first) : null;
 
-      <section className="space-block" aria-label="내 작업 공간">
-        <h2>내 작업 공간</h2>
-        {!mounted ? (
-          <p className="muted">읽어 오는 중…</p>
-        ) : workspace ? (
-          <Space key={workspace} publicSpace={false} />
+  return (
+    <main className="page wide">
+      <PageHead
+        title="모으기"
+        lead="수집기가 보낸 설치 현황 줄을 보고, 고른 줄을 초안으로 보냅니다. 가격이 없는 자료이고 이 화면은 AI를 쓰지 않습니다."
+        about={
+          <>
+            <p>
+              여러 기관이 제각각 낸 전광판·옥외광고 설치 현황 자료를 로컬의 수집기(파이썬)가 받아 한 꼴로 정리해 이 서버로 보냅니다. 서버는 줄의 꼴을 다시 보고, 같은
+              자리·같은 규격의 줄을 한 건으로 합쳐 모아 둡니다. 이 화면은 그렇게 모인 줄을 보여 주고, 고른 줄을 초안으로 보냅니다.
+            </p>
+            <p>
+              판매 상품이 아니라 설치 현황 자료입니다. 가격이 없고, 지어내지 않습니다. 이 화면은 AI를 쓰지 않습니다. 수집기는 이 사이트에서 돌지 않으며, 이 사이트가 다른
+              사이트를 긁어 오지도 않습니다.
+            </p>
+          </>
+        }
+      />
+
+      {/* 검수함·상품과 같은 공간 탭(화살표 키로 옮긴다). 어느 쪽인지 알기 전에는 어느 탭도 고른 표시를 하지 않는다. */}
+      <SpaceTabs prefix="collect" value={chosen} onChange={setTab} />
+
+      {chosen === null ? <Loading /> : null}
+
+      <SpacePanel prefix="collect" space="mine" active={chosen === 'mine'}>
+        {!mounted ? null : workspace ? (
+          <Space key={workspace} publicSpace={false} onShowSample={() => setTab('demo')} onKnown={setMineEmpty} />
         ) : (
-          <p className="muted">
-            아직 내 작업 공간이 없습니다. <Link href="/">작업 화면</Link>에서 글을 한 건 접수하면 공간 번호가 생깁니다. 수집기를 공간 번호 없이 돌리면 서버가 새 공간을 만들어 그 번호를
-            응답으로 돌려줍니다.
-          </p>
+          <EmptyState
+            title="아직 내 작업 공간이 없습니다."
+            action={
+              <button type="button" className="btn" onClick={() => setTab('demo')}>
+                본보기 공간 보기
+              </button>
+            }
+          >
+            <Link href="/">작업 화면</Link>에서 글을 한 건 접수하면 공간 번호가 생깁니다. 수집기를 공간 번호 없이 돌리면 서버가 새 공간을 만들어 그 번호를 응답으로 돌려줍니다.
+          </EmptyState>
         )}
         <details className="help">
           <summary>수집기에서 보내는 법</summary>
@@ -411,12 +551,11 @@ export function Collect() {
             한 공간에 묶음 {comma(COLLECT_LIMITS.batchesPerWorkspace)}개, 줄 {comma(COLLECT_LIMITS.itemsPerWorkspace)}줄까지 둡니다. 이 수는 잰 근거 없이 정한 상한입니다.
           </p>
         </details>
-      </section>
+      </SpacePanel>
 
-      <section className="space-block" aria-label="본보기 공간">
-        <h2>본보기 공간 (읽기 전용)</h2>
-        {mounted ? <Space publicSpace /> : <p className="muted">읽어 오는 중…</p>}
-      </section>
+      <SpacePanel prefix="collect" space="demo" active={chosen === 'demo'}>
+        {mounted ? <Space publicSpace /> : null}
+      </SpacePanel>
     </main>
   );
 }

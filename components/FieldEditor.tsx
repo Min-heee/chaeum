@@ -1,8 +1,9 @@
 'use client';
 
 // 칸 하나를 고치는 입력. 칸의 꼴마다 입력이 다르다. 여기서는 꼴만 맞추고, 맞는 값인지는 서버의 규칙이 다시 본다.
-import { useId, useState, type FormEvent } from 'react';
+import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import { fieldDef, parseFieldValue, type FieldKey } from '@/contract/fields';
+import styles from './FieldEditor.module.css';
 
 type Obj = Record<string, unknown>;
 const obj = (v: unknown): Obj => (typeof v === 'object' && v !== null && !Array.isArray(v) ? (v as Obj) : {});
@@ -100,6 +101,13 @@ export function FieldEditor({
   const [state, setState] = useState<State>(() => initialState(field, value));
   const [problem, setProblem] = useState<string | null>(null);
   const id = useId();
+  const formRef = useRef<HTMLFormElement | null>(null);
+  // 입력이 열리면 저장 버튼까지 보이게 끌어 온다(화면 아래에 붙은 막대 뒤로 숨지 않게. 띄우는 값은 전역의 scroll-padding 이 정한다).
+  // 옵션 줄을 더해 입력이 길어질 때도 다시 끌어 온다.
+  const rowCount = state.rows.length;
+  useEffect(() => {
+    formRef.current?.scrollIntoView({ block: 'nearest' });
+  }, [rowCount]);
   const set = (patch: Partial<State>) => setState((prev) => ({ ...prev, ...patch }));
   const setRow = (index: number, patch: Partial<Row>) =>
     setState((prev) => ({ ...prev, rows: prev.rows.map((row, i) => (i === index ? { ...row, ...patch } : row)) }));
@@ -131,11 +139,13 @@ export function FieldEditor({
     case 'resolution':
       inputs = (
         <span className="pair">
-          <label>
-            가로 <input id={id} autoFocus inputMode="decimal" value={state.a} onChange={(e) => set({ a: e.target.value })} />
+          <label className="stack">
+            가로
+            <input id={id} autoFocus inputMode="decimal" value={state.a} onChange={(e) => set({ a: e.target.value })} />
           </label>
-          <label>
-            세로 <input inputMode="decimal" value={state.b} onChange={(e) => set({ b: e.target.value })} />
+          <label className="stack">
+            세로
+            <input inputMode="decimal" value={state.b} onChange={(e) => set({ b: e.target.value })} />
           </label>
         </span>
       );
@@ -143,13 +153,15 @@ export function FieldEditor({
     case 'hours':
       inputs = (
         <span className="pair">
-          <label>
-            시작 <input id={id} autoFocus type="time" value={state.a} onChange={(e) => set({ a: e.target.value })} />
+          <label className="stack">
+            시작
+            <input id={id} autoFocus type="time" value={state.a} onChange={(e) => set({ a: e.target.value })} />
           </label>
-          <label>
-            끝 <input type="time" value={state.b} onChange={(e) => set({ b: e.target.value })} />
+          <label className="stack">
+            끝
+            <input type="time" value={state.b} onChange={(e) => set({ b: e.target.value })} />
           </label>
-          <label className="check">
+          <label className={`check ${styles.check}`}>
             <input type="checkbox" checked={state.flag} onChange={(e) => set({ flag: e.target.checked })} /> 끝이 다음 날
           </label>
         </span>
@@ -161,12 +173,15 @@ export function FieldEditor({
       inputs = (
         <span className="rows">
           {state.rows.map((row, index) => (
-            <span className="pair" key={index}>
-              <label>
-                {keyLabel} <input id={index === 0 ? id : undefined} autoFocus={index === 0} inputMode="numeric" value={row.key} onChange={(e) => setRow(index, { key: e.target.value })} />
+            <span className={`pair ${styles.option}`} key={index}>
+              <label className="stack">
+                {/* 이름표는 첫 줄에만 보인다. 다음 줄부터는 화면 읽기 도구만 읽는다. */}
+                <span className={index === 0 ? undefined : 'sr-only'}>{keyLabel}</span>
+                <input id={index === 0 ? id : undefined} autoFocus={index === 0} inputMode="numeric" value={row.key} onChange={(e) => setRow(index, { key: e.target.value })} />
               </label>
-              <label>
-                값(원) <input inputMode="numeric" value={row.price} onChange={(e) => setRow(index, { price: e.target.value })} />
+              <label className="stack">
+                <span className={index === 0 ? undefined : 'sr-only'}>값(원)</span>
+                <input inputMode="numeric" value={row.price} onChange={(e) => setRow(index, { price: e.target.value })} />
               </label>
               <button type="button" className="btn small" onClick={() => set({ rows: state.rows.filter((_, i) => i !== index) })} aria-label={`${index + 1}번째 옵션 빼기`}>
                 빼기
@@ -191,7 +206,18 @@ export function FieldEditor({
   }
 
   return (
-    <form className="editor" onSubmit={submit}>
+    <form
+      ref={formRef}
+      className={`editor ${styles.editor}`}
+      onSubmit={submit}
+      onKeyDown={(event) => {
+        // Esc 는 그만두기다.
+        if (event.key === 'Escape' && !busy) {
+          event.stopPropagation();
+          onCancel();
+        }
+      }}
+    >
       <label htmlFor={id} className="editor-label">
         {def.label} 고치기 <span className="muted">({def.hint}. 비우면 “없음”)</span>
       </label>

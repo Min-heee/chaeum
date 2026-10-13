@@ -1,35 +1,127 @@
-.inquiry,
-.reply {
-  width: 100%;
-  max-width: 760px;
-  font: inherit;
-  line-height: 1.6;
-  padding: 8px 10px;
+/* 견적 화면에서만 쓰는 것. 색·글자·간격은 전역 스타일(app/globals.css)의 변수를 그대로 쓴다. */
+
+/* ── 단계마다 판 하나 ── */
+.stepPanel:focus-visible {
+  outline-offset: -2px;
 }
-.reply {
-  min-height: 190px;
+.stepPanel > h2 {
+  margin-bottom: var(--s3);
 }
-.conditions {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-  gap: 8px 14px;
-  max-width: 860px;
-  margin: 8px 0;
+/* 판 안의 설명 글은 줄이 너무 길어지지 않게 한다(양식 안팎이 같은 너비가 되게). */
+.stepPanel p {
+  max-width: 88ch;
 }
-.conditions label {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  font-size: 13px;
-}
-.conditions input,
-.conditions select {
-  width: 100%;
-}
-.picked {
+/* 지금 할 단계의 판 */
+.stepPanel[data-now='true'] {
+  border-color: var(--accent-line);
   box-shadow: inset 3px 0 0 var(--accent);
 }
-.steps {
-  margin: 6px 0 14px;
+.today {
+  width: fit-content;
+}
+.stepPanel .inquiry,
+.stepPanel .reply {
+  display: block;
+}
+.stepPanel .inquiry {
+  min-height: 104px;
+}
+.stepPanel .reply {
+  min-height: 220px;
+}
+/* 확정한 뒤에는 고칠 수 없다. 그렇게 보이게 한다. */
+.stepPanel .reply:read-only {
+  background: var(--bg-soft);
+}
+/* 조건 양식: 좁은 화면에서도 두 칸씩 서게 한다. */
+.stepPanel .conditions {
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  margin-top: var(--s2);
+}
+/* 예산·수량·기간: 자릿수가 고르게 보이게 한다. */
+.conditions .numInput {
+  font-variant-numeric: tabular-nums;
+}
+.working {
+  margin: var(--s2) 0;
+}
+
+/* ── 맞는 상품 표(판의 양 끝까지 닿는 전역 .table-wrap.flush) ── */
+/* 고르기 칸 전체가 누르는 자리다. */
+.pickCell {
+  vertical-align: top;
+}
+.pickCell label {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+  cursor: pointer;
+}
+.pickCell input[type='radio'] {
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+}
+/* 총액: 값은 굵게 오른쪽에, 어떻게 낸 값인지는 그 아래 작은 글씨로. */
+.amount {
+  font-size: var(--fs-md);
+  font-weight: 700;
+}
+.vat {
+  color: var(--fg-soft);
+}
+.cellNote {
+  display: block;
+  width: fit-content;
+  max-width: 300px;
+  margin: 2px 0 0 auto;
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  line-height: 1.45;
+  white-space: normal;
+}
+.matched {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s1);
+}
+/* 마감: 이름 · 날짜 · 남은 날 · 상태를 줄마다 같은 자리에 놓는다. */
+.deadlines {
+  list-style: none;
+  display: grid;
+  gap: var(--s1);
+  margin: 0;
+  padding: 0;
+}
+.deadlines li {
+  display: grid;
+  grid-template-columns: 5em 6.4em 5.6em auto;
+  align-items: center;
+  justify-content: start;
+  gap: var(--s2);
+  white-space: nowrap;
+}
+.date,
+.left {
+  font-variant-numeric: tabular-nums;
+}
+.left {
+  text-align: right;
+}
+.excluded {
+  margin: var(--s2) 0;
   padding-left: 20px;
+}
+.excluded li {
+  margin: 2px 0;
+}
+/* "이 화면 설명" 안의 번호 매긴 설명 */
+.about {
+  margin: var(--s2) 0 0;
+  padding-left: 20px;
+}
+.about li {
+  margin: var(--s1) 0;
 }

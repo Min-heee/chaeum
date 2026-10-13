@@ -1,0 +1,7 @@
+/* 초안 상세의 머리. 번호는 이름보다 조용하게 적는다. */
+.no {
+  margin-right: 2px;
+  color: var(--muted);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}

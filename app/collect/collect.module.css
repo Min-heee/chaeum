@@ -1,0 +1,163 @@
+/* 모으기 화면에서만 쓰는 것. 색·간격은 전역 스타일(app/globals.css)의 변수를 그대로 쓴다. */
+
+/* 거르기 줄: 이름표 글자는 줄이 바뀌지 않고, 긴 출처 이름이 든 고르기 상자가 줄을 다 차지하지 않게 한다. */
+.filters label {
+  white-space: nowrap;
+}
+.filters select {
+  max-width: 240px;
+}
+.filters input[type='search'] {
+  width: 200px;
+}
+
+/* 고른 줄을 보내는 막대. 넓은 화면에서는 표를 내려도 따라온다. */
+.bulk {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s2) var(--s3);
+  margin: var(--s3) 0 var(--s2);
+  padding: var(--s2) var(--s3);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+.bulkCount {
+  margin: 0;
+  min-width: 0;
+}
+.bulkActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2);
+}
+@media (min-width: 900px) {
+  /* 위에 붙는 머리(좁은 틀)가 있으면 그 아래에 붙는다. */
+  .bulkSticky {
+    position: sticky;
+    top: var(--head-h);
+    z-index: 5;
+    border-color: var(--line-strong);
+  }
+  /* 막대가 위에 붙어 있을 때 키보드 초점이 그 뒤로 숨지 않게 한다. */
+  :global(html):has(.bulkSticky) {
+    scroll-padding-top: calc(var(--head-h) + 68px);
+  }
+}
+
+/* 보내기 바로 아래의 단서. 표 가까이에 둔다. */
+.sendNote {
+  margin: 0 0 var(--s2);
+  max-width: 96ch;
+}
+
+/* 모은 줄 표. 고른 줄은 전역(tr.is-picked)의 꼴을 쓴다. 고르기 칸은 칸 전체가 누르는 자리다. */
+.items .pickCell {
+  padding: 0;
+}
+.pickCell label {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+  padding-top: 10px;
+  cursor: pointer;
+}
+/* 이름 칸은 넉넉히, 표시 칸은 딱지가 한 줄에 서게 */
+.items .name {
+  min-width: 350px;
+}
+.items .place {
+  min-width: 140px;
+}
+.items .flags {
+  min-width: 200px;
+}
+
+/* 이름 아래의 작은 줄: 출처·줄 번호와 "원래 줄 보기"가 한 줄에 선다(좁으면 줄이 바뀐다). */
+.items tbody th span.sub {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--s3);
+}
+
+/* "원래 줄 보기": 줄 안의 글자 버튼. 누르면 그 줄 아래에 원래 줄이 펼쳐진다. */
+.rawToggle {
+  appearance: none;
+  border: 0;
+  background: none;
+  margin: 0;
+  padding: 2px 0;
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 400;
+  color: var(--accent);
+  cursor: pointer;
+  border-radius: var(--r-sm);
+}
+.rawToggle:hover {
+  color: var(--accent-hover);
+  text-decoration: underline;
+}
+/* 펼침 표시(작은 세모). 펼치면 아래를 본다. */
+.rawToggle::before {
+  content: '';
+  display: inline-block;
+  margin-right: 6px;
+  border-left: 6px solid currentColor;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  vertical-align: 1px;
+}
+.rawToggle[aria-expanded='true']::before {
+  transform: rotate(90deg);
+}
+.items tbody tr.rawRow > td,
+.items tbody tr.rawRow:hover > td {
+  padding-top: 0;
+  background: var(--bg);
+}
+/* 표가 옆으로 밀려도 원래 줄은 보이는 자리에 머문다. */
+.rawRow pre {
+  position: sticky;
+  left: var(--s3);
+  margin: var(--s2) 0;
+  max-width: min(100%, calc(100vw - 64px));
+}
+
+/* 좁은 화면: 거르기 칸이 한 줄에 하나씩 서고, 입력은 줄을 채운다. */
+@media (max-width: 640px) {
+  /* 요약 숫자 일곱 개가 한 줄에 셋씩 서게 한다(둘씩이면 네 줄이 된다). */
+  .totals :global(.stat) {
+    flex-basis: 96px;
+    padding-left: var(--s3);
+    padding-right: var(--s3);
+  }
+  .items .name {
+    min-width: 240px;
+  }
+  .rawToggle {
+    min-height: 32px;
+  }
+  .filters label {
+    flex: 1 1 100%;
+  }
+  .filters select,
+  .filters input[type='search'] {
+    flex: 1 1 auto;
+    width: auto;
+    max-width: 100%;
+    min-width: 0;
+  }
+  .bulkActions {
+    width: 100%;
+  }
+  .bulkActions .btnGrow {
+    flex: 1 1 auto;
+  }
+}

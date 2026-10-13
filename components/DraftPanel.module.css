@@ -1,0 +1,365 @@
+/* 초안 한 건(원문 + 등록 양식)에만 쓰는 스타일. 작업 화면과 검수 화면이 함께 쓴다.
+   색·크기·간격은 app/globals.css 의 기준값만 쓴다. */
+
+/* ── 원문 ──────────────────────────────────────────────── */
+/* 읽기 좋게 줄 간격을 넉넉히 둔다. */
+.source.source {
+  padding: var(--s3) var(--s4);
+  line-height: 1.75;
+}
+.sourceNote {
+  font-weight: 400;
+  font-size: var(--fs-sm);
+}
+.sourceHint {
+  margin: var(--s2) 0 0;
+}
+
+/* ── 양식 머리: 초안 번호 + 상태 ───────────────────────── */
+.formHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s1) var(--s2);
+  margin: 0 0 var(--s3);
+}
+.formHead .title {
+  margin: 0;
+}
+.formHead .title:focus-visible {
+  border-radius: var(--r-sm);
+}
+/* 승인·반려로 건너뛰는 지름길: 초점을 받을 때만 보인다(전역 .skip 과 같은 꼴). */
+.skipToDock {
+  position: absolute;
+  left: -9999px;
+}
+.skipToDock:focus {
+  position: static;
+  margin-left: auto;
+  padding: 2px var(--s2);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r);
+  background: var(--panel);
+  font-size: var(--fs-sm);
+}
+
+/* 요약 한 줄(확인할 칸 · 채워진 칸 · 사람이 고친 칸) + 보기 전환. 검수할 칸이 한 줄이라도 더 보이게 낮게 둔다. */
+.listBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s2) var(--s3);
+  margin: 0 0 var(--s3);
+}
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px var(--s4);
+  min-width: 0;
+  margin: 0;
+  font-size: var(--fs-sm);
+}
+.summary > div {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.summary dt {
+  color: var(--muted);
+}
+.summary dd {
+  margin: 0;
+  font-size: var(--fs-md);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.summary [data-tone='warn'] dd {
+  color: var(--flag-fg);
+}
+.summary [data-tone='ok'] dd {
+  color: var(--ok);
+}
+.summaryNote {
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  font-weight: 400;
+}
+.segCount {
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+}
+/* 지금 할 일 한 줄과, 방금 저장한 것을 알리는 한 줄 */
+.todo {
+  margin: 0 0 var(--s2);
+}
+.todo p {
+  margin: 0;
+}
+.saved {
+  color: var(--ok);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+/* ── 칸 목록: 표처럼 줄을 맞춘다 ───────────────────────── */
+.list {
+  container-type: inline-size;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+.listHead {
+  display: grid;
+  grid-template-columns: 148px minmax(0, 1fr);
+  gap: var(--s3);
+  padding: 6px var(--s3);
+  background: var(--bg-soft);
+  color: var(--fg-soft);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+.list .row {
+  grid-template-columns: 148px minmax(0, 1fr);
+  gap: var(--s1) var(--s3);
+  padding: 10px var(--s3);
+}
+.rows {
+  display: block;
+}
+.list .row:not(:global(.field-flag)):hover {
+  background: var(--bg);
+}
+.list .row :global(.field-name) {
+  padding-top: 3px;
+  color: var(--fg-soft);
+}
+.list .row:global(.field-flag) :global(.field-name) {
+  color: var(--flag-fg);
+  font-weight: 600;
+}
+.list .row :global(.field-top) {
+  align-items: center;
+  min-height: 26px;
+}
+.list .row :global(.field-value),
+.list .row :global(.field-value-static) {
+  font-variant-numeric: tabular-nums;
+}
+.editedTag {
+  display: block;
+  margin-top: 2px;
+}
+
+/* 값 아래의 원문 표현·근거 구절: 이름표 폭을 맞춘다 */
+.meta {
+  display: grid;
+  gap: 2px;
+  margin: var(--s1) 0 0;
+  font-size: var(--fs-sm);
+}
+.meta > div {
+  display: grid;
+  grid-template-columns: 60px minmax(0, 1fr);
+  gap: var(--s2);
+  align-items: baseline;
+}
+.meta dt {
+  color: var(--muted);
+  font-size: var(--fs-xs);
+}
+.meta dd {
+  margin: 0;
+  color: var(--fg-soft);
+}
+.list :global(.field-flag) .meta dt,
+.list :global(.field-flag) .meta dd {
+  color: var(--flag-fg);
+}
+.meta .evidenceLine dd {
+  padding-left: var(--s2);
+  border-left: 3px solid var(--flag-line);
+}
+.list .row :global(.reasons) {
+  margin: 6px 0 0;
+}
+.list .row :global(.reasons) li {
+  margin: var(--s1) 0 0;
+}
+.list .row :global(.both) {
+  margin: var(--s2) 0 0;
+}
+
+.noFields {
+  padding: var(--s3);
+  margin: 0;
+  border-top: 1px solid var(--line);
+}
+.listNote {
+  margin: var(--s2) 0 0;
+}
+
+/* 종류·갈래 고치기, 반려 양식: 라벨은 위에 */
+.inlineForm :global(.stack) {
+  margin: 0;
+}
+.inlineForm :global(.pair) {
+  align-items: flex-end;
+}
+
+/* ── 아래에 붙는 행동 막대 ─────────────────────────────── */
+/* 승인·반려 같은 결정은 여기 한곳에 모은다. 칸이 길어도 화면 아래에 붙어 따라온다. */
+.dock {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  margin: var(--s4) calc(-1 * var(--s4)) 0;
+  padding: var(--s3) var(--s4);
+  padding-bottom: max(var(--s3), env(safe-area-inset-bottom));
+  background: var(--panel);
+  border-top: 1px solid var(--line-strong);
+  border-bottom: 1px solid var(--line);
+}
+.dock:last-child {
+  margin-bottom: calc(-1 * var(--s4));
+  border-bottom: 0;
+  border-radius: 0 0 var(--r-lg) var(--r-lg);
+}
+.dock:focus-visible {
+  outline-offset: -2px;
+}
+.dock :global(.box) {
+  margin: 0 0 var(--s2);
+}
+/* 이름·판매가가 비어 승인해도 등록되지 않을 때, 버튼 바로 위에 미리 적는다. */
+.dockWarn {
+  margin: 0 0 var(--s2);
+  color: var(--flag-fg);
+  font-size: var(--fs-sm);
+}
+.linkBtn {
+  appearance: none;
+  margin: 0 var(--s2) 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.linkBtn:hover {
+  color: var(--accent-hover);
+}
+/* 버튼 안의 작은 덧글(대기 N건) */
+.btnNote {
+  margin-left: var(--s1);
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2) var(--s3);
+}
+.barMain {
+  display: flex;
+  flex: 1 1 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2);
+  min-width: 0;
+}
+.barMain p {
+  margin: 0;
+}
+.barSide {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--s2);
+  margin-left: auto;
+  min-width: 0;
+}
+.barSide:empty {
+  display: none;
+}
+.beforeDock {
+  margin: var(--s3) 0 0;
+}
+
+/* 반려 양식: 사유 · 메모 · 버튼을 한 줄에. 좁으면 위아래로. */
+.rejectForm {
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) minmax(0, 1fr) auto;
+  gap: var(--s2) var(--s3);
+  align-items: end;
+  width: 100%;
+}
+.rejectForm :global(.stack) {
+  margin: 0;
+}
+.rejectForm select,
+.rejectForm input {
+  width: 100%;
+}
+.rejectForm :global(.actions) {
+  margin: 0;
+}
+
+/* 변경 기록: 막대 바로 아래에 온다. 막대의 아랫선이 구분선이다. */
+.formPane .events {
+  margin-top: var(--s3);
+  padding-top: 0;
+  border-top: 0;
+}
+.formPane .events li {
+  margin: 2px 0;
+}
+
+/* ── 좁을 때 ───────────────────────────────────────────── */
+/* 칸 목록이 좁아지면 칸 이름을 값 위로 올린다. */
+@container (max-width: 460px) {
+  .listHead {
+    display: none;
+  }
+  .list .row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .rows > .row:first-child {
+    border-top: 0;
+  }
+  .list .row :global(.field-name) {
+    padding-top: 0;
+  }
+  .editedTag {
+    display: inline;
+    margin: 0 0 0 var(--s1);
+  }
+}
+
+@media (max-width: 640px) {
+  .rejectForm {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .barSide {
+    margin-left: 0;
+  }
+  /* 좁은 화면에서는 막대를 한 줄로 낮게 둔다. 남은 칸 수는 위의 요약 숫자와 보기 전환에 있다. */
+  .barCount {
+    display: none;
+  }
+  .barMain {
+    flex-basis: 100%;
+  }
+  .view {
+    display: flex;
+    width: 100%;
+  }
+}

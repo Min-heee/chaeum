@@ -2,12 +2,13 @@
 
 // 성적표. 평가 실행이 남긴 값만 그대로 보여 준다. 화면에서 숫자를 만들지 않는다.
 // 묶음별로 따로, 모든 비율 옆에 분자/분모를 적는다.
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import type { EvalRunDetailResponse, EvalRunListResponse } from '@/contract/api';
 import { CORRECTION_COLUMNS } from '@/contract/api';
 import { EVAL_METHODS, GOLD_SPLITS, METHOD_LABELS, SPLIT_LABELS, SPLIT_SIZES, type EvalMethod, type EvalMetrics, type GoldSplit, type Ratio, type Verdict } from '@/contract/eval-types';
 import { FIELD_KEYS } from '@/contract/fields';
-import { Notice } from './bits';
+import styles from '../app/report/report.module.css';
+import { Badge, EmptyState, Loading, Notice, PageHead } from './bits';
 import { call, callText, failureMessage, useMounted, useWorkspace } from './client';
 import { fieldLabel, formatTime, formatValue, seconds, usd } from './format';
 
@@ -34,15 +35,37 @@ const VERDICT_LABELS: Record<Verdict, string> = {
 const isRatio = (v: unknown): v is Ratio =>
   typeof v === 'object' && v !== null && typeof (v as Ratio).num === 'number' && typeof (v as Ratio).den === 'number';
 
-/** 비율. 분자/분모를 먼저 적는다. 분모가 0 이면 비율을 내지 않고, 분자가 0 이면 "0%"라고 쓰지 않는다. */
-function ratio(v: unknown): string {
-  if (!isRatio(v)) return '기록 없음';
-  if (v.den === 0) return '0/0 (해당 없음)';
-  if (v.num === 0) return `0/${v.den}`;
-  return `${v.num}/${v.den} · ${((v.num / v.den) * 100).toFixed(1)}%`;
+/** 값이 없다는 말(기록 없음, 이 방식에는 없음, 호출 없음). 흐리게 적는다. */
+const none = (text: string): ReactNode => <span className={styles.none}>{text}</span>;
+
+/**
+ * 비율. 분자/분모를 먼저 적는다. 분모가 0 이면 비율을 내지 않고, 분자가 0 이면 "0%"라고 쓰지 않는다.
+ * 글자는 "211/408 · 51.7%" 그대로다. 백분율 자리만 같은 너비로 잡아 방식끼리 세로로 견주기 쉽게 한다(색은 칠하지 않는다).
+ */
+function ratio(v: unknown): ReactNode {
+  if (!isRatio(v)) return none('기록 없음');
+  if (v.den === 0) {
+    return (
+      <>
+        <span className={styles.ratio}>
+          <span>0/0</span>
+          <span className={styles.pct} />
+        </span>
+        <span className={styles.note}> (해당 없음)</span>
+      </>
+    );
+  }
+  return (
+    <span className={styles.ratio}>
+      <span>
+        {v.num}/{v.den}
+      </span>
+      <span className={styles.pct}>{v.num === 0 ? '' : ` · ${((v.num / v.den) * 100).toFixed(1)}%`}</span>
+    </span>
+  );
 }
 
-const NONE = '이 방식에는 없음';
+const NONE = none('이 방식에는 없음');
 
 /** 실행 기록에 "확인 전 문서 포함"이 적혀 있는가(metrics.runInfo.includeUnreviewed). */
 function hasUnreviewed(metrics: unknown): boolean {
@@ -60,14 +83,21 @@ function commitLabel(gitCommit: string): string {
 interface MetricRow {
   label: string;
   hint: string;
-  read: (m: Partial<EvalMetrics>) => string;
+  read: (m: Partial<EvalMetrics>) => ReactNode;
 }
 
 const ROWS: MetricRow[] = [
   {
     label: '채점한 문서',
     hint: '확인 전 문서가 들었는지는 값 옆에 적습니다',
-    read: (m) => (typeof m.docs === 'number' ? `${m.docs}건 (${hasUnreviewed(m) ? '확인 전 문서 포함' : '사람이 확인한 것만'})` : '기록 없음'),
+    read: (m) =>
+      typeof m.docs === 'number' ? (
+        <>
+          {m.docs}건<span className={hasUnreviewed(m) ? styles.noteFlag : styles.note}> ({hasUnreviewed(m) ? '확인 전 문서 포함' : '사람이 확인한 것만'})</span>
+        </>
+      ) : (
+        none('기록 없음')
+      ),
   },
   { label: '칸 정확도', hint: '일치한 칸 / 정답에 값이 있는 칸', read: (m) => ratio(m.fieldAccuracy?.overall) },
   { label: '지어낸 값', hint: '정답이 “없음”인데 값을 낸 칸 / 정답이 “없음”인 칸', read: (m) => ratio(m.fabricated?.overall) },
@@ -79,22 +109,46 @@ const ROWS: MetricRow[] = [
   {
     label: '건당 비용',
     hint: '호출 비용 합 / 문서 수',
-    read: (m) => (m.costTime ? `${usd(m.costTime.costUsdPerDoc)} (합 ${usd(m.costTime.costUsdTotal)}${m.costTime.fromRecording ? ', 녹화본에 적힌 값' : ''})` : '호출 없음'),
+    read: (m) =>
+      m.costTime ? (
+        <>
+          {usd(m.costTime.costUsdPerDoc)}
+          <span className={styles.note}>
+            {' '}
+            (합 {usd(m.costTime.costUsdTotal)}
+            {m.costTime.fromRecording ? ', 녹화본에 적힌 값' : ''})
+          </span>
+        </>
+      ) : (
+        none('호출 없음')
+      ),
   },
   {
     label: '건당 시간',
     hint: '가운데값 · 95번째',
-    read: (m) => (m.costTime ? `${seconds(m.costTime.latencyMsP50)} · ${seconds(m.costTime.latencyMsP95)}${m.costTime.fromRecording ? ' (녹화할 때 잰 값)' : ''}` : '호출 없음'),
+    read: (m) =>
+      m.costTime ? (
+        <>
+          {seconds(m.costTime.latencyMsP50)} · {seconds(m.costTime.latencyMsP95)}
+          {m.costTime.fromRecording ? <span className={styles.note}> (녹화할 때 잰 값)</span> : null}
+        </>
+      ) : (
+        none('호출 없음')
+      ),
   },
   { label: '종류 정확도', hint: '종류를 맞힌 문서 / 전체 문서', read: (m) => ratio(m.typeAccuracy) },
   { label: '갈래 정확도', hint: '갈래를 맞힌 문서 / 정답이 상품인 문서', read: (m) => ratio(m.subtypeAccuracy) },
   { label: '놓친 값', hint: '못 낸 칸 / 정답에 값이 있는 칸', read: (m) => ratio(m.missed) },
 ];
 
+const WRONG_VERDICTS: readonly Verdict[] = ['wrong', 'missed', 'fabricated'];
+
+/** 한 실행의 틀린 건. 단추는 방식끼리 한 줄에 나란히 서고, 펼친 표는 그 아래에 선다(report.module.css 의 .wrongs). */
 function WrongDocs({ run }: { run: Run }) {
   const [detail, setDetail] = useState<EvalRunDetailResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const panelId = `wrong-${run.id}`;
 
   const toggle = async () => {
     if (open) {
@@ -111,66 +165,104 @@ function WrongDocs({ run }: { run: Run }) {
   };
 
   const wrong = detail?.docs.filter((d) => !d.allCorrect) ?? [];
+  // 실제 자료 묶음은 값을 싣지 않는다.
+  const showValues = run.split !== 'real';
   return (
-    <div className="wrong">
-      <button type="button" className="btn small" aria-expanded={open} onClick={toggle}>
+    <div className={styles.wrongItem}>
+      <button type="button" className="btn small" aria-expanded={open} aria-controls={open ? panelId : undefined} onClick={toggle}>
         {METHOD_LABELS[run.method]} — 틀린 건 {open ? '접기' : '보기'}
       </button>
-      {open && error ? <Notice kind="error">{error}</Notice> : null}
-      {open && !detail && !error ? <p className="muted">읽어 오는 중…</p> : null}
-      {open && detail ? (
-        wrong.length === 0 ? (
-          <p className="muted">틀린 칸이 있는 문서가 없습니다({detail.docs.length}건 가운데).</p>
-        ) : (
-          <>
-            <p className="muted small">
-              틀린 칸이 있는 문서 {wrong.length}건 / 전체 {detail.docs.length}건
-              {run.split === 'real' ? ' · 실제 자료 묶음은 값을 싣지 않습니다.' : ''}
-            </p>
-            <ul className="cards">
-              {wrong.map((doc) => (
-                <li key={doc.goldDocId} className="card">
-                  <strong>{doc.goldDocId}</strong> <span className="muted small">{doc.flagged ? '확인 필요로 감' : '표시 없이 통과함'}</span>
-                  <ul className="plain">
-                    {doc.cells
-                      .filter((c) => c.verdict === 'wrong' || c.verdict === 'missed' || c.verdict === 'fabricated')
-                      .map((c) => (
-                        <li key={c.field}>
-                          {fieldLabel(c.field)}: {VERDICT_LABELS[c.verdict]}
-                          {run.split === 'real' ? '' : ` — 정답 ${formatValue(c.field, c.expected)} / 낸 값 ${formatValue(c.field, c.actual)}`}
-                          {c.flagged ? <span className="flag"> 표시 붙음</span> : null}
-                        </li>
-                      ))}
-                  </ul>
-                </li>
-              ))}
-            </ul>
-          </>
-        )
+      {open ? (
+        <div className={styles.wrongPanel} id={panelId}>
+          <h3>{METHOD_LABELS[run.method]}</h3>
+          {error ? <Notice kind="error">{error}</Notice> : null}
+          {!detail && !error ? <Loading /> : null}
+          {detail ? (
+            wrong.length === 0 ? (
+              <p className="muted">틀린 칸이 있는 문서가 없습니다({detail.docs.length}건 가운데).</p>
+            ) : (
+              <>
+                <p className="muted small">
+                  틀린 칸이 있는 문서 {wrong.length}건 / 전체 {detail.docs.length}건
+                  {showValues ? '' : ' · 실제 자료 묶음은 값을 싣지 않습니다.'}
+                </p>
+                <div className={`table-wrap ${styles.wrongTable}`} tabIndex={0} role="region" aria-label={`${METHOD_LABELS[run.method]} 틀린 건`}>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th scope="col">칸</th>
+                        <th scope="col">판정</th>
+                        {showValues ? (
+                          <>
+                            <th scope="col">정답</th>
+                            <th scope="col">낸 값</th>
+                          </>
+                        ) : null}
+                        <th scope="col">표시</th>
+                      </tr>
+                    </thead>
+                    {wrong.map((doc) => (
+                      <tbody key={doc.goldDocId}>
+                        <tr className={styles.doc}>
+                          <th scope="rowgroup" colSpan={showValues ? 5 : 3}>
+                            <code>{doc.goldDocId}</code>
+                            {doc.flagged ? <span className="flag">확인 필요로 감</span> : <Badge>표시 없이 통과함</Badge>}
+                          </th>
+                        </tr>
+                        {doc.cells
+                          .filter((c) => WRONG_VERDICTS.includes(c.verdict))
+                          .map((c) => (
+                            <tr key={c.field}>
+                              <th scope="row">{fieldLabel(c.field)}</th>
+                              <td>{VERDICT_LABELS[c.verdict]}</td>
+                              {showValues ? (
+                                <>
+                                  <td>{formatValue(c.field, c.expected)}</td>
+                                  <td>{formatValue(c.field, c.actual)}</td>
+                                </>
+                              ) : null}
+                              <td className="tight">{c.flagged ? <span className="flag">표시 붙음</span> : <span className="muted">없음</span>}</td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    ))}
+                  </table>
+                </div>
+              </>
+            )
+          ) : null}
+        </div>
       ) : null}
     </div>
   );
 }
 
-function SplitBlock({ split, runs, currentGoldVersion }: { split: GoldSplit; runs: Run[]; currentGoldVersion: number | null }) {
-  // 방식마다 가장 새 실행 하나.
+/** 묶음마다 방식별로 가장 새 실행 하나를 고른다. */
+function latestByMethod(runs: Run[]): Map<EvalMethod, Run> {
   const latest = new Map<EvalMethod, Run>();
   for (const run of runs) if (!latest.has(run.method)) latest.set(run.method, run);
+  return latest;
+}
+
+function SplitBlock({ split, runs, currentGoldVersion }: { split: GoldSplit; runs: Run[]; currentGoldVersion: number | null }) {
+  // 방식마다 가장 새 실행 하나.
+  const latest = latestByMethod(runs);
   const methods = EVAL_METHODS.filter((m) => latest.has(m));
   const versions = new Set(methods.map((m) => latest.get(m)?.goldVersion));
+  const metricsOf = (m: EvalMethod) => (latest.get(m)?.metrics ?? {}) as Partial<EvalMetrics>;
 
   return (
-    <section className="space-block" aria-label={`${SPLIT_LABELS[split]} 묶음`}>
+    <section className={styles.block} id={`split-${split}`} aria-label={`${SPLIT_LABELS[split]} 묶음`}>
       <h2>
         {SPLIT_LABELS[split]} <span className="count">{SPLIT_SIZES[split]}건 묶음</span>
       </h2>
       <p className="muted small">{SPLIT_NOTES[split]}</p>
       {methods.length === 0 ? (
-        <p className="empty">아직 잰 것이 없습니다.</p>
+        <EmptyState>아직 잰 것이 없습니다.</EmptyState>
       ) : (
         <>
           {methods.some((m) => {
-            const docs = (latest.get(m)?.metrics as Partial<EvalMetrics> | undefined)?.docs;
+            const docs = metricsOf(m).docs;
             return typeof docs === 'number' && docs < SPLIT_SIZES[split];
           }) ? (
             <Notice kind="warn">묶음 {SPLIT_SIZES[split]}건을 다 채점한 실행이 아닙니다. 채점한 문서 수를 표의 첫 줄에서 확인해 주세요.</Notice>
@@ -185,13 +277,13 @@ function SplitBlock({ split, runs, currentGoldVersion }: { split: GoldSplit; run
           {methods.some((m) => latest.get(m)?.gitCommit.endsWith('-dirty')) ? (
             <Notice kind="warn">커밋하지 않은 변경이 있는 코드로 잰 실행입니다. 적힌 커밋만으로는 같은 결과를 다시 낼 수 없습니다.</Notice>
           ) : null}
-          <div className="table-wrap" tabIndex={0} role="region" aria-label={`${SPLIT_LABELS[split]} 방식별 비교표`}>
+          <div className={`table-wrap ${styles.metrics}`} tabIndex={0} role="region" aria-label={`${SPLIT_LABELS[split]} 방식별 비교표`}>
             <table>
               <thead>
                 <tr>
                   <th scope="col">지표 (분자 / 분모)</th>
                   {methods.map((m) => (
-                    <th scope="col" key={m}>
+                    <th scope="col" key={m} className={styles.val}>
                       {METHOD_LABELS[m]}
                     </th>
                   ))}
@@ -205,7 +297,9 @@ function SplitBlock({ split, runs, currentGoldVersion }: { split: GoldSplit; run
                       <span className="muted small"> {row.hint}</span>
                     </th>
                     {methods.map((m) => (
-                      <td key={m}>{row.read((latest.get(m)?.metrics ?? {}) as Partial<EvalMetrics>)}</td>
+                      <td key={m} className={styles.val}>
+                        {row.read(metricsOf(m))}
+                      </td>
                     ))}
                   </tr>
                 ))}
@@ -215,24 +309,26 @@ function SplitBlock({ split, runs, currentGoldVersion }: { split: GoldSplit; run
 
           <details className="help">
             <summary>칸별 정확도</summary>
-            <div className="table-wrap" tabIndex={0} role="region" aria-label={`${SPLIT_LABELS[split]} 칸별 정확도`}>
+            <div className={`table-wrap ${styles.metrics}`} tabIndex={0} role="region" aria-label={`${SPLIT_LABELS[split]} 칸별 정확도`}>
               <table>
                 <thead>
                   <tr>
                     <th scope="col">칸</th>
                     {methods.map((m) => (
-                      <th scope="col" key={m}>
+                      <th scope="col" key={m} className={styles.val}>
                         {METHOD_LABELS[m]}
                       </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {FIELD_KEYS.filter((key) => methods.some((m) => isRatio((latest.get(m)?.metrics as Partial<EvalMetrics>).fieldAccuracy?.byField?.[key]))).map((key) => (
+                  {FIELD_KEYS.filter((key) => methods.some((m) => isRatio(metricsOf(m).fieldAccuracy?.byField?.[key]))).map((key) => (
                     <tr key={key}>
                       <th scope="row">{fieldLabel(key)}</th>
                       {methods.map((m) => (
-                        <td key={m}>{ratio((latest.get(m)?.metrics as Partial<EvalMetrics>).fieldAccuracy?.byField?.[key])}</td>
+                        <td key={m} className={styles.val}>
+                          {ratio(metricsOf(m).fieldAccuracy?.byField?.[key])}
+                        </td>
                       ))}
                     </tr>
                   ))}
@@ -241,21 +337,46 @@ function SplitBlock({ split, runs, currentGoldVersion }: { split: GoldSplit; run
             </div>
           </details>
 
-          <ul className="plain muted small">
-            {methods.map((m) => {
-              const run = latest.get(m);
-              if (!run) return null;
-              return (
-                <li key={m}>
-                  {METHOD_LABELS[m]}: 실행 #{run.id} · {formatTime(run.startedAt)} · 정답 버전 {run.goldVersion}
-                  {run.model ? ` · 모델 ${run.model}` : ''}
-                  {run.promptVersion ? ` · 프롬프트 ${run.promptVersion}` : ''} · 커밋 {commitLabel(run.gitCommit)}
-                  {hasUnreviewed(run.metrics) ? ' · 확인 전 문서 포함' : ''}
-                </li>
-              );
-            })}
-          </ul>
-          <div className="actions">
+          <div className={`table-wrap ${styles.runs}`} tabIndex={0} role="region" aria-label={`${SPLIT_LABELS[split]} 잰 실행`}>
+            <table>
+              <caption>잰 실행. 방식마다 가장 새 실행 하나를 위 표에 적었습니다.</caption>
+              <thead>
+                <tr>
+                  <th scope="col">방식</th>
+                  <th scope="col">실행</th>
+                  <th scope="col">잰 때</th>
+                  <th scope="col" className="num">
+                    정답 버전
+                  </th>
+                  <th scope="col">모델</th>
+                  <th scope="col">프롬프트</th>
+                  <th scope="col">커밋</th>
+                </tr>
+              </thead>
+              <tbody>
+                {methods.map((m) => {
+                  const run = latest.get(m);
+                  if (!run) return null;
+                  return (
+                    <tr key={m}>
+                      <th scope="row">
+                        {METHOD_LABELS[m]}
+                        {hasUnreviewed(run.metrics) ? <span className={styles.noteFlag}>확인 전 문서 포함</span> : null}
+                      </th>
+                      <td className="tight">실행 #{run.id}</td>
+                      <td>{formatTime(run.startedAt)}</td>
+                      <td className="num">{run.goldVersion}</td>
+                      <td>{run.model ?? none('없음')}</td>
+                      <td>{run.promptVersion ?? none('없음')}</td>
+                      <td>{commitLabel(run.gitCommit)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          <div className={styles.wrongs}>
             {methods.map((m) => {
               const run = latest.get(m);
               return run ? <WrongDocs key={run.id} run={run} /> : null;
@@ -331,22 +452,35 @@ function Corrections() {
   }, [mounted, workspace]);
 
   return (
-    <section className="space-block" aria-label="가장 자주 고친 칸">
+    <section className={styles.block} id="corrections" aria-label="가장 자주 고친 칸">
       <h2>가장 자주 고친 칸</h2>
       <p className="muted small">이 브라우저의 작업 공간에서 사람이 값을 고친 횟수입니다. 고친 값은 “정답 후보”로 쌓입니다(상품 화면에서 CSV로 내려받을 수 있습니다).</p>
       {error ? <Notice kind="error">{error}</Notice> : null}
       {!mounted ? null : !workspace || (counts && counts.length === 0) ? (
-        <p className="empty">아직 사람이 고친 값이 없습니다.</p>
+        <EmptyState>아직 사람이 고친 값이 없습니다.</EmptyState>
       ) : counts ? (
-        <ol>
-          {counts.map((c) => (
-            <li key={c.field}>
-              {fieldLabel(c.field)} — {c.n}번
-            </li>
-          ))}
-        </ol>
+        <div className={`table-wrap ${styles.narrow}`}>
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">칸</th>
+                <th scope="col" className="num">
+                  고친 횟수
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {counts.map((c) => (
+                <tr key={c.field}>
+                  <th scope="row">{fieldLabel(c.field)}</th>
+                  <td className="num">{c.n}번</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       ) : error ? null : (
-        <p className="muted">읽어 오는 중…</p>
+        <Loading lines={2} />
       )}
     </section>
   );
@@ -373,25 +507,50 @@ export function Report() {
     };
   }, []);
 
+  const present = SPLIT_ORDER.filter((s) => (GOLD_SPLITS as readonly string[]).includes(s));
+
   return (
-    <main className="page wide">
-      <h1>성적표</h1>
-      <p className="muted">
-        평가 실행이 남긴 기록입니다. 사람이 확인한 정답으로 잰 것인지, 확인 전 문서가 든 것인지는 묶음마다 적습니다. 잰 것만 적고, 묶음별 점수는 합치지 않습니다. “규칙만”과 견준 차이를 “개선”이라고 부르지 않습니다(기준선 규칙을 대충
-        짤수록 커지는 숫자입니다).
-      </p>
+    <main className="page">
+      <PageHead
+        title="성적표"
+        lead="평가 실행이 남긴 기록입니다. 잰 것만 적고, 묶음별 점수는 합치지 않습니다."
+        about={
+          <p>
+            평가 실행이 남긴 기록입니다. 사람이 확인한 정답으로 잰 것인지, 확인 전 문서가 든 것인지는 묶음마다 적습니다. 잰 것만 적고, 묶음별 점수는 합치지 않습니다. “규칙만”과 견준 차이를 “개선”이라고 부르지
+            않습니다(기준선 규칙을 대충 짤수록 커지는 숫자입니다).
+          </p>
+        }
+      />
       {error ? <Notice kind="error">{error}</Notice> : null}
-      {!runs && !error ? <p className="muted">읽어 오는 중…</p> : null}
-      {runs && runs.length === 0 ? <p className="empty">아직 잰 것이 없습니다. 평가는 로컬 명령(npm run eval)으로 돌리고, 돌린 결과만 여기에 나옵니다.</p> : null}
-      {runs && runs.length > 0
-        ? SPLIT_ORDER.filter((s) => (GOLD_SPLITS as readonly string[]).includes(s)).map((split) => (
+      {!runs && !error ? <Loading lines={5} /> : null}
+      {runs && runs.length === 0 ? <EmptyState>아직 잰 것이 없습니다. 평가는 로컬 명령(npm run eval)으로 돌리고, 돌린 결과만 여기에 나옵니다.</EmptyState> : null}
+      {runs && runs.length > 0 ? (
+        <>
+          <nav aria-label="묶음으로 바로 가기">
+            <ul className={styles.jump}>
+              {present.map((split) => {
+                const measured = latestByMethod(runs.filter((r) => r.split === split)).size;
+                return (
+                  <li key={split}>
+                    <a href={`#split-${split}`}>
+                      {SPLIT_LABELS[split]}
+                      <Badge>{measured > 0 ? `방식 ${measured}개 잼` : '아직 잰 것 없음'}</Badge>
+                    </a>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+          {present.map((split) => (
             <SplitBlock key={split} split={split} runs={runs.filter((r) => r.split === split)} currentGoldVersion={goldVersions?.[split] ?? null} />
-          ))
-        : null}
+          ))}
+        </>
+      ) : null}
       <Corrections />
-      <section className="space-block" aria-label="읽을 때 알아 둘 것">
+      <section className={styles.block} aria-label="읽을 때 알아 둘 것">
         <h2>읽을 때 알아 둘 것</h2>
         <ul>
+          <li>“규칙만”과 견준 차이를 “개선”이라고 부르지 않습니다(기준선 규칙을 대충 짤수록 커지는 숫자입니다).</li>
           <li>대부분 합성 자료입니다. 원문은 AI가 썼고 읽는 것도 같은 회사의 모델입니다.</li>
           <li>사람 확인이 끝나지 않은 묶음의 숫자에는 경고가 붙습니다. 그 숫자는 바깥에 내세우는 값이 아닙니다.</li>
           <li>정답을 확인한 사람이 한 명입니다. 건수가 작아 몇 건 차이로 비율이 크게 움직입니다.</li>

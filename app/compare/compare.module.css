@@ -1,37 +1,63 @@
-/* 비교 화면에서만 쓰는 것. 색은 전역 스타일(app/globals.css)의 변수를 그대로 쓴다. */
+/* 비교 화면에서만 쓰는 것. 색·글자·간격은 전역 스타일(app/globals.css)의 변수를 그대로 쓴다. */
+
+/* "이 화면 설명" 안의 두 줄 */
 .why {
-  margin: 8px 0 0;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
-
 .why li + li {
-  margin-top: 4px;
+  margin-top: var(--s2);
 }
 
+/* ── 거르기 판 ── */
 .controls {
-  display: grid;
-  gap: 10px;
   /* fieldset 은 기본으로 안의 것보다 좁아지지 않는다. 좁은 화면에서 옆으로 넘치지 않게 푼다. */
   min-width: 0;
-  margin: 12px 0 4px;
-  padding: 12px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: var(--panel);
+  margin: 0 0 var(--s3);
+  padding: var(--s3) var(--s4);
+}
+.controls .filters {
+  margin: 0;
+}
+.filters select,
+.filters input[type='search'] {
+  min-width: 0;
+  max-width: 100%;
+}
+.space {
+  gap: var(--s2);
+}
+.spaceLabel {
+  font-size: var(--fs-sm);
+  color: var(--fg-soft);
+}
+.controls .hints {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px var(--s3);
+  margin: var(--s2) 0 0;
 }
 
-.line {
+.retry {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 12px;
+  gap: var(--s2) var(--s3);
+  margin: var(--s2) 0;
 }
 
-.line select,
-.line input[type='search'] {
-  min-width: 0;
-  max-width: 100%;
+/* 요약 한 줄: 몇 건인지, 어떤 차례인지. 다시 읽는 동안에는 오른쪽에 읽는 중 표시가 붙는다. */
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s1) var(--s3);
+  margin: var(--s3) 0 var(--s2);
+}
+.summary p {
+  margin: 0;
 }
 
 /* 다시 읽는 동안 앞의 표를 흐리게 둔다. */
@@ -39,118 +65,328 @@
   opacity: 0.55;
 }
 
+/* ── 견줄 값의 표 ── */
+.wide {
+  margin-top: var(--s2);
+}
+/* 표가 넓어 옆으로 더 있을 때만 보이는 한 줄(CompareTable 이 싸개를 재서 data-overflows 를 붙인다) */
+.more {
+  display: none;
+  margin: var(--s2) 0 0;
+}
+.tableBox[data-overflows] > .more {
+  display: block;
+}
+
 /* 잣대 칸의 머리: 눌러서 차례를 바꾼다. 단추지만 표 머리처럼 보이게 둔다. */
 .sort {
   appearance: none;
   display: inline-flex;
-  align-items: baseline;
-  gap: 4px;
-  margin: 0;
-  padding: 2px 0;
+  align-items: center;
+  gap: 6px;
+  margin: -4px -6px;
+  padding: 4px 6px;
   border: 0;
+  border-radius: var(--r-sm);
   background: none;
   color: inherit;
   font: inherit;
   font-weight: 600;
-  white-space: nowrap;
+  /* 긴 잣대 이름은 두 줄로 선다(칸이 이름 때문에 넓어지지 않게). */
+  white-space: normal;
+  text-align: right;
   cursor: pointer;
-  text-decoration: underline dotted;
-  text-underline-offset: 3px;
 }
-
+.table thead th:global(.num) {
+  white-space: normal;
+}
+.table thead th:global(.tight) {
+  white-space: nowrap;
+}
+.sort:hover {
+  background: var(--line);
+  color: var(--fg);
+}
 .sort[aria-pressed='true'] {
-  color: var(--accent);
-  text-decoration: none;
+  color: var(--accent-hover);
+}
+.sortMark {
+  flex: none;
+}
+.sortMark path {
+  fill: var(--line-input);
+}
+.sort[aria-pressed='true'] .sortMark path {
+  fill: var(--line-strong);
+}
+.sortMark[data-order='asc'] .up,
+.sortMark[data-order='desc'] .down {
+  fill: var(--accent);
 }
 
-.pickCell {
-  width: 32px;
-  min-width: 32px !important;
-}
-
-.pickCell input[type='checkbox'] {
-  width: 18px;
-  height: 18px;
-  margin: 0;
+.table .pickCell {
+  width: 44px;
+  min-width: 44px;
+  max-width: 44px;
   padding: 0;
 }
-
-/* 값 아래 작은 글씨(어디서 계산했는지, 없음의 까닭). 줄이 바뀌어도 값과 겹치지 않는다. */
-.value {
+/* 고르기 칸 전체가 누르는 자리다. */
+.pickCell label {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 40px;
+  padding: 10px 0 0 var(--s1);
+  cursor: pointer;
+}
+.pickCell input[type='checkbox'] {
   display: block;
-  white-space: nowrap;
+  width: 18px;
+  height: 18px;
+}
+/* 숫자 칸은 제 글의 너비만큼만 잡고, 남는 너비는 상품 이름 칸이 가져간다. 넘치면 싸개 안에서 옆으로 밀린다. */
+.table .nameCell {
+  width: 100%;
+  min-width: 184px;
+}
+/* 이름이 아주 길어도 숫자 칸을 화면 밖으로 밀어내지 않게 한다. */
+.table tbody .nameCell > a,
+.table tbody .nameCell > span {
+  display: block;
+  max-width: 280px;
+}
+/* 숫자 칸은 값의 너비만큼만 잡는다(전역의 칸 최소 너비를 푼다). 그래야 한 화면에 더 많은 잣대가 보인다. */
+.table th:global(.num),
+.table td:global(.num) {
+  padding-left: var(--s2);
+  padding-right: var(--s2);
+}
+.table td.rank {
+  font-weight: 600;
+}
+/* 숫자 칸: 값도, 그 아래 작은 글씨도 오른쪽에 맞춘다. */
+.table td:global(.num) .note {
+  margin-left: auto;
 }
 
+/* 값과 그 아래 작은 글씨(어디서 계산했는지, 없음의 까닭). 줄이 바뀌어도 값과 겹치지 않는다. */
+.value {
+  display: block;
+  color: var(--fg);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  white-space: nowrap;
+}
+/* "(반올림)"은 값 아래 줄에 선다(값의 칸이 좁게 남는다). */
+.rounded {
+  display: block;
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  font-weight: 400;
+}
 .note {
   display: block;
+  /* 글의 너비만큼 잡되 104px 를 넘으면 줄을 바꾼다(값은 한 줄, 근거는 두세 줄). 칸이 이보다 좁아지지 않아 글이 한 낱말씩 끊기지 않는다. */
+  width: max-content;
+  max-width: 104px;
   margin-top: 2px;
-  max-width: 260px;
   color: var(--muted);
-  font-size: 12px;
-  line-height: 1.4;
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  line-height: 1.45;
   white-space: normal;
   word-break: keep-all;
   overflow-wrap: anywhere;
 }
-
-.none {
+.none,
+.value.none {
   color: var(--muted);
+  font-weight: 400;
 }
 
+/* 묶음의 머리줄(부가세 별도끼리 …) */
 .groupRow th {
+  padding-top: 6px;
+  padding-bottom: 6px;
   background: var(--bg);
-  color: var(--muted);
-  font-size: 13px;
+  color: var(--fg-soft);
+  font-size: var(--fs-xs);
   font-weight: 600;
 }
+.table tbody tr.groupRow:hover > th {
+  background: var(--bg);
+}
 
-.bar {
+/* 고른 줄은 전역(tr.is-picked)의 꼴을 쓴다. 붙는 칸의 바탕도 같이 물들인다. */
+.table tbody tr:global(.is-picked) .nameCell {
+  box-shadow: inset -1px 0 0 var(--line-strong);
+}
+
+/* 고르기 칸과 상품 이름 칸은 옆으로 밀어도 제자리에 남는다(좁은 화면에서도 무슨 줄인지 이름이 남는다). */
+.table .pickCell,
+.table .nameCell {
+  position: sticky;
+  z-index: 1;
+}
+.table .pickCell {
+  left: 0;
+}
+.table .nameCell {
+  left: 44px;
+  /* 붙은 칸의 오른쪽 끝에 선을 긋는다(옆으로 밀린 칸과 나뉘어 보이게). */
+  box-shadow: inset -1px 0 0 var(--line-strong);
+}
+.table tbody tr:not(:global(.is-picked)) .pickCell,
+.table tbody tr:not(:global(.is-picked)) .nameCell {
+  background: var(--panel);
+}
+.table tbody tr:not(:global(.is-picked)):hover .pickCell,
+.table tbody tr:not(:global(.is-picked)):hover .nameCell {
+  background: var(--row-hover);
+}
+.groupRow th > span {
+  position: sticky;
+  left: var(--s3);
+}
+
+/* ── 고른 것 막대: 나란히 보기 ── */
+.pickBar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 12px;
-  margin: 8px 0;
+  justify-content: space-between;
+  gap: var(--s2) var(--s3);
+  margin: var(--s3) 0;
+  padding: var(--s2) var(--s3) var(--s2) var(--s4);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-lg);
+  background: var(--panel);
+}
+/* 하나라도 고르면 화면 아래에 붙어 따라온다. 긴 표에서도 단추가 눈앞에 있다. 그림자 없이 파란 테두리로만 알린다. */
+.pickBar[data-on='true'] {
+  position: sticky;
+  bottom: var(--s3);
+  z-index: 5;
+  border-color: var(--accent);
+}
+.pickText {
+  min-width: 0;
+  color: var(--fg-soft);
+  font-size: var(--fs-sm);
+}
+.pickText strong {
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+.pickBar[data-on='true'] .pickText strong {
+  color: var(--accent-hover);
+}
+.pickActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2);
+  margin-left: auto;
 }
 
-/* 나란히 놓은 표: 값이 서로 다른 줄이 눈에 띄게 한다. */
-.diff th,
-.diff td {
-  background: var(--accent-soft);
+/* ── 나란히 본 판 ── */
+.side {
+  margin-top: var(--s4);
 }
-
-.diff th {
+/* 표는 판의 양 끝까지 닿는다(전역 .table-wrap.flush). 줄 이름 칸은 옆으로 밀어도 제자리에 남는다. */
+.sideTable tbody th {
+  width: 240px;
+}
+.sideTable thead th:first-child,
+.sideTable tbody th {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+.sideTable tbody th {
+  background: var(--panel);
+}
+.sideTable tbody tr:hover > th {
+  background: var(--row-hover);
+}
+.sideTable td {
+  min-width: 180px;
+}
+/* 나란히 본 표는 칸이 넓다. 작은 글씨를 일찍 끊지 않는다. */
+.sideTable .note {
+  width: auto;
+  max-width: 44ch;
+}
+.sideTable thead th:not(:first-child) {
+  white-space: normal;
+  min-width: 180px;
+}
+/* 값이 서로 다른 줄: 줄 머리에 표시가 붙는다. */
+.side .sideTable tbody tr.diff > th {
   box-shadow: inset 3px 0 0 var(--accent);
 }
-
 .tag {
-  display: inline-block;
-  margin-left: 6px;
-  padding: 0 6px;
-  border: 1px solid var(--accent);
-  border-radius: 10px;
-  color: var(--accent);
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
+  margin-left: var(--s2);
 }
-
+/* 좋은 쪽: 그 칸의 바탕이 옅은 초록이 되고 표가 붙는다. */
+.side .sideTable tbody tr > td.bestCell,
+.side .sideTable tbody tr:hover > td.bestCell {
+  background: var(--ok-soft);
+}
 .best {
-  display: inline-block;
-  margin-left: 6px;
-  padding: 0 6px;
-  border-radius: 10px;
-  background: var(--ok);
-  color: #fff;
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
+  display: block;
+  margin-top: var(--s1);
 }
 
+/* ── 계산하는 법 ── */
+.rulesPanel {
+  margin-top: var(--s5);
+}
 .rules {
-  margin: 6px 0;
-  padding-left: 20px;
+  margin: var(--s3) 0 0;
+  font-size: var(--fs-sm);
+}
+.rules > div {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: var(--s1) var(--s4);
+  padding: var(--s2) 0;
+  border-top: 1px solid var(--line);
+}
+.rules dt {
+  font-weight: 600;
+  color: var(--fg);
+}
+.rules dd {
+  margin: 0;
+  max-width: 96ch;
+  color: var(--fg-soft);
 }
 
-.rules li {
-  margin: 3px 0;
+@media (max-width: 899px) {
+  /* 좁은 화면: 이름 칸을 좁혀 숫자 칸이 화면에 더 보이게 한다. 눌러서 차례를 바꾸는 머리는 누르는 자리를 넉넉히 둔다. */
+  .table .nameCell {
+    min-width: 132px;
+  }
+  .table tbody .nameCell > a,
+  .table tbody .nameCell > span {
+    max-width: 132px;
+  }
+  .sort {
+    min-height: 40px;
+  }
+  .sideTable tbody th {
+    width: 112px;
+    min-width: 112px;
+  }
+  .sideTable td,
+  .sideTable thead th:not(:first-child) {
+    min-width: 150px;
+  }
+  .rules > div {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pickActions {
+    margin-left: 0;
+  }
 }

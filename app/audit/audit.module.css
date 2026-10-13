@@ -1,0 +1,141 @@
+/* 점검 화면에서만 쓰는 것. 색·글자·간격은 전역 스타일(app/globals.css)의 변수를 그대로 쓴다. */
+
+/* 살필 곳 두 가지(등록된 상품 · 파일)를 나란히. 좁으면 위아래로 선다. */
+.targets {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: var(--s4);
+  align-items: start;
+  margin: var(--s3) 0;
+}
+.targets > :global(.panel) {
+  margin: 0;
+  height: 100%;
+}
+.targets :global(.panel-title) {
+  margin-top: 0;
+}
+
+/* 결과 구역 */
+.result {
+  margin-top: var(--s5);
+  padding-top: var(--s4);
+  border-top: 1px solid var(--line);
+  scroll-margin-top: calc(var(--head-h) + var(--s3));
+  /* 상품별 표를 표로 둘지 덩어리로 세울지는 이 구역의 너비로 정한다(아래 @container). */
+  container-type: inline-size;
+}
+.result h2 {
+  margin-top: 0;
+}
+.summary {
+  margin: var(--s2) 0 0;
+}
+.subhead {
+  margin-top: var(--s5);
+}
+
+/* 상품별 문제 표: 상품 하나가 한 묶음(tbody)이고, 문제 하나가 한 줄이다. */
+.findings table tbody th {
+  min-width: 180px;
+  max-width: 320px;
+}
+.findings table .where {
+  min-width: 132px;
+  color: var(--fg-soft);
+  font-weight: 600;
+}
+.findings table .what {
+  min-width: 220px;
+}
+/* 묶음 사이의 선. 전역 표 스타일은 tbody 마다 마지막 줄의 선을 지우므로 여기서 다시 긋는다. */
+@container (min-width: 821px) {
+  .findings table tbody:not(:last-child) > tr:last-child > td,
+  .findings table tbody:not(:last-child) > tr > th {
+    border-bottom: 1px solid var(--line-strong);
+  }
+  .findings table tbody:last-child > tr > th {
+    border-bottom: 0;
+  }
+}
+
+/* 표가 들어갈 자리가 좁으면 상품 하나가 한 덩어리로 서고, 그 안에 문제가 한 줄씩 선다. 옆으로 밀 것이 없다.
+   자리 너비는 결과 구역(.result)을 잰다. */
+@container (max-width: 820px) {
+  .findings.findings table,
+  .findings.findings table tbody,
+  .findings.findings table th,
+  .findings.findings table td {
+    display: block;
+  }
+  .findings.findings table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .findings.findings table tbody {
+    padding: var(--s3);
+    border-bottom: 1px solid var(--line-strong);
+  }
+  .findings.findings table tbody:last-child {
+    border-bottom: 0;
+  }
+  .findings.findings table tr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s1) var(--s2);
+  }
+  .findings.findings table tr + tr {
+    margin-top: var(--s3);
+    padding-top: var(--s3);
+    border-top: 1px dashed var(--line-strong);
+  }
+  .findings.findings table tbody th,
+  .findings.findings table tbody td {
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    padding: 0;
+    border: 0;
+    white-space: normal;
+  }
+  .findings.findings table tbody th,
+  .findings.findings table .what {
+    flex: 1 1 100%;
+  }
+  .findings.findings table tbody tr:hover > th,
+  .findings.findings table tbody tr:hover > td {
+    background: transparent;
+  }
+}
+
+/* 이 점검이 보는 것 */
+.codes table td:last-child {
+  min-width: 260px;
+}
+
+/* 아주 좁은 화면: 사유별 표가 옆으로 밀리지 않게 칸을 조금 좁힌다. 숫자 칸의 머리는 낱말 사이에서만 줄이 바뀐다. */
+@media (max-width: 480px) {
+  .byCode.byCode table th,
+  .byCode.byCode table td {
+    padding-left: var(--s2);
+    padding-right: var(--s2);
+  }
+  .byCode.byCode table thead th {
+    white-space: normal;
+    overflow-wrap: normal;
+  }
+  .byCode.byCode table tbody th {
+    min-width: 120px;
+  }
+  .byCode.byCode table thead th:nth-child(3) {
+    min-width: 3.5em;
+  }
+  .byCode.byCode table thead th:nth-child(4) {
+    min-width: 4.6em;
+  }
+}

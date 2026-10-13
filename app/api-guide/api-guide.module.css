@@ -1,0 +1,149 @@
+/* API 화면에서만 쓰는 것. 색·글자·간격은 전역 스타일(app/globals.css)의 변수를 그대로 쓴다. */
+
+/* 지금 작업 공간 한 줄 */
+.space {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s1) var(--s2);
+  margin: 0 0 var(--s1);
+}
+
+/* 찾기 입력 */
+.search {
+  width: 280px;
+}
+
+/* 구역(방금 누른 것 · 경로 보기 · 딸린 도구의 경로) */
+.section {
+  margin-top: var(--s5);
+  /* 표를 표로 둘지 덩어리로 세울지는 이 구역의 너비로 정한다(아래 @container). */
+  container-type: inline-size;
+}
+.section :global(.actions) {
+  margin: 0;
+}
+
+/* 경로 표: 메서드 · 주소 · 하는 일 · 예시 */
+.routes table .m {
+  width: 1%;
+  min-width: 0;
+  white-space: nowrap;
+}
+.routes table .p {
+  width: 34%;
+  min-width: 200px;
+}
+.routes table .does {
+  min-width: 220px;
+}
+.routes table .acts {
+  width: 1%;
+  min-width: 0;
+  white-space: nowrap;
+}
+.method {
+  display: inline-block;
+  min-width: 52px;
+  padding: 0 6px;
+  border-radius: var(--r-sm);
+  background: var(--bg-soft);
+  color: var(--fg-soft);
+  font-family: var(--mono);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+}
+/* 무언가를 바꾸는 요청(POST · PATCH) */
+.write {
+  background: var(--accent-soft);
+  color: var(--accent-hover);
+}
+.path {
+  font-family: var(--mono);
+  font-size: var(--fs-sm);
+  word-break: break-all;
+}
+.rowActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--s2);
+}
+
+/* 펼친 예시(curl). 윗줄과 한 덩어리로 보이게 사이 선을 지운다. */
+.routes table tr.open > * {
+  border-bottom-color: transparent;
+}
+.routes table tr.codeRow > td {
+  padding-top: 0;
+}
+.routes table tr.codeRow :global(.code) {
+  margin: 0;
+}
+.routes table tbody tr.codeRow:hover > td {
+  background: transparent;
+}
+
+/* 표가 들어갈 자리가 좁으면(좁은 화면, 옆 메뉴가 있는 중간 너비) 줄 하나가 한 덩어리로 선다:
+   메서드 + 주소 / 하는 일 / 단추 / 예시. 옆으로 밀 것이 없다. 자리 너비는 구역(.section)을 잰다. */
+@container (max-width: 760px) {
+  .routes table,
+  .routes table thead,
+  .routes table tbody,
+  .routes table th,
+  .routes table td {
+    display: block;
+  }
+  .routes table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .routes table tr {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: var(--s1) var(--s2);
+    padding: var(--s3);
+    border-bottom: 1px solid var(--line);
+  }
+  .routes table tbody tr:last-child {
+    border-bottom: 0;
+  }
+  .routes table tr.open {
+    border-bottom: 0;
+    padding-bottom: var(--s2);
+  }
+  .routes table tr.codeRow {
+    display: block;
+    padding-top: 0;
+  }
+  .routes table tbody th,
+  .routes table tbody td,
+  .routes table .m,
+  .routes table .p,
+  .routes table .does,
+  .routes table .acts {
+    width: auto;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    white-space: normal;
+  }
+  .routes table .does,
+  .routes table .acts {
+    grid-column: 1 / -1;
+  }
+  .routes table tbody tr:hover > th,
+  .routes table tbody tr:hover > td {
+    background: transparent;
+  }
+  .rowActions {
+    justify-content: flex-start;
+    margin-top: var(--s1);
+  }
+}

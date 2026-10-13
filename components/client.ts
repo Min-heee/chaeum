@@ -291,3 +291,50 @@ export function useOrigin(): string {
     () => '',
   );
 }
+
+// ── 화면에서 고른 보기 설정 ─────────────────────────────────
+// 서버에는 보내지 않는다. 화면을 옮겼다 돌아와도 고른 보기가 남게 하려는 것이다.
+
+/** 이 탭에서만 기억하는 보기 설정(예: 초안에서 "확인할 칸만", 도구가 살필 공간). 없으면 null. */
+export function usePref(key: string): string | null {
+  return useSyncExternalStore(
+    subscribe,
+    () => read('session', `chaeum.ui.${key}`),
+    () => null,
+  );
+}
+
+export function setPref(key: string, value: string | null): void {
+  write('session', `chaeum.ui.${key}`, value);
+}
+
+function subscribeUrl(onChange: () => void): () => void {
+  window.addEventListener(CHANGED, onChange);
+  window.addEventListener('popstate', onChange);
+  return () => {
+    window.removeEventListener(CHANGED, onChange);
+    window.removeEventListener('popstate', onChange);
+  };
+}
+
+/** 주소의 ?뒤(예: "?space=demo&status=APPROVED"). 목록 화면이 고른 공간·상태를 여기에 둔다(뒤로 가기로 돌아와도 남는다). */
+export function useQuery(): string {
+  return useSyncExternalStore(
+    subscribeUrl,
+    () => window.location.search,
+    () => '',
+  );
+}
+
+/** 주소의 ?뒤를 고친다(값이 null 이면 그 이름을 뺀다). 화면을 새로 읽지 않고, 뒤로 가기 기록도 늘리지 않는다. */
+export function setQuery(patch: Record<string, string | null>): void {
+  if (typeof window === 'undefined') return;
+  const params = new URLSearchParams(window.location.search);
+  for (const [name, value] of Object.entries(patch)) {
+    if (value === null) params.delete(name);
+    else params.set(name, value);
+  }
+  const query = params.toString();
+  window.history.replaceState(null, '', `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`);
+  window.dispatchEvent(new Event(CHANGED));
+}
