@@ -8,8 +8,8 @@ describe('평가가 아는 프롬프트 판', () => {
     expect(picked[0]!.build('글').promptVersion).toBe('extract-v1');
   });
   it('판 이름으로 고른다. 판마다 프롬프트 버전 이름이 다르다', () => {
-    const versions = pickPrompts('v1, v2, v3, v4').map((p) => p.build('글').promptVersion);
-    expect(versions).toEqual(['extract-v1', 'extract-v2', 'extract-v3', 'extract-v4']);
+    const versions = pickPrompts('v1, v2, v3, v4, v5').map((p) => p.build('글').promptVersion);
+    expect(versions).toEqual(['extract-v1', 'extract-v2', 'extract-v3', 'extract-v4', 'extract-v5']);
     const all = Object.entries(EXTRACT_PROMPTS).filter(([name]) => name !== 'current').map(([, build]) => build('글').promptVersion);
     expect(new Set(all).size).toBe(all.length);
   });

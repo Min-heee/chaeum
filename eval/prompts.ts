@@ -7,6 +7,7 @@ import { buildExtractRequestV1 } from '@/llm/prompts/extract.v1';
 import { buildExtractRequestV2 } from '@/llm/prompts/extract.v2';
 import { buildExtractRequestV3 } from '@/llm/prompts/extract.v3';
 import { buildExtractRequestV4 } from '@/llm/prompts/extract.v4';
+import { buildExtractRequestV5 } from '@/llm/prompts/extract.v5';
 
 export type ExtractBuilder = (cleanText: string) => LlmRequest<Extraction>;
 
@@ -20,6 +21,8 @@ export const EXTRACT_PROMPTS: Record<string, ExtractBuilder> = {
   v3: buildExtractRequestV3,
   /** 시도 4: 원문 표현(raw)에는 값의 글자만 적는다(이름표·머리말·문장째 금지, 섞인 언어에서도 상품 이름은 원문 그대로). v1 에서 만들었다. 재 보고 버린 판이다(docs/EVAL-LOG.md 시도 4). 견줄 때만 쓴다. */
   v4: buildExtractRequestV4,
+  /** 시도 5: 갈래의 뜻을 적었다(광고 지면은 놓인 곳을 먼저 보고, 그 밖의 옥외·건물 화면이 전광판). v1 에서 만들었다. 재 보고 버린 판이다(docs/EVAL-LOG.md 시도 5). 견줄 때만 쓴다. */
+  v5: buildExtractRequestV5,
 };
 
 /** "v1,current" 같은 글을 판 목록으로. 모르는 판이면 오류. */

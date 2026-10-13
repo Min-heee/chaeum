@@ -30,6 +30,13 @@ import {
   type ExtractWireV4,
 } from './prompts/extract.v4';
 import {
+  EXTRACT_PROMPT_VERSION_V5,
+  EXTRACT_SCHEMA_VERSION_V5,
+  ExtractWireSchemaV5,
+  extractWireToOutputV5,
+  type ExtractWireV5,
+} from './prompts/extract.v5';
+import {
   TRANSCRIBE_PROMPT_VERSION,
   TRANSCRIBE_SCHEMA_VERSION,
   TranscribeWireSchema,
@@ -75,6 +82,11 @@ const BY_PROMPT_VERSION: Record<string, WireFormat> = {
     schemaVersion: EXTRACT_SCHEMA_VERSION_V4,
     wire: ExtractWireSchemaV4,
     toOutput: (w) => extractWireToOutputV4(w as ExtractWireV4),
+  },
+  [EXTRACT_PROMPT_VERSION_V5]: {
+    schemaVersion: EXTRACT_SCHEMA_VERSION_V5,
+    wire: ExtractWireSchemaV5,
+    toOutput: (w) => extractWireToOutputV5(w as ExtractWireV5),
   },
   [CONTENT_PROMPT_VERSION]: {
     schemaVersion: CONTENT_SCHEMA_VERSION,
