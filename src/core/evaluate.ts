@@ -1,5 +1,5 @@
 // 한 번에 돌기: 뽑기 결과를 맞추고 따져 칸별 결과와 갈래를 낸다.
-import type { DraftEvaluation, EvaluatedField, EvaluateInput, RecheckInput } from '@/contract/core-api';
+import type { DraftEvaluation, EvaluatedField, EvaluateInput, NormalizeResult, RecheckInput } from '@/contract/core-api';
 import {
   fieldDef,
   FIELDS_BY_TYPE,
@@ -16,6 +16,7 @@ import { checkRange } from './checks/range';
 import { checkRequired } from './checks/required';
 import { checkStructure, isPlaceholder } from './checks/structure';
 import { normalizeField } from './normalize/field';
+import { unwrapLabeled } from './normalize/unwrap';
 import { declaredMoneyUnits } from './normalize/money-unit';
 import { routeDraft } from './route';
 import { sortReasons } from './text';
@@ -37,6 +38,19 @@ function moneyUnitsFor(sourceText: string, m: Material): number[] {
   return MONEY_KINDS.has(fieldDef(m.field).kind) ? declaredMoneyUnits(sourceText, [m.evidence, m.raw]) : [];
 }
 
+/**
+ * 원문 표현을 표준 값으로 맞춘다.
+ * 글자 칸에서 원문 표현이 모델 값을 이름표·맺는 말로 감싼 꼴이면("위치: ○○") 감싼 것을 벗긴 값을 낸다.
+ * 벗긴 값은 원문에 그대로 있는 글자라 사유를 붙이지 않는다. 원문 표현과 모델 값은 칸 정보에 그대로 남는다.
+ */
+function codeValueOf(sourceText: string, m: Material, raw: string): NormalizeResult<FieldValue> {
+  if (fieldDef(m.field).kind === 'text' && typeof m.modelValue === 'string') {
+    const inner = unwrapLabeled(m.field, raw, m.modelValue, sourceText);
+    if (inner !== null) return { value: inner, reasons: [] };
+  }
+  return normalizeField(m.field, raw, moneyUnitsFor(sourceText, m));
+}
+
 /** 사람이 고치지 않은 칸: 원문 표현을 맞추고, 근거와 불일치를 본다. */
 function fromSource(sourceText: string, m: Material): EvaluatedField {
   const reasons: ReasonCode[] = [];
@@ -45,7 +59,7 @@ function fromSource(sourceText: string, m: Material): EvaluatedField {
   let codeValue: FieldValue | null = null;
   // 자리 채움 글자("-", "추후 안내")는 읽을 값이 아니다. 사유는 구조 검사가 붙인다.
   if (raw !== null && !isPlaceholder(raw)) {
-    const normalized = normalizeField(m.field, raw, moneyUnitsFor(sourceText, m));
+    const normalized = codeValueOf(sourceText, m, raw);
     codeValue = normalized.value;
     reasons.push(...normalized.reasons);
   }
@@ -78,7 +92,7 @@ function assemble(sourceText: string, type: DocType, subtype: string | null, mat
   const fields: EvaluatedField[] = FIELDS_BY_TYPE[type].map((field) => {
     const m = byField.get(field) ?? { field, raw: null, modelValue: null, evidence: null };
     if (!m.edited) return fromSource(sourceText, m);
-    const codeValue = m.raw !== null && !isPlaceholder(m.raw) ? normalizeField(field, m.raw, moneyUnitsFor(sourceText, m)).value : null;
+    const codeValue = m.raw !== null && !isPlaceholder(m.raw) ? codeValueOf(sourceText, m, m.raw).value : null;
     return {
       field,
       raw: m.raw,

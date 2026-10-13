@@ -223,6 +223,58 @@ describe('규칙만으로 뽑은 초안', () => {
   });
 });
 
+describe('글자 칸의 감싼 꼴(원문 표현이 값을 이름표·맺는 말로 감쌌다)', () => {
+  const WRAPPED = '위치: 강남역 11번 출구 앞';
+  const INNER = '강남역 11번 출구 앞';
+
+  it('이름표째 적힌 원문 표현은 벗긴 값이 실린다. 사유는 붙지 않고 칸 정보는 그대로 남는다', () => {
+    const ev = run({ region: { raw: WRAPPED } });
+    expect(of(ev, 'region')).toEqual({
+      field: 'region', raw: WRAPPED, modelValue: INNER, codeValue: INNER, finalValue: INNER, evidence: WRAPPED, reasons: [], editedByHuman: false,
+    });
+    expect(ev.route).toBe('READY');
+  });
+
+  it('나머지에 뜻이 있는 낱말이 남으면 전과 같이 원문 표현이 실리고 불일치가 붙는다', () => {
+    const raw = '위치: 강남역 11번 출구 앞 건물';
+    const f = of(run({ region: { raw, evidence: raw } }, {}, `${SOURCE}\n${raw}`), 'region');
+    expect([f.codeValue, f.finalValue, f.reasons]).toEqual([raw, raw, ['VALUE_MISMATCH']]);
+  });
+
+  it('값이 원문 표현의 앞 낱말뿐이면 이름을 자르지 않는다', () => {
+    const f = of(run({ name: { value: '강남역 11번 출구' } }), 'name');
+    expect([f.codeValue, f.finalValue, f.reasons]).toEqual(['강남역 11번 출구 대형 전광판', '강남역 11번 출구 대형 전광판', ['VALUE_MISMATCH']]);
+  });
+
+  it('값이 원문에 없으면(지어낸 값) 벗기지 않는다', () => {
+    const f = of(run({ region: { raw: '위치: 역삼역 1번 출구', value: '역삼역 1번 출구' } }), 'region');
+    expect(f.codeValue).toBe('위치: 역삼역 1번 출구');
+    expect(f.reasons).toEqual(['NO_EVIDENCE', 'VALUE_MISMATCH']);
+  });
+
+  it('숫자 칸은 전과 같다(이름표가 붙은 원문 표현을 제 맞추기로 읽는다)', () => {
+    const f = of(run({ size_m: { raw: '크기: 7*12(m)' } }), 'size_m');
+    expect([f.codeValue, f.reasons]).toEqual([{ width: 7, height: 12 }, []]);
+    const hours = of(run({ hours: { raw: '운영시간: 05시~25시' } }), 'hours');
+    expect([hours.codeValue, hours.reasons]).toEqual([{ open: '05:00', close: '01:00', nextDay: true }, []]);
+  });
+
+  it('규칙만으로 뽑았으면 모델 값이 없으니 벗기지 않는다', () => {
+    const fields = GOOD.map((f) => (f.field === 'region' ? { ...f, raw: WRAPPED } : f));
+    const ev = evaluateDraft({ sourceText: SOURCE, extraction: { type: 'ad', subtype: '전광판', fields }, extractedBy: 'rules' });
+    expect([of(ev, 'region').modelValue, of(ev, 'region').codeValue]).toEqual([null, WRAPPED]);
+  });
+
+  it('다시 따질 때도 같다: 다른 칸을 고쳐도 벗긴 값이 남고, 그 칸을 고치면 고친 값이 실린다', () => {
+    const stored = run({ region: { raw: WRAPPED } }).fields;
+    const base = { sourceText: SOURCE, type: 'ad', subtype: '전광판', extractedBy: 'llm', fields: stored } as const;
+    const other = of(recheckDraft({ ...base, edits: { name: '강남역 전광판' } }), 'region');
+    expect([other.raw, other.codeValue, other.finalValue, other.reasons]).toEqual([WRAPPED, INNER, INNER, []]);
+    const edited = of(recheckDraft({ ...base, edits: { region: '강남역' } }), 'region');
+    expect([edited.raw, edited.modelValue, edited.codeValue, edited.finalValue, edited.editedByHuman]).toEqual([WRAPPED, INNER, INNER, '강남역', true]);
+  });
+});
+
 describe('recheckDraft', () => {
   const stored = (change: Parameters<typeof run>[0] = {}) => run(change).fields;
   const recheck = (fields: EvaluatedField[], edits: Partial<Record<FieldKey, FieldValue | null>>, subtype = '전광판') =>
