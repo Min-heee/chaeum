@@ -29,7 +29,10 @@ const nextConfig: NextConfig = {
     '/products': ['./data/export-templates/*.json'],
   },
   // collector/ 는 파이썬 수집기다. 배포 묶음에 싣지 않는다(가상 환경과 받아 둔 원자료가 딸려 가지 않게).
-  outputFileTracingExcludes: { '*': ['./collector/**'] },
+  // 평가 기록·문서·시험·정답 파일도 함수 묶음에 싣지 않는다(실행 중에 읽지 않는다).
+  outputFileTracingExcludes: {
+    '*': ['./collector/**', './eval/results/**', './docs/**', './tests/**', './data/gold/**', './data/recordings/runs/**'],
+  },
   async headers() {
     return [{ source: '/:path*', headers: [...SECURITY_HEADERS] }];
   },

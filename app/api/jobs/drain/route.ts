@@ -2,7 +2,7 @@
 import { drainJobs } from '@/server/service';
 import { json, route } from '../../_lib/http';
 
-// 예산은 6초지만 집어 든 마지막 일이 모델을 기다릴 수 있다.
-export const maxDuration = 60;
+// 예산은 6초지만 집어 든 마지막 일이 모델을 기다릴 수 있다(글 검사에 걸려 다시 부르면 80초까지).
+export const maxDuration = 120;
 
 export const POST = route('POST /jobs/drain', async () => json(await drainJobs(() => new Date())));

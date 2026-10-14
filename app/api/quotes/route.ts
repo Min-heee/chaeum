@@ -4,6 +4,9 @@ import { QuoteCreateRequestSchema } from '@/contract/tools/quote';
 import { createQuote } from '@/server/quotes';
 import { intakeWorkspace, json, readJson, route } from '../_lib/http';
 
+// 요청 안에서 모델을 두세 번 부른다(한 번에 40초까지). 플랫폼 기본값에 기대지 않게 적어 둔다.
+export const maxDuration = 150;
+
 export const dynamic = 'force-dynamic';
 
 export const POST = route('POST /quotes', async (request: Request) => {

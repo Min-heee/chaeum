@@ -4,17 +4,23 @@ import { COUNTER_KEYS, LIMITS, kstDay, type HealthResponse } from '@/contract/ap
 import { LIVE_LLM } from '@/contract/pipeline-api';
 import { getPool } from '@/server/db';
 import { llmStatus } from '@/server/service';
+import type { Db } from '@/server/types';
 
 export const dynamic = 'force-dynamic';
 
 const NO_STORE = { 'Cache-Control': 'no-store' } as const;
+
+/** 실제 호출을 닫으면 DB 를 읽지 않는다. DB 주소가 아예 없을 때 기본값(getPool)이 던지지 않게 쓰는 빈자리. */
+const NO_DB = {
+  query: () => Promise.reject(new Error('DB 없음')),
+} as unknown as Db;
 
 /** LLM 칸. DB 가 죽어 오늘 쓴 수를 못 세면 실제 호출을 닫힌 것으로 답한다(자리를 잡을 수 없으니 실제로도 못 부른다). */
 async function readLlm(now: Date): Promise<HealthResponse['llm']> {
   try {
     return await llmStatus(process.env, now);
   } catch {
-    return llmStatus({ ...process.env, [LIVE_LLM.capEnv]: '0' }, now);
+    return llmStatus({ ...process.env, [LIVE_LLM.capEnv]: '0' }, now, NO_DB);
   }
 }
 
