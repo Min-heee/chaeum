@@ -5,6 +5,7 @@
 
 - 글 → 뽑기(LLM) → 맞추기(코드) → 따지기(코드) → 갈래(확인 필요 / 바로 승인 가능) → 사람 검수 → 등록 → 영어·중국어 글 → CSV
 - Next.js(App Router) + TypeScript + PostgreSQL 16 + Anthropic API
+- 시연: https://chaeum-kappa.vercel.app (모델을 부르지 않는다. 보기 글은 미리 받아 둔 응답, 직접 넣은 글은 규칙만으로 뽑는다. 성적표 화면은 비어 있다. 평가는 로컬에서 돌린다)
 - 딸린 도구 일곱: 점검, 용어 사전, 견적, 시안 검사, 달력, 비교, 모으기(공공 자료를 받아 정리하는 파이썬 수집기 포함). 본체가 채운 칸을 그대로 읽어 쓴다
 - 무엇을 왜 만드는지는 `docs/PRD.md`·`docs/PRD-TOOLS.md`, 고른 것과 버린 것은 `docs/DECISIONS.md`, 재는 기준은 `docs/EVAL-SPEC.md`, 잰 값은 `docs/EVALUATION.md`·`docs/EVALUATION-TOOLS.md`, 수집기는 `docs/COLLECTOR.md`
 
