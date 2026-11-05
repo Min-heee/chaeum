@@ -210,6 +210,19 @@ describe('막는 것', () => {
     expect(await count('draft_events WHERE draft_id = $1', [draft.id])).toBe(LIMITS.eventsPerDraft + 1);
   });
 
+  it('변경 기록이 199줄인 반려 초안은 한 번 더 다시 돌릴 수 있다(칸 고치기와 같은 경계)', async () => {
+    const ws = await newWorkspace();
+    const draft = await processed(ws, goodsText().text, llm());
+    const rejected = await rejectDraft({ workspaceId: ws, draftId: draft.id, version: 2, reasonCode: 'OTHER', now: at(1000) });
+    const have = await count('draft_events WHERE draft_id = $1', [draft.id]);
+    await pool().query(
+      `INSERT INTO draft_events (draft_id, actor, action, field, before, after, created_at)
+       SELECT $1, 'admin', 'edit', 'material', '"가"'::jsonb, '"나"'::jsonb, $3 FROM generate_series(1, $2::int)`,
+      [draft.id, LIMITS.eventsPerDraft - have - 1, at(1500)],
+    );
+    await expect(reprocessDraft({ workspaceId: ws, draftId: draft.id, version: rejected.version, now: at(2000) })).resolves.toMatchObject({ status: 'PROCESSING' });
+  });
+
   it('반려 메모의 NUL 글자는 빠지고, 500자에서 잘린다', async () => {
     const ws = await newWorkspace();
     const draft = await processed(ws, goodsText().text, llm());

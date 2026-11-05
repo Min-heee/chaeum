@@ -117,7 +117,8 @@ export async function reprocessDraft(input: Decision): Promise<DecisionResult> {
       now: input.now,
     });
     // 위에서 공간과 상태를 확인했다. 넘쳤으면 던져서 방금 바꾼 것까지 되돌린다.
-    await assertEventRoom(client, input.draftId);
+    // 상태 바꿈이 방금 한 줄을 썼으므로, 칸 고치기처럼 쓰기 전의 수로 본다.
+    await assertEventRoom(client, input.draftId, 1);
     // 지난 칸을 지운다. 처리 중인 초안의 상세는 칸이 빈 목록이다(약속).
     await saveFields(client, input.draftId, []);
     await requeue(client, 'extract', input.draftId, input.now);
