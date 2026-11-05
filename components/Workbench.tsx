@@ -139,6 +139,8 @@ export function Workbench({ samples, samplesError }: { samples: Sample[]; sample
   const intakeRef = useRef<HTMLDivElement | null>(null);
   /** "새 글 넣기"를 누른 뒤, 글 칸이 다시 그려지면 그리로 초점을 보낸다. */
   const focusInput = useRef(false);
+  /** 초안을 만드는 차례. 넣는 길·보기 글을 바꾸면 올라가서, 늦게 끝난 앞 요청의 결과가 화면을 덮지 않게 한다. */
+  const turn = useRef(0);
 
   const sample = samples.find((s) => s.id === sampleId) ?? samples[0];
 
@@ -166,6 +168,7 @@ export function Workbench({ samples, samplesError }: { samples: Sample[]; sample
   const bulkTooMany = bulkDocs.length > LIMITS.bulkMaxDocs;
 
   const reset = () => {
+    turn.current += 1;
     setBulk(null);
     setDraft(null);
     setError(null);
@@ -203,7 +206,7 @@ export function Workbench({ samples, samplesError }: { samples: Sample[]; sample
   };
 
   /** 여러 건을 한 번에 넣고, 줄이 빌 때까지 굴린다. 결과는 건수와 초안 줄로 보여 주고, 초안은 검수함에서 본다. */
-  const makeBulk = async () => {
+  const makeBulk = async (mine: number) => {
     const sent = await call<BulkIntakeResponse>('POST', '/api/source-docs/bulk', { body: { texts: bulkDocs }, label: `여러 건 한 번에 넣기 (${bulkDocs.length}건)` });
     setBusy({ text: '칸을 채우는 중입니다…', stage: 1, stages: TEXT_STAGES });
     let remaining = sent.counts.new;
@@ -227,6 +230,7 @@ export function Workbench({ samples, samplesError }: { samples: Sample[]; sample
         }
       }),
     );
+    if (turn.current !== mine) return;
     setBulk({
       counts: sent.counts,
       rows,
@@ -243,6 +247,8 @@ export function Workbench({ samples, samplesError }: { samples: Sample[]; sample
   };
 
   const make = async () => {
+    turn.current += 1;
+    const mine = turn.current;
     setError(null);
     setNote(null);
     setDraft(null);
@@ -252,7 +258,7 @@ export function Workbench({ samples, samplesError }: { samples: Sample[]; sample
       if (mode === 'bulk') {
         if (bulkDocs.length === 0 || bulkTooMany) return;
         setBusy({ text: '접수하는 중입니다…', stage: 0, stages: TEXT_STAGES });
-        await makeBulk();
+        await makeBulk(mine);
         return;
       }
       let got: IntakeResponse;
@@ -261,7 +267,7 @@ export function Workbench({ samples, samplesError }: { samples: Sample[]; sample
         setBusy({ text: 'AI가 파일을 글로 옮기는 중입니다…', stage: 0, stages: FILE_STAGES });
         const sent = await call<SourceFileResponse>('POST', '/api/source-files', { file, label: '그림·PDF 올리기' });
         got = sent;
-        if (sent.duplicate) setNote('전에 올린 것과 같은 파일이라 모델을 다시 부르지 않고 있던 초안을 보여 줍니다.');
+        if (sent.duplicate && turn.current === mine) setNote('전에 올린 것과 같은 파일이라 모델을 다시 부르지 않고 있던 초안을 보여 줍니다.');
       } else {
         const text = mode === 'sample' ? (sample?.text ?? '') : pasted;
         if (text.trim() === '') return;
@@ -270,10 +276,12 @@ export function Workbench({ samples, samplesError }: { samples: Sample[]; sample
           body: { text },
           label: mode === 'sample' ? `보기 글로 초안 만들기 (${sample?.label ?? ''})` : '직접 넣은 글로 초안 만들기',
         });
-        if (got.duplicate) setNote('이 공간에 이미 넣은 글이라 있던 초안을 보여 줍니다.');
+        if (got.duplicate && turn.current === mine) setNote('이 공간에 이미 넣은 글이라 있던 초안을 보여 줍니다.');
       }
       setBusy({ text: '칸을 채우는 중입니다…', stage: 1, stages: mode === 'file' ? FILE_STAGES : TEXT_STAGES });
-      setDraft(await waitForDraft(got.draftId, { label: '줄 굴리기' }));
+      const made = await waitForDraft(got.draftId, { label: '줄 굴리기' });
+      if (turn.current !== mine) return;
+      setDraft(made);
       // 결과(초안 번호와 상태)로 초점을 옮긴다. 두 칸이 위아래로 서는 너비에서는 그 자리까지 내려간다.
       requestAnimationFrame(() => {
         const title = resultRef.current?.querySelector<HTMLElement>('[data-draft-title]');
@@ -283,6 +291,7 @@ export function Workbench({ samples, samplesError }: { samples: Sample[]; sample
         title.focus({ preventScroll: true });
       });
     } catch (err) {
+      if (turn.current !== mine) return;
       // 서버의 글에 까닭이 이미 들어 있다. 없을 때만 덧붙인다.
       const label = err instanceof ApiFailure && err.skipCause ? LLM_SKIP_LABELS[err.skipCause] : '';
       const message = failureMessage(err);
