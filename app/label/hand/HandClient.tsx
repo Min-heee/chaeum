@@ -227,6 +227,7 @@ export default function HandClient({ target, docs: firstDocs, start }: Props) {
       setNotice(json.created ? `${json.docId} 로 저장했습니다. 다음 글을 씁니다.` : `${json.docId} 을(를) 고쳐 저장했습니다.`);
       setForm(EMPTY);
       setAsked(false);
+      started.current = performance.now();
       window.scrollTo({ top: 0 });
     } catch {
       setError('저장 실패. 서버가 떠 있는지 봐 주세요.');
