@@ -245,6 +245,9 @@ def test_error_text_with_status_200_is_not_saved_over_a_good_file(tmp_path: Path
         assert result["muju-led"]["status"] == "refused", answer
         assert paths.raw_file(tmp_path, "muju-led").read_bytes() == CSV  # 있던 파일은 그대로다
         assert not paths.raw_file(tmp_path, "muju-led").with_suffix(".part").exists()
+        # 기록도 전에 받은 것을 남긴다. 그래야 정리 단계가 그 파일을 쓴다.
+        assert fetch.read_log(tmp_path)["muju-led"]["status"] == "downloaded", answer
+        assert fetch.read_log(tmp_path)["muju-led"]["last_refresh_error"] == result["muju-led"]["note"]
 
 
 def test_utf8_header_with_bom_passes_the_first_line_check(tmp_path: Path, sources: dict[str, Source], fake_server: Any) -> None:
