@@ -5,7 +5,7 @@ import { FIELDS_BY_TYPE, type ExtractedField, type Extraction, type FieldKey, ty
 import { PER_ANY } from '../normalize/footfall';
 import { COUNTER_AFTER, WON_AFTER, WON_BEFORE } from '../normalize/money';
 import { normalizePeriodOptions, normalizeQuantityOptions } from '../normalize/period';
-import { findNumberChunks } from '../numbers';
+import { CHUNK, findNumberChunks } from '../numbers';
 import { guessSubtype, guessType } from './classify';
 
 interface Span {
@@ -343,11 +343,11 @@ function findFields(type: ProductType, text: string): { hits: Partial<Record<Fie
   put('name', r.name());
   // 판매가: 뚜렷한 이름표 → 흔한 이름표 → 값표의 가장 짧은 기간(적은 수량) → 글에 금액이 하나뿐일 때 그것.
   put('price_krw',
-    r.labeled(/판매가|할인가|특가|행사가|이벤트가|(?:할인|판매)\s?가격|sale\s?price|特价|优惠价/gi, r.money)
+    r.labeled(/(?<!정상\s?|기존\s?|원래\s?)판매가|할인가|특가|행사가|이벤트가|(?:할인|판매)\s?가격|sale\s?price|特价|优惠价/gi, r.money)
       ?? r.labeled(/(?<!정상\s?|기존\s?|원래\s?)(?:가격|금액|비용|단가|광고비|이용료|요금|price|价格|费用)/gi, r.money)
       ?? r.cheapestKeyAmount(pairs, keyOf)
-      ?? onlyOne(text, /(?:₩\s?)?\d[\d,.]*\s?(?:[억만천]+\s?)?원/g, r));
-  put('list_price_krw', r.labeled(/정가|정상가|정상\s?가격|기존가|기존\s?가격|원래\s?가격|소비자가|list\s?price|原价/gi, r.money));
+      ?? onlyOne(text, new RegExp(String.raw`(?:₩\s?)?(?:${CHUNK}|\d[\d,.]*)\s?(?:[억만천]+\s?)?원`, 'g'), r));
+  put('list_price_krw', r.labeled(/정가|정상가|정상\s?판매가|기존\s?판매가|정상\s?가격|기존가|기존\s?가격|원래\s?가격|소비자가|list\s?price|原价/gi, r.money));
   put('vat_included', r.anywhere(VAT));
   return { hits, specCount };
 }

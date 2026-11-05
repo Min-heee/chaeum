@@ -216,3 +216,15 @@ describe('등록 대상이 아닌 글', () => {
     expect(rulesExtract('')).toEqual({ type: 'not_product', subtype: null, fields: [] });
   });
 });
+
+describe('판매가 찾기', () => {
+  it('금액이 하나뿐이면 억이 낀 금액도 통째로 읽는다', () => {
+    expect(raws(rulesExtract('강남역 전광판 광고\n크기 10m x 5m\n1억 5천만원 (VAT 별도)')).price_krw).toBe('1억 5천만원');
+  });
+
+  it('함정: "정상 판매가"는 판매가가 아니라 정가다', () => {
+    const r = raws(rulesExtract('강남역 전광판 광고\n정상 판매가 200만원\n할인가 150만원'));
+    expect(r.price_krw).toBe('150만원');
+    expect(r.list_price_krw).toBe('200만원');
+  });
+});
