@@ -7,7 +7,7 @@ import { asInt, plain, read, unread } from '../text';
 
 /** 원이 아닌 돈. 환율을 짐작해 바꾸지 않고 못 읽은 것으로 둔다. */
 const FOREIGN = /[¥$€£]|元|圓|円|위안|人民币|rmb|cny|jpy|usd|eur|달러|dollar|유로|[\d억만천백십]\s*(?:엔|동|불)(?![가-힣])/;
-export const WON_AFTER = /^\s?(?:원|韩元|韩币|won|krw)/;
+export const WON_AFTER = /^\s?(?:원|韩元|韩币|韓元|韓幣|won|krw)/;
 export const WON_BEFORE = /(?:₩|krw)\s?$/;
 /** 수 바로 뒤에 붙으면 돈이 아닌 것("1주", "10%", "10만명", "2면"). */
 export const COUNTER_AFTER = /^(?:[a-z%]|주|일|개|명|회|잔|부(?!터)|장|매|인|초|분|시|면|번|호|층|년|월|차|종|건|세트|박|배)/;
