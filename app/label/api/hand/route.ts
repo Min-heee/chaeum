@@ -26,6 +26,7 @@ export async function POST(request: Request) {
   let body: Record<string, unknown>;
   try {
     body = (await request.json()) as Record<string, unknown>;
+    if (!body || typeof body !== 'object' || Array.isArray(body)) throw new TypeError('not an object');
   } catch {
     return NextResponse.json({ error: 'JSON 이 아니다' }, { status: 400 });
   }
