@@ -286,8 +286,13 @@ def looks_like_html(head: bytes) -> bool:
 def fetch_all(sources: list[Source], base: Path, offline: bool, options: FetchOptions, tools: Tools) -> dict[str, dict[str, Any]]:
     """출처들을 차례로 받고 기록 파일을 고친다. 하나가 틀려도 나머지는 이어서 한다."""
     log = read_log(base)
+    results: dict[str, dict[str, Any]] = {}
     for source in sources:
         entry = fetch_offline(source, base) if offline else fetch_online(source, base, options, tools)
-        log[source.id] = entry
+        results[source.id] = entry
+        earlier = log.get(source.id, {})
+        # --refresh 가 실패·거절돼도 전에 받은 파일은 그대로다. 그 기록을 지우면 정리 단계가 그 출처를 못 쓴다.
+        kept = entry["status"] in ("failed", "refused") and earlier.get("sha256") and paths.raw_file(base, source.id).exists()
+        log[source.id] = {**earlier, "last_refresh_error": entry["note"]} if kept else entry
         write_log(base, log)
-    return {source.id: log[source.id] for source in sources}
+    return results

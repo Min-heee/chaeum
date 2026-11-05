@@ -115,6 +115,12 @@ describe('틀 문장', () => {
     expect(text).toContain('다른 상품도 있습니다');
     expect(text).not.toContain('{qty}');
     expect(checkReply(text, facts)).toEqual([]);
+    // 이름에 로마 숫자·윗첨자가 든 상품도 제 이름 때문에 걸리지 않는다. 이름 밖에 쓰면 걸린다.
+    for (const name of ['합정타워 Ⅱ 전광판', '합정역 전광판 (50m²)']) {
+      const named = input('ko', { ...BILLBOARD, name }, 2);
+      expect(checkReply(templateReply(named), named)).toEqual([]);
+      expect(checkReply(`${templateReply(named)}\nⅡ`, named)).toEqual(['STRAY_NUMBER']);
+    }
     expect(hasLeftoverPlaceholder(fillReply(text, replyValues(BILLBOARD), 'ko', { vatIncluded: false }))).toBe(false);
   });
   it('날짜 조건이 없던 케이터링: 수량만 쓰고 날짜 줄은 없다', () => {

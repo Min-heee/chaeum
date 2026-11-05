@@ -48,6 +48,8 @@ describe('예산 읽기', () => {
     expect(resolveBudget('-300만원', 3_000_000)).toEqual({ budgetKrw: null, budgetBy: null });
     expect(resolveBudget('예산 −300만원', null)).toEqual({ budgetKrw: null, budgetBy: null });
     expect(resolveBudget('100-150만원', 1_500_000)).toEqual({ budgetKrw: 1_500_000, budgetBy: 'model' });
+    expect(resolveBudget('100 - 150만원', 1_500_000)).toEqual({ budgetKrw: 1_500_000, budgetBy: 'model' });
+    expect(resolveBudget('200만원 – 300만원', 3_000_000)).toEqual({ budgetKrw: 3_000_000, budgetBy: 'model' });
   });
   it('표현 없이 모델 값만 왔으면 그 값을 쓰되 0 이하·소수·터무니없이 큰 값은 버린다', () => {
     expect(resolveBudget(null, 800_000)).toEqual({ budgetKrw: 800_000, budgetBy: 'model' });
@@ -83,6 +85,9 @@ describe('날짜 조각 → 날짜 범위', () => {
     expect(resolveDateRange(parts({ month: 10, day_from: 12 }), TODAY)).toEqual({ dateFrom: '2026-10-12', dateTo: '2026-10-12' });
     expect(resolveDateRange(parts({ month: 10, day_from: 11 }), TODAY)).toEqual({ dateFrom: '2027-10-11', dateTo: '2027-10-11' });
     expect(resolveDateRange(parts({ month: 9 }), TODAY)).toEqual({ dateFrom: '2027-09-01', dateTo: '2027-09-30' });
+    // 다룰 수 있는 마지막 해(2200)를 넘겨 찾지 않는다. 터지지 않고 null.
+    expect(resolveDateRange(parts({ month: 3 }), '2200-06-01')).toBeNull();
+    expect(resolveDateRange(parts({ month: 2, day_from: 29 }), '2197-03-01')).toBeNull();
   });
   it('범위가 오늘을 품으면 첫날을 오늘로 당긴다(이번 달, 이번 주). 지난 날에 시작하는 범위가 되지 않는다', () => {
     expect(resolveDateRange(parts({ month: 10 }), TODAY)).toEqual({ dateFrom: TODAY, dateTo: '2026-10-31' });

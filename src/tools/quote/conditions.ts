@@ -19,8 +19,8 @@ const WON_MONEY = /원|₩|(?<![a-z])(?:won|krw)(?![a-z])|[韩韓]元|[韩韓]�
 /** 표현을 가르는 자리: 괄호, 빗금, 같음표, 뒤에 빈칸이 오는 쉼표(숫자 속 쉼표는 아니다). */
 const BUDGET_SPLIT = /[()[\]/=≈]|[,;]\s+/;
 
-/** 빼기 부호가 붙은 수("-300만원"). 범위의 줄표("100-150")는 앞이 숫자라 여기에 걸리지 않는다. */
-const SIGNED_NUMBER = /(?<![\d\p{L}])[-−–]\s*\d/u;
+/** 빼기 부호가 붙은 수("-300만원"). 범위의 줄표("100-150", "100 - 150", "200만원 – 300만원")는 앞에 수가 있어 여기에 걸리지 않는다. */
+const SIGNED_NUMBER = /(?<![\d\p{L}])(?<!\d[^-−–]*)[-−–]\s*\d/u;
 
 /**
  * 원화와 다른 통화가 함께 적힌 표현("3000000 won (about $2,200)")에서 원화 조각만 뗀다.
@@ -95,6 +95,8 @@ function rangeInYear(year: number, month: number, parts: DateParts): DateRange |
 
 /** 연도 없는 2월 29일은 오늘부터 이 햇수 안에서 찾는다(다음 윤년까지 닿게). 그 밖의 날짜는 올해와 내년만 본다. */
 const LEAP_DAY_YEARS_AHEAD = 8;
+/** 날짜로 다루는 마지막 해(diffDays 가 받는 끝). 연도 없는 날짜를 찾을 때 이 해를 넘지 않는다. */
+const YEAR_MAX = 2200;
 
 /** 범위가 오늘을 품으면 첫날을 오늘로 당긴다. 통째로 지났거나 아직 안 온 범위는 그대로다. */
 function fromTodayOn(range: DateRange, today: string): DateRange {
@@ -131,7 +133,7 @@ export function resolveDateRange(parts: DateParts | null, today: string): DateRa
   const thisYear = Number(today.slice(0, 4));
   const leapDay = month === 2 && (checked.day_from === 29 || checked.day_to === 29);
   const byWeek = checked.day_from === null && checked.week_of_month !== null;
-  for (let year = thisYear; year <= thisYear + (leapDay ? LEAP_DAY_YEARS_AHEAD : 1); year += 1) {
+  for (let year = thisYear; year <= Math.min(YEAR_MAX, thisYear + (leapDay ? LEAP_DAY_YEARS_AHEAD : 1)); year += 1) {
     // 그 달이 통째로 지난 해는 건너뛴다.
     if (diffDays(today, iso(year, month, daysInMonth(year, month))) < 0) continue;
     const range = rangeInYear(year, month, checked);

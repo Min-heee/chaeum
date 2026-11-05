@@ -61,9 +61,10 @@ export async function assertWorkspaceRoom(db: Db, workspaceId: string): Promise<
 /**
  * 이 초안의 변경 기록을 더 쌓아도 되는가. 칸 고치기와 다시 돌리기가 쓰기 전에 부른다.
  * 공간을 보지 않는다. 공간을 확인한 초안의 번호로만 부른다.
+ * written: 같은 트랜잭션에서 이미 쓴 줄 수. 쓰기 전의 수로 본다.
  */
-export async function assertEventRoom(db: Db, draftId: number): Promise<void> {
-  if ((await countEvents(db, draftId)) >= LIMITS.eventsPerDraft) {
+export async function assertEventRoom(db: Db, draftId: number, written = 0): Promise<void> {
+  if ((await countEvents(db, draftId)) - written >= LIMITS.eventsPerDraft) {
     throw new AppError('LIMIT_EXCEEDED', `이 초안은 변경 기록이 ${LIMITS.eventsPerDraft}줄에 닿아 더 고치거나 다시 돌릴 수 없습니다. 글을 새로 접수해 주세요.`);
   }
 }
