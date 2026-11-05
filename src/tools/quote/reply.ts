@@ -273,8 +273,10 @@ export function checkReply(template: string, facts: CheckFacts): ContentFailCode
   if (!fails.has('EMPTY_TEXT')) {
     // 이름·지역 표기(원래 글자와 그 언어로 바꾼 글자)가 그대로 들어간 자리를 떼고 본다. 긴 것부터 뗀다.
     const literal = unique(numbered.flatMap((text) => [text, localText(text, facts.glossary, facts.lang)]).filter((text) => text !== ''));
-    const rest = literal.sort((a, b) => b.length - a.length).reduce((text, name) => text.split(name).join(' '), body.normalize('NFKC'));
-    if (hasNumberWords(body) || numberUsedAsValue(rest, allowedNumbers)) fails.add('STRAY_NUMBER');
+    const strip = (text: string) => literal.sort((a, b) => b.length - a.length).reduce((t, name) => t.split(name).join(' '), text);
+    const rest = strip(body.normalize('NFKC'));
+    // 말로 쓴 숫자는 호환 꼴을 맞추기 전의 글에서 본다(로마 숫자 Ⅱ 가 II 로 바뀌기 전). 이름·지역에 원래 든 것("타워 Ⅱ", "50m²")은 떼고 본다.
+    if (hasNumberWords(strip(body)) || numberUsedAsValue(rest, allowedNumbers)) fails.add('STRAY_NUMBER');
   }
   if (!fails.has('EMPTY_TEXT')) {
     const missingTotal = allowed.includes('total') && !used.includes('total');
